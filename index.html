@@ -1066,7 +1066,8 @@
       for (let i = 0; i < notes.length; i++) {
         const n = notes[i];
         const t = startOffset + n.startTime;
-        const row = document.querySelector(`#note-tbody tr[data-index="${i}"]`);
+        const rowIndex = n._origIndex !== undefined ? n._origIndex : i;
+        const row = document.querySelector(`#note-tbody tr[data-index="${rowIndex}"]`);
         if (row) {
           const delay = (t - audioCtx.currentTime) * 1000;
           setTimeout(() => {
@@ -1132,11 +1133,12 @@
     }
 
     function playNotesFrom(notes, bpm, fromTime) {
-      // fromTime以降のノートだけをオフセットして再生
+      // fromTime以降のノートだけをオフセットして再生（元インデックス保持）
       const offsetNotes = notes
         .filter(n => (n.startTime + n.duration) > fromTime)
-        .map(n => ({
+        .map((n, _, __, idx = notes.indexOf(n)) => ({
           ...n,
+          _origIndex: idx,
           startTime: Math.max(0, n.startTime - fromTime),
           duration: n.startTime < fromTime ? n.duration - (fromTime - n.startTime) : n.duration
         }));
