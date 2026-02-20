@@ -7,7 +7,6 @@ const fileInput = document.getElementById('file-input');
 const btnPlay = document.getElementById('btn-play');
 const btnStop = document.getElementById('btn-stop');
 
-
 // ドラッグ&ドロップ
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
@@ -30,7 +29,7 @@ function loadFile(file) {
     try {
       processMidi(e.target.result, file.name);
     } catch (err) {
-      alert('MIDIパースエラー: ' + err.message);
+      alert(`MIDIパースエラー: ${err.message}`);
       console.error(err);
     }
   };
@@ -56,7 +55,7 @@ function processMidi(buffer, fileName) {
   // ヘッダー情報表示
   document.getElementById('info-format').textContent = `Type ${parsed.header.format}`;
   document.getElementById('info-tracks').textContent = parsed.header.numTracks;
-  document.getElementById('info-division').textContent = parsed.header.timeDivision + ' ticks/beat';
+  document.getElementById('info-division').textContent = `${parsed.header.timeDivision} ticks/beat`;
   document.getElementById('info-tempo').textContent = `${bpm} BPM (${tempo} μs/beat)`;
   document.getElementById('info-notes').textContent = notes.length;
   // document.getElementById('header-info').style.display = 'block';
@@ -74,9 +73,7 @@ function processMidi(buffer, fileName) {
   btnStop.disabled = true;
 
   // 全体の長さを事前計算
-  currentTotalDuration = notes.length > 0
-    ? Math.max(...notes.map(n => n.startTime + n.duration))
-    : 0;
+  currentTotalDuration = notes.length > 0 ? Math.max(...notes.map((n) => n.startTime + n.duration)) : 0;
 
   // 可視化セクションを先に表示（Canvas描画にclientWidth必要）
   document.getElementById('piano-roll-section').style.display = 'block';
@@ -90,4 +87,3 @@ function processMidi(buffer, fileName) {
 // 再生コントロール
 btnPlay.addEventListener('click', () => playNotes(currentNotes, currentBpm));
 btnStop.addEventListener('click', () => stopPlayback());
-

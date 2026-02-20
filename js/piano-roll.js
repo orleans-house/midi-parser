@@ -15,9 +15,10 @@ function drawPianoRoll() {
   ctx.clearRect(0, 0, W, H);
   if (!currentNotes.length) return;
 
-  const dur = currentTotalDuration || Math.max(...currentNotes.map(n => n.startTime + n.duration));
+  const dur = currentTotalDuration || Math.max(...currentNotes.map((n) => n.startTime + n.duration));
   // 音域検出（パディング付き）
-  let minNote = 127, maxNote = 0;
+  let minNote = 127,
+    maxNote = 0;
   for (const n of currentNotes) {
     if (n.note < minNote) minNote = n.note;
     if (n.note > maxNote) maxNote = n.note;
@@ -32,7 +33,7 @@ function drawPianoRoll() {
   // ノート描画
   for (const n of currentNotes) {
     const isMuted = channelStates[n.channel]?.muted;
-    const anySolo = Object.values(channelStates).some(s => s.soloed);
+    const anySolo = Object.values(channelStates).some((s) => s.soloed);
     const isSoloed = channelStates[n.channel]?.soloed;
     const hidden = anySolo ? !isSoloed : isMuted;
 
@@ -102,4 +103,3 @@ function updatePlayhead(elapsed) {
     ctx.restore();
   }
 }
-
