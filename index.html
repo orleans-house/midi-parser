@@ -16,12 +16,12 @@
     <!-- 左カラム: コントロールパネル -->
     <div id="control-panel">
       <div class="panel-section">
-        <button type="button" id="btn-open">📂 ファイルを開く</button>
+        <button type="button" id="btn-open"><i data-lucide="folder-open"></i> ファイルを開く</button>
         <input type="file" id="file-input" accept=".mid,.midi">
       </div>
 
       <div id="file-info" class="panel-section">
-        <h3>📄 ファイル情報</h3>
+        <h3><i data-lucide="file-audio"></i> ファイル情報</h3>
         <table>
           <tr><td>File</td><td id="info-filename">-</td></tr>
           <tr><td>Format</td><td id="info-format">-</td></tr>
@@ -33,41 +33,41 @@
       </div>
 
       <div id="playback-controls" class="panel-section">
-        <h3>🎛️ コントロール</h3>
+        <h3><i data-lucide="sliders-horizontal"></i> コントロール</h3>
         <div class="control-row">
-          <button type="button" id="btn-play" disabled>&#9654; 再生</button>
-          <button type="button" id="btn-stop" disabled>&#9632; 停止</button>
+          <button type="button" id="btn-play" disabled><i data-lucide="play"></i> 再生</button>
+          <button type="button" id="btn-stop" disabled><i data-lucide="square"></i> 停止</button>
         </div>
         <div id="wave-mixer">
           <div class="mixer-channel mixer-master">
             <span class="mixer-pct" id="master-vol-pct">100%</span>
             <input type="range" class="mixer-vol" id="master-volume" min="0" max="100" value="100" orient="vertical">
-            <span class="master-icon">🔊</span>
+            <span class="master-icon"><i data-lucide="volume-2"></i></span>
             <span class="mixer-label">Master</span>
           </div>
           <div class="mixer-divider"></div>
           <div class="mixer-channel" data-wave="triangle">
             <span class="mixer-pct">50%</span>
             <input type="range" class="mixer-vol" min="0" max="100" value="50" orient="vertical">
-            <button type="button" class="mixer-btn active">🔺</button>
+            <button type="button" class="mixer-btn active"><svg class="wave-icon" viewBox="0 0 24 16"><polyline points="0,12 6,4 12,12 18,4 24,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg></button>
             <span class="mixer-label">Tri</span>
           </div>
           <div class="mixer-channel" data-wave="sine">
             <span class="mixer-pct">50%</span>
             <input type="range" class="mixer-vol" min="0" max="100" value="50" orient="vertical">
-            <button type="button" class="mixer-btn">🔵</button>
+            <button type="button" class="mixer-btn"><svg class="wave-icon" viewBox="0 0 24 16"><path d="M0,8 C3,2 6,2 8,8 C10,14 13,14 16,8 C18,2 21,2 24,8" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
             <span class="mixer-label">Sin</span>
           </div>
           <div class="mixer-channel" data-wave="square">
             <span class="mixer-pct">20%</span>
             <input type="range" class="mixer-vol" min="0" max="100" value="20" orient="vertical">
-            <button type="button" class="mixer-btn">🟧</button>
+            <button type="button" class="mixer-btn"><svg class="wave-icon" viewBox="0 0 24 16"><polyline points="0,12 0,4 6,4 6,12 12,12 12,4 18,4 18,12 24,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg></button>
             <span class="mixer-label">Sq</span>
           </div>
           <div class="mixer-channel" data-wave="sawtooth">
             <span class="mixer-pct">24%</span>
             <input type="range" class="mixer-vol" min="0" max="100" value="24" orient="vertical">
-            <button type="button" class="mixer-btn">🔶</button>
+            <button type="button" class="mixer-btn"><svg class="wave-icon" viewBox="0 0 24 16"><polyline points="0,12 12,4 12,12 24,4 24,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg></button>
             <span class="mixer-label">Saw</span>
           </div>
         </div>
@@ -100,9 +100,10 @@
   <div id="controls" style="display:none;"></div>
 
   <div id="drag-overlay">
-    <div class="drag-overlay-content">🎵 ここにドロップ</div>
+    <div class="drag-overlay-content"><i data-lucide="music"></i> ここにドロップ</div>
   </div>
 
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.js"></script>
   <script src="js/globals.js"></script>
   <script src="js/midi-parser.js"></script>
   <script src="js/visualizer.js"></script>

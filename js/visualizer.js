@@ -4,22 +4,22 @@
 // ============================================================
 
 const CHANNEL_COLORS = [
-  '#00d4ff',
-  '#ff6b6b',
-  '#51cf66',
-  '#ffd43b',
-  '#cc5de8',
-  '#ff922b',
-  '#20c997',
-  '#748ffc',
-  '#f06595',
-  '#94d82d',
-  '#22b8cf',
-  '#ff8787',
-  '#69db7c',
-  '#ffa94d',
-  '#da77f2',
-  '#5c7cfa',
+  '#b39ddb', // パステル紫
+  '#ef9a9a', // パステルレッド
+  '#81c784', // パステルグリーン
+  '#fff59d', // パステルイエロー
+  '#ce93d8', // ライトパープル
+  '#ffcc80', // パステルオレンジ
+  '#80cbc4', // パステルティール
+  '#9fa8da', // パステルインディゴ
+  '#f48fb1', // パステルピンク
+  '#c5e1a5', // パステルライム
+  '#80deea', // パステルシアン
+  '#ffab91', // パステルコーラル
+  '#a5d6a7', // パステルミント
+  '#ffe082', // パステルアンバー
+  '#b39ddb', // パステル紫（リピート）
+  '#90caf9', // パステルブルー
 ];
 
 function getChannelLabel(ch) {
@@ -55,13 +55,13 @@ function buildChannelUI(channels) {
   masterHeader.className = 'channel-header';
   const masterLabel = document.createElement('span');
   masterLabel.className = 'channel-label';
-  masterLabel.textContent = '🔊 Master';
+  masterLabel.innerHTML = '<i data-lucide="volume-2"></i> Master';
   masterHeader.append(masterLabel);
   const masterCanvas = document.createElement('canvas');
   masterCanvas.id = 'waveform-master';
   masterCanvas.height = 80;
   masterCanvas.style.width = '100%';
-  masterCanvas.style.background = '#0d1117';
+  masterCanvas.style.background = getThemeColor('--bg-canvas', '#140f1a');
   masterCanvas.style.borderRadius = '4px';
   masterCanvas.style.display = 'block';
   masterCard.append(masterHeader, masterCanvas);
@@ -104,7 +104,7 @@ function buildChannelUI(channels) {
     canvas.id = `waveform-${ch}`;
     canvas.height = 80;
     canvas.style.width = '100%';
-    canvas.style.background = '#0d1117';
+    canvas.style.background = getThemeColor('--bg-canvas', '#140f1a');
     canvas.style.borderRadius = '4px';
     canvas.style.display = 'block';
 
@@ -116,14 +116,19 @@ function buildChannelUI(channels) {
       requestAnimationFrame(() => {
         canvas.width = canvas.offsetWidth;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#0d1117';
+        ctx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#333';
+        ctx.fillStyle = getThemeColor('--border', '#3a2e4a');
         ctx.font = '12px monospace';
         ctx.textAlign = 'center';
         ctx.fillText('NO SIGNAL', canvas.width / 2, canvas.height / 2 + 4);
       });
     }
+  }
+
+  // Lucide アイコン再初期化
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
   }
 }
 
