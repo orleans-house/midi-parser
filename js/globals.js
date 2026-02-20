@@ -10,3 +10,8 @@ let playbackStartOffset = 0;
 let channelStates = {};
 let channelPrograms = {};
 let currentChannels = [];
+
+// CSS変数からテーマカラーを取得するヘルパー
+function getThemeColor(varName, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+}

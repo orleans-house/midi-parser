@@ -180,3 +180,8 @@ btnPlay.addEventListener('click', () => {
   }
 });
 btnStop.addEventListener('click', () => stopPlayback());
+
+// Lucide アイコン初期化
+if (typeof lucide !== 'undefined') {
+  lucide.createIcons();
+}

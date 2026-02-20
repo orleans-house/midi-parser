@@ -90,10 +90,10 @@ async function playNotes(notes, bpm, seekOffset = 0) {
         const bufLen = ma.frequencyBinCount;
         const data = new Uint8Array(bufLen);
         ma.getByteTimeDomainData(data);
-        mctx.fillStyle = '#0d1117';
+        mctx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
         mctx.fillRect(0, 0, mc.width, mc.height);
         mctx.lineWidth = 2;
-        mctx.strokeStyle = '#00d4ff';
+        mctx.strokeStyle = getThemeColor('--accent-purple', '#b39ddb');
         mctx.beginPath();
         const sw = mc.width / bufLen;
         let mx = 0;
@@ -122,7 +122,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const dataArray = new Uint8Array(bufferLength);
       analyser.getByteTimeDomainData(dataArray);
 
-      ctx.fillStyle = '#0d1117';
+      ctx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.lineWidth = 2;
@@ -205,7 +205,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
   if (seekOffset === 0) currentTotalDuration = totalDuration;
 
-  btnPlay.textContent = '\u23f8 一時停止';
+  btnPlay.innerHTML = '<i data-lucide="pause"></i> 一時停止';
+  lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
   btnStop.disabled = false;
 
@@ -249,7 +250,8 @@ function pausePlayback() {
     clearTimeout(stopTimerId);
     stopTimerId = null;
   }
-  btnPlay.textContent = '\u25b6 再生';
+  btnPlay.innerHTML = '<i data-lucide="play"></i> 再生';
+  lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
 }
 
@@ -276,7 +278,8 @@ function resumePlayback() {
       (remaining + 1.0) * 1000,
     );
   }
-  btnPlay.textContent = '\u23f8 一時停止';
+  btnPlay.innerHTML = '<i data-lucide="pause"></i> 一時停止';
+  lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
 }
 
 function stopPlayback() {
@@ -311,7 +314,8 @@ function stopPlayback() {
     audioCtx.close().catch(() => {});
     audioCtx = null;
   }
-  btnPlay.textContent = '\u25b6 再生';
+  btnPlay.innerHTML = '<i data-lucide="play"></i> 再生';
+  lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
   btnStop.disabled = true;
   document.getElementById('position-display').textContent = '';

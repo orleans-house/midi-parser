@@ -180,8 +180,11 @@ h3 {
 .mixer-btn {
   width: 36px;
   height: 36px;
-  padding: 0;
+  padding: 6px;
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 6px;
   background: var(--bg-input);
   color: var(--text-secondary);
@@ -200,6 +203,33 @@ h3 {
   background: var(--accent-green);
   color: var(--text-on-accent);
   border-color: var(--accent-green);
+}
+
+.wave-icon {
+  width: 24px;
+  height: 16px;
+  display: block;
+}
+
+/* Lucide アイコンサイズ調整 */
+[data-lucide] {
+  display: inline-flex;
+  align-items: center;
+}
+
+button svg,
+h3 svg,
+.master-icon svg,
+.channel-label svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: -2px;
+}
+
+.drag-overlay-content svg {
+  width: 28px;
+  height: 28px;
+  vertical-align: -4px;
 }
 
 .mixer-label {

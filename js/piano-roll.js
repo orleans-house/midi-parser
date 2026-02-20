@@ -42,7 +42,7 @@ function drawPianoRoll() {
     const y = plotH - ((n.note - minNote + 1) / noteRange) * plotH;
     const h = Math.max(1, plotH / noteRange);
 
-    const color = CHANNEL_COLORS[n.channel] || '#888';
+    const color = CHANNEL_COLORS[n.channel] || getThemeColor('--text-secondary', '#a89bb5');
     ctx.globalAlpha = hidden ? 0.15 : 0.85;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
@@ -50,7 +50,7 @@ function drawPianoRoll() {
   ctx.globalAlpha = 1;
 
   // Y軸ラベル（C音のみ）
-  ctx.fillStyle = '#555';
+  ctx.fillStyle = getThemeColor('--text-muted', '#6b5f7a');
   ctx.font = '9px monospace';
   for (let note = minNote; note <= maxNote; note++) {
     if (note % 12 === 0) {
@@ -94,7 +94,7 @@ function updatePlayhead(elapsed) {
     const dur = currentTotalDuration || 1;
     const x = PADDING_LEFT + (elapsed / dur) * plotW;
     ctx.save();
-    ctx.strokeStyle = '#ff4444';
+    ctx.strokeStyle = getThemeColor('--accent-green', '#81c784');
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x, 0);
