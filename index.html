@@ -1074,8 +1074,6 @@
     // ピアノロール描画
     // ============================================================
 
-    let pianoRollAnimId = null;
-
     function drawPianoRoll() {
       const canvas = document.getElementById('piano-roll-canvas');
       const ctx = canvas.getContext('2d');
@@ -1133,41 +1131,6 @@
       }
     }
 
-    // ピアノロール再生ヘッド
-    function startPianoRollPlayhead() {
-      cancelAnimationFrame(pianoRollAnimId);
-      const canvas = document.getElementById('piano-roll-canvas');
-      const ctx = canvas.getContext('2d');
-      const dpr = window.devicePixelRatio || 1;
-
-      function frame() {
-        if (!isPlaying) return;
-        const elapsed = (performance.now() - playbackStartReal) / 1000 + playbackStartOffset;
-        const dur = currentTotalDuration || 1;
-
-        // 再描画
-        drawPianoRoll();
-        const W = canvas.clientWidth;
-        const H = canvas.clientHeight;
-        const PADDING_LEFT = 0;
-        const plotW = W - PADDING_LEFT;
-
-        // ヘッドライン
-        const x = PADDING_LEFT + (elapsed / dur) * plotW;
-        ctx.save();
-        ctx.strokeStyle = '#ff4444';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, H - 20);
-        ctx.stroke();
-        ctx.restore();
-
-        pianoRollAnimId = requestAnimationFrame(frame);
-      }
-      pianoRollAnimId = requestAnimationFrame(frame);
-    }
-
     // ピアノロールクリックでシーク
     document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
       if (!currentNotes.length) return;
@@ -1206,7 +1169,7 @@
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, H - 20);
+        ctx.lineTo(x, H);
         ctx.stroke();
         ctx.restore();
       }
