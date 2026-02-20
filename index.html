@@ -900,13 +900,16 @@
         updatePlayhead(elapsed);
       }, 100);
 
-      setTimeout(() => {
+      stopTimerId = setTimeout(() => {
         if (isPlaying) stopPlayback();
       }, (totalDuration + 1.0) * 1000);
     }
 
+    let stopTimerId = null;
+
     function stopPlayback() {
       isPlaying = false;
+      if (stopTimerId) { clearTimeout(stopTimerId); stopTimerId = null; }
       if (schedulerTimer) { clearTimeout(schedulerTimer); schedulerTimer = null; }
       if (animationTimer) { clearInterval(animationTimer); animationTimer = null; }
       for (const osc of scheduledNodes) {
