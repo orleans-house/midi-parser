@@ -135,6 +135,10 @@
       border: 1px solid #333;
     }
 
+    .channel-card.channel-inactive {
+      opacity: 0.4;
+    }
+
     .channel-header {
       display: flex;
       align-items: center;
@@ -678,11 +682,15 @@
       container.innerHTML = '';
       channelStates = {};
 
-      for (const ch of channels) {
-        channelStates[ch] = { muted: false, soloed: false, gainNode: null, analyser: null };
+      // 全16チャンネル表示（0-15）
+      const allChannels = Array.from({length: 16}, (_, i) => i);
+
+      for (const ch of allChannels) {
+        const isActive = channels.includes(ch);
+        channelStates[ch] = { muted: !isActive, soloed: false, gainNode: null, analyser: null, active: isActive };
 
         const card = document.createElement('div');
-        card.className = 'channel-card';
+        card.className = 'channel-card' + (isActive ? '' : ' channel-inactive');
         card.id = `channel-card-${ch}`;
 
         const header = document.createElement('div');
@@ -717,6 +725,20 @@
 
         card.append(header, canvas);
         container.appendChild(card);
+
+        // NO SIGNAL表示
+        if (!isActive) {
+          requestAnimationFrame(() => {
+            canvas.width = canvas.offsetWidth;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#0d1117';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('NO SIGNAL', canvas.width / 2, canvas.height / 2 + 4);
+          });
+        }
       }
     }
 
