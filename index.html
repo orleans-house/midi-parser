@@ -609,6 +609,26 @@
       container.innerHTML = '';
       channelStates = {};
 
+      // マスター合成波カード（4列幅）
+      const masterCard = document.createElement('div');
+      masterCard.className = 'channel-card';
+      masterCard.style.gridColumn = '1 / -1';
+      const masterHeader = document.createElement('div');
+      masterHeader.className = 'channel-header';
+      const masterLabel = document.createElement('span');
+      masterLabel.className = 'channel-label';
+      masterLabel.textContent = '🔊 Master';
+      masterHeader.append(masterLabel);
+      const masterCanvas = document.createElement('canvas');
+      masterCanvas.id = 'waveform-master';
+      masterCanvas.height = 80;
+      masterCanvas.style.width = '100%';
+      masterCanvas.style.background = '#0d1117';
+      masterCanvas.style.borderRadius = '4px';
+      masterCanvas.style.display = 'block';
+      masterCard.append(masterHeader, masterCanvas);
+      container.appendChild(masterCard);
+
       // 全16チャンネル表示（0-15）
       const allChannels = Array.from({length: 16}, (_, i) => i);
 
@@ -715,7 +735,13 @@
 
       const masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.5;
-      masterGain.connect(audioCtx.destination);
+
+      // マスター合成波用AnalyserNode
+      const masterAnalyser = audioCtx.createAnalyser();
+      masterAnalyser.fftSize = 2048;
+      masterGain.connect(masterAnalyser);
+      masterAnalyser.connect(audioCtx.destination);
+      window._masterAnalyser = masterAnalyser;
 
       // チャンネルごとのオーディオノード作成
       for (const ch of currentChannels) {
@@ -747,6 +773,9 @@
       // 波形描画ループ
       function drawWaveforms() {
         if (!isPlaying) {
+          // マスタークリア
+          const mc = document.getElementById('waveform-master');
+          if (mc) { const mctx = mc.getContext('2d'); mctx.clearRect(0, 0, mc.width, mc.height); }
           for (const ch of currentChannels) {
             const canvas = document.getElementById(`waveform-${ch}`);
             if (canvas) {
@@ -757,6 +786,34 @@
           return;
         }
         requestAnimationFrame(drawWaveforms);
+
+        // マスター合成波描画
+        if (window._masterAnalyser) {
+          const mc = document.getElementById('waveform-master');
+          if (mc) {
+            mc.width = mc.offsetWidth;
+            const mctx = mc.getContext('2d');
+            const ma = window._masterAnalyser;
+            const bufLen = ma.frequencyBinCount;
+            const data = new Uint8Array(bufLen);
+            ma.getByteTimeDomainData(data);
+            mctx.fillStyle = '#0d1117';
+            mctx.fillRect(0, 0, mc.width, mc.height);
+            mctx.lineWidth = 2;
+            mctx.strokeStyle = '#00d4ff';
+            mctx.beginPath();
+            const sw = mc.width / bufLen;
+            let mx = 0;
+            for (let i = 0; i < bufLen; i++) {
+              const v = data[i] / 128.0;
+              const y = (v * mc.height) / 2;
+              if (i === 0) mctx.moveTo(mx, y); else mctx.lineTo(mx, y);
+              mx += sw;
+            }
+            mctx.lineTo(mc.width, mc.height / 2);
+            mctx.stroke();
+          }
+        }
 
         for (const ch of currentChannels) {
           const state = channelStates[ch];
@@ -1038,26 +1095,8 @@
       maxNote = Math.min(127, maxNote + 4);
       const noteRange = maxNote - minNote + 1;
 
-      const PADDING_LEFT = 30;
-      const PADDING_BOTTOM = 20;
-      const plotW = W - PADDING_LEFT;
-      const plotH = H - PADDING_BOTTOM;
-
-      // グリッド線（10秒ごと）
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 0.5;
-      const gridInterval = dur > 120 ? 30 : dur > 30 ? 10 : 5;
-      for (let t = 0; t <= dur; t += gridInterval) {
-        const x = PADDING_LEFT + (t / dur) * plotW;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, plotH);
-        ctx.stroke();
-        // 時刻ラベル
-        ctx.fillStyle = '#666';
-        ctx.font = '10px monospace';
-        ctx.fillText(`${t}s`, x + 2, H - 4);
-      }
+      const plotW = W;
+      const plotH = H;
 
       // ノート描画
       for (const n of currentNotes) {
@@ -1066,7 +1105,7 @@
         const isSoloed = channelStates[n.channel]?.soloed;
         const hidden = anySolo ? !isSoloed : isMuted;
 
-        const x = PADDING_LEFT + (n.startTime / dur) * plotW;
+        const x = (n.startTime / dur) * plotW;
         const w = Math.max(1, (n.duration / dur) * plotW);
         const y = plotH - ((n.note - minNote + 1) / noteRange) * plotH;
         const h = Math.max(1, plotH / noteRange);
@@ -1077,16 +1116,6 @@
         ctx.fillRect(x, y, w, h);
       }
       ctx.globalAlpha = 1;
-
-      // Y軸ラベル（C音のみ）
-      ctx.fillStyle = '#555';
-      ctx.font = '9px monospace';
-      for (let note = minNote; note <= maxNote; note++) {
-        if (note % 12 === 0) {
-          const y = plotH - ((note - minNote + 0.5) / noteRange) * plotH;
-          ctx.fillText(`C${Math.floor(note / 12) - 1}`, 2, y + 3);
-        }
-      }
     }
 
     // ピアノロール再生ヘッド
@@ -1105,7 +1134,7 @@
         drawPianoRoll();
         const W = canvas.clientWidth;
         const H = canvas.clientHeight;
-        const PADDING_LEFT = 30;
+        const PADDING_LEFT = 0;
         const plotW = W - PADDING_LEFT;
 
         // ヘッドライン
@@ -1130,7 +1159,7 @@
       const canvas = e.target;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      const PADDING_LEFT = 30;
+      const PADDING_LEFT = 0;
       const plotW = canvas.clientWidth - PADDING_LEFT;
       const ratio = (x - PADDING_LEFT) / plotW;
       if (ratio < 0 || ratio > 1) return;
@@ -1153,7 +1182,7 @@
         const ctx = prCanvas.getContext('2d');
         const W = prCanvas.clientWidth;
         const H = prCanvas.clientHeight;
-        const PADDING_LEFT = 30;
+        const PADDING_LEFT = 0;
         const plotW = W - PADDING_LEFT;
         const dur = currentTotalDuration || 1;
         const x = PADDING_LEFT + (elapsed / dur) * plotW;
