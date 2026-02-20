@@ -121,6 +121,82 @@
       font-size: 0.85rem;
     }
 
+    /* チャンネルビジュアライザー */
+    #visualizer-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .channel-card {
+      background: #16213e;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid #333;
+    }
+
+    .channel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .channel-label {
+      font-weight: bold;
+      font-size: 0.85rem;
+      flex: 1;
+    }
+
+    .btn-ch {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 0.7rem;
+      border-radius: 4px;
+      background: #2a2a4a;
+      color: #888;
+      border: 1px solid #444;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-ch:hover {
+      background: #3a3a5a;
+      color: #ccc;
+    }
+
+    .btn-mute.active {
+      background: #e03131;
+      color: #fff;
+      border-color: #e03131;
+    }
+
+    .btn-solo.active {
+      background: #f59f00;
+      color: #1a1a2e;
+      border-color: #f59f00;
+    }
+
+    /* フィルターバー */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .filter-bar label {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .filter-bar select {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+
     /* テーブル */
     #note-table-section {
       display: none;
@@ -202,8 +278,8 @@
   </div>
 
   <div id="visualizer-section" style="display:none; margin-bottom: 20px;">
-    <h2>波形</h2>
-    <canvas id="waveform" height="120" style="width:100%; background:#16213e; border-radius:8px;"></canvas>
+    <h2>波形（チャンネル別）</h2>
+    <div id="visualizer-container"></div>
   </div>
 
   <div id="controls">
@@ -221,6 +297,12 @@
 
   <div id="note-table-section">
     <h2>ノート一覧</h2>
+    <div class="filter-bar">
+      <label for="note-channel-filter">チャンネル:</label>
+      <select id="note-channel-filter">
+        <option value="all">全て</option>
+      </select>
+    </div>
     <div id="note-table-wrap">
       <table class="notes">
         <thead>
@@ -241,6 +323,12 @@
 
   <div id="tab-section">
     <h2>Guitar TAB</h2>
+    <div class="filter-bar">
+      <label for="tab-channel-select">対象チャンネル:</label>
+      <select id="tab-channel-select">
+        <option value="non-drum">全て（ドラム除く）</option>
+      </select>
+    </div>
     <div id="tab-output"></div>
   </div>
 
@@ -557,6 +645,154 @@
     }
 
     // ============================================================
+    // チャンネル管理
+    // ============================================================
+
+    const CHANNEL_COLORS = [
+      '#00d4ff', '#ff6b6b', '#51cf66', '#ffd43b',
+      '#cc5de8', '#ff922b', '#20c997', '#748ffc',
+      '#f06595', '#94d82d', '#22b8cf', '#ff8787',
+      '#69db7c', '#ffa94d', '#da77f2', '#5c7cfa'
+    ];
+
+    let channelStates = {}; // { [ch]: { muted, soloed, gainNode, analyser } }
+    let currentChannels = [];
+
+    function getChannelLabel(ch) {
+      const num = ch + 1;
+      return num === 10 ? 'Ch.10 (Drums)' : `Ch.${num}`;
+    }
+
+    function getChannelColor(ch) {
+      return CHANNEL_COLORS[ch % CHANNEL_COLORS.length];
+    }
+
+    function detectChannels(notes) {
+      const channels = new Set();
+      for (const n of notes) channels.add(n.channel);
+      return [...channels].sort((a, b) => a - b);
+    }
+
+    function buildChannelUI(channels) {
+      const container = document.getElementById('visualizer-container');
+      container.innerHTML = '';
+      channelStates = {};
+
+      for (const ch of channels) {
+        channelStates[ch] = { muted: false, soloed: false, gainNode: null, analyser: null };
+
+        const card = document.createElement('div');
+        card.className = 'channel-card';
+        card.id = `channel-card-${ch}`;
+
+        const header = document.createElement('div');
+        header.className = 'channel-header';
+
+        const label = document.createElement('span');
+        label.className = 'channel-label';
+        label.style.color = getChannelColor(ch);
+        label.textContent = getChannelLabel(ch);
+
+        const btnMute = document.createElement('button');
+        btnMute.className = 'btn-ch btn-mute';
+        btnMute.textContent = 'M';
+        btnMute.title = 'Mute';
+        btnMute.addEventListener('click', () => toggleMute(ch));
+
+        const btnSolo = document.createElement('button');
+        btnSolo.className = 'btn-ch btn-solo';
+        btnSolo.textContent = 'S';
+        btnSolo.title = 'Solo';
+        btnSolo.addEventListener('click', () => toggleSolo(ch));
+
+        header.append(label, btnMute, btnSolo);
+
+        const canvas = document.createElement('canvas');
+        canvas.id = `waveform-${ch}`;
+        canvas.height = 80;
+        canvas.style.width = '100%';
+        canvas.style.background = '#0d1117';
+        canvas.style.borderRadius = '4px';
+        canvas.style.display = 'block';
+
+        card.append(header, canvas);
+        container.appendChild(card);
+      }
+    }
+
+    function toggleMute(ch) {
+      const state = channelStates[ch];
+      state.muted = !state.muted;
+      const btn = document.querySelector(`#channel-card-${ch} .btn-mute`);
+      btn.classList.toggle('active', state.muted);
+      updateChannelGains();
+    }
+
+    function toggleSolo(ch) {
+      const state = channelStates[ch];
+      state.soloed = !state.soloed;
+      const btn = document.querySelector(`#channel-card-${ch} .btn-solo`);
+      btn.classList.toggle('active', state.soloed);
+      updateChannelGains();
+    }
+
+    function updateChannelGains() {
+      const anySolo = Object.values(channelStates).some(s => s.soloed);
+      for (const [ch, state] of Object.entries(channelStates)) {
+        if (!state.gainNode) continue;
+        const shouldPlay = anySolo ? (state.soloed && !state.muted) : !state.muted;
+        state.gainNode.gain.value = shouldPlay ? 1 : 0;
+      }
+    }
+
+    function populateChannelFilter(channels) {
+      // ノートテーブルフィルター
+      const noteFilter = document.getElementById('note-channel-filter');
+      noteFilter.innerHTML = '<option value="all">全て</option>';
+      for (const ch of channels) {
+        const opt = document.createElement('option');
+        opt.value = ch;
+        opt.textContent = getChannelLabel(ch);
+        noteFilter.appendChild(opt);
+      }
+
+      // TABチャンネルセレクター
+      const tabSelect = document.getElementById('tab-channel-select');
+      tabSelect.innerHTML = '<option value="non-drum">全て（ドラム除く）</option>';
+      tabSelect.innerHTML += '<option value="all">全て</option>';
+      for (const ch of channels) {
+        const opt = document.createElement('option');
+        opt.value = ch;
+        opt.textContent = getChannelLabel(ch);
+        tabSelect.appendChild(opt);
+      }
+    }
+
+    function filterNoteTable(channelValue) {
+      const rows = document.querySelectorAll('#note-tbody tr');
+      rows.forEach(row => {
+        if (channelValue === 'all' || row.dataset.channel === String(channelValue)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function updateTab(filterValue) {
+      let filtered;
+      if (filterValue === 'non-drum') {
+        filtered = currentNotes.filter(n => n.channel !== 9);
+      } else if (filterValue === 'all') {
+        filtered = currentNotes;
+      } else {
+        const ch = parseInt(filterValue);
+        filtered = currentNotes.filter(n => n.channel === ch);
+      }
+      document.getElementById('tab-output').textContent = generateTab(filtered);
+    }
+
+    // ============================================================
     // Web Audio API 再生
     // ============================================================
 
@@ -577,57 +813,89 @@
 
       const masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.5;
+      masterGain.connect(audioCtx.destination);
 
-      // Analyser for waveform visualization
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-      masterGain.connect(analyser);
-      analyser.connect(audioCtx.destination);
+      // チャンネルごとのオーディオノード作成
+      for (const ch of currentChannels) {
+        const state = channelStates[ch];
 
-      // Show visualizer
-      const vizSection = document.getElementById('visualizer-section');
-      vizSection.style.display = 'block';
-      const canvas = document.getElementById('waveform');
-      canvas.width = canvas.offsetWidth;
-      const canvasCtx = canvas.getContext('2d');
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 1;
 
-      function drawWaveform() {
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+
+        gainNode.connect(analyser);
+        analyser.connect(masterGain);
+
+        state.gainNode = gainNode;
+        state.analyser = analyser;
+
+        // Canvasサイズ設定
+        const canvas = document.getElementById(`waveform-${ch}`);
+        if (canvas) canvas.width = canvas.offsetWidth;
+      }
+
+      // ミュート/ソロ状態を適用
+      updateChannelGains();
+
+      // ビジュアライザー表示
+      document.getElementById('visualizer-section').style.display = 'block';
+
+      // 波形描画ループ
+      function drawWaveforms() {
         if (!isPlaying) {
-          canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+          for (const ch of currentChannels) {
+            const canvas = document.getElementById(`waveform-${ch}`);
+            if (canvas) {
+              const ctx = canvas.getContext('2d');
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+          }
           return;
         }
-        requestAnimationFrame(drawWaveform);
-        analyser.getByteTimeDomainData(dataArray);
+        requestAnimationFrame(drawWaveforms);
 
-        canvasCtx.fillStyle = '#16213e';
-        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        for (const ch of currentChannels) {
+          const state = channelStates[ch];
+          if (!state.analyser) continue;
 
-        canvasCtx.lineWidth = 2;
-        canvasCtx.strokeStyle = '#00d4ff';
-        canvasCtx.beginPath();
+          const canvas = document.getElementById(`waveform-${ch}`);
+          if (!canvas) continue;
 
-        const sliceWidth = canvas.width / bufferLength;
-        let x = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
-          const y = (v * canvas.height) / 2;
-          if (i === 0) canvasCtx.moveTo(x, y);
-          else canvasCtx.lineTo(x, y);
-          x += sliceWidth;
+          const ctx = canvas.getContext('2d');
+          const analyser = state.analyser;
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+          analyser.getByteTimeDomainData(dataArray);
+
+          ctx.fillStyle = '#0d1117';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = getChannelColor(ch);
+          ctx.beginPath();
+
+          const sliceWidth = canvas.width / bufferLength;
+          let x = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128.0;
+            const y = (v * canvas.height) / 2;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+            x += sliceWidth;
+          }
+          ctx.lineTo(canvas.width, canvas.height / 2);
+          ctx.stroke();
         }
-        canvasCtx.lineTo(canvas.width, canvas.height / 2);
-        canvasCtx.stroke();
       }
-      drawWaveform();
+      drawWaveforms();
 
       const startOffset = audioCtx.currentTime + 0.1;
-      const rows = document.querySelectorAll('#note-tbody tr');
 
       // AudioContext時間ベースの先読みスケジューラ
-      const LOOK_AHEAD = 15; // 15秒先まで常にスケジュール
-      const CHECK_INTERVAL = 200; // 200msごとにチェック
+      const LOOK_AHEAD = 15;
+      const CHECK_INTERVAL = 200;
       let chunkIndex = 0;
 
       function scheduler() {
@@ -655,7 +923,14 @@
           env.gain.linearRampToValueAtTime(0, t + dur);
 
           osc.connect(env);
-          env.connect(masterGain);
+
+          // チャンネル別ゲインノードにルーティング
+          const chState = channelStates[n.channel];
+          if (chState && chState.gainNode) {
+            env.connect(chState.gainNode);
+          } else {
+            env.connect(masterGain);
+          }
 
           osc.start(t);
           osc.stop(t + dur + 0.01);
@@ -675,14 +950,13 @@
       for (let i = 0; i < notes.length; i++) {
         const n = notes[i];
         const t = startOffset + n.startTime;
-        const row = rows[i];
+        const row = document.querySelector(`#note-tbody tr[data-index="${i}"]`);
         if (row) {
           const delay = (t - audioCtx.currentTime) * 1000;
           setTimeout(() => {
             if (!isPlaying) return;
             document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
             row.classList.add('playing');
-            // row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
           }, Math.max(0, delay));
         }
       }
@@ -715,6 +989,11 @@
         try { osc.stop(); } catch {}
       }
       scheduledNodes = [];
+      // チャンネルオーディオノードのクリーンアップ
+      for (const ch of Object.keys(channelStates)) {
+        channelStates[ch].gainNode = null;
+        channelStates[ch].analyser = null;
+      }
       if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
       document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
       btnPlay.disabled = false;
@@ -750,6 +1029,15 @@
       if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
     });
 
+    // チャンネルフィルターイベント
+    document.getElementById('note-channel-filter').addEventListener('change', (e) => {
+      filterNoteTable(e.target.value);
+    });
+
+    document.getElementById('tab-channel-select').addEventListener('change', (e) => {
+      updateTab(e.target.value);
+    });
+
     function loadFile(file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -773,6 +1061,9 @@
       currentNotes = notes;
       currentBpm = bpm;
 
+      // チャンネル検出
+      currentChannels = detectChannels(notes);
+
       // ヘッダー情報表示
       document.getElementById('info-format').textContent = `Type ${parsed.header.format}`;
       document.getElementById('info-tracks').textContent = parsed.header.numTracks;
@@ -784,11 +1075,20 @@
       // テンポ表示
       document.getElementById('tempo-display').textContent = `${bpm} BPM | ${fileName}`;
 
+      // チャンネルUI構築
+      buildChannelUI(currentChannels);
+      document.getElementById('visualizer-section').style.display = 'block';
+
+      // チャンネルフィルター設定
+      populateChannelFilter(currentChannels);
+
       // ノートテーブル
       const tbody = document.getElementById('note-tbody');
       tbody.innerHTML = '';
       notes.forEach((n, i) => {
         const tr = document.createElement('tr');
+        tr.dataset.channel = n.channel;
+        tr.dataset.index = i;
         tr.innerHTML =
           `<td>${i + 1}</td>` +
           `<td>${n.startTime.toFixed(3)}</td>` +
@@ -800,9 +1100,8 @@
         tbody.appendChild(tr);
       });
 
-      // TAB譜生成
-      const tabOutput = document.getElementById('tab-output');
-      tabOutput.textContent = generateTab(notes);
+      // TAB譜生成（デフォルト: ドラム除く）
+      updateTab('non-drum');
 
       // セクション表示
       document.getElementById('controls').style.display = 'flex';
