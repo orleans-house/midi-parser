@@ -46,6 +46,21 @@ fileInput.addEventListener('change', () => {
   if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
 });
 
+// 波形リアルタイム切替
+const waveType = document.getElementById('wave-type');
+waveType.addEventListener('change', () => {
+  const newType = waveType.value;
+  if (typeof scheduledNodes !== 'undefined') {
+    for (const osc of scheduledNodes) {
+      try {
+        osc.type = newType;
+      } catch (_) {
+        /* already stopped */
+      }
+    }
+  }
+});
+
 // ボリュームコントロール
 masterVolume.addEventListener('input', () => {
   const val = masterVolume.value;
