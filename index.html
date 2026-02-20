@@ -1148,17 +1148,15 @@
 
     // ピアノロールクリックでシーク
     document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
-      if (!currentNotes.length) { console.log('piano click: no notes'); return; }
+      if (!currentNotes.length) return;
       const canvas = e.target;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const PADDING_LEFT = 30;
       const plotW = canvas.clientWidth - PADDING_LEFT;
       const ratio = (x - PADDING_LEFT) / plotW;
-      console.log('piano click: x=', x, 'ratio=', ratio, 'plotW=', plotW);
       if (ratio < 0 || ratio > 1) return;
       const seekTime = ratio * (currentTotalDuration || 1);
-      console.log('piano seek to:', seekTime);
       stopPlayback();
       playNotesFrom(currentNotes, currentBpm, seekTime);
     });
