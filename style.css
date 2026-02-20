@@ -480,6 +480,142 @@ select {
   border: 1px solid var(--border);
 }
 
+/* ===== エフェクターモジュールグリッド ===== */
+.cable-section {
+  position: relative;
+  height: 32px;
+  margin-top: 8px;
+}
+
+.cable-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.fx-module-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.fx-module {
+  background: var(--bg-card);
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+}
+
+.fx-module-inactive {
+  opacity: 0.4;
+}
+
+.fx-module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fx-module-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.fx-module-toggle {
+  background: none;
+  border: none;
+  padding: 2px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.fx-module-toggle:hover {
+  color: var(--text-primary);
+}
+
+.fx-module-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fx-module-body {
+  margin-top: 8px;
+}
+
+.fx-mod-section {
+  margin-bottom: 6px;
+}
+
+.fx-mod-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.fx-wave-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.fx-wave-btn {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fx-wave-btn.active {
+  background: var(--accent-green);
+  color: var(--text-on-accent);
+  border-color: var(--accent-green);
+}
+
+.fx-wave-btn .wave-icon {
+  width: 18px;
+  height: 12px;
+}
+
+.fx-mod-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.fx-mod-row input[type="checkbox"] {
+  accent-color: var(--accent-green);
+}
+
+.ch-fx-slider {
+  flex: 1;
+  height: 3px;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+}
+
+.ch-fx-slider:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ch-fx-val {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  min-width: 24px;
+  text-align: right;
+}
+
 /* ===== 全画面ドラッグオーバーレイ ===== */
 #drag-overlay {
   display: none;
