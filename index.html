@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIDI Parser & TAB Generator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #00d4ff;
+      margin-bottom: 24px;
+      font-size: 1.6rem;
+    }
+
+    h2 {
+      color: #00d4ff;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    /* ドロップゾーン */
+    #drop-zone {
+      border: 2px dashed #444;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 24px;
+      background: #16213e;
+    }
+
+    #drop-zone.dragover {
+      border-color: #00d4ff;
+      background: #1a2a4a;
+    }
+
+    #drop-zone p {
+      font-size: 1rem;
+      color: #888;
+    }
+
+    #drop-zone .hint {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 8px;
+    }
+
+    #file-input { display: none; }
+
+    /* ヘッダー情報 */
+    #header-info {
+      background: #16213e;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: none;
+    }
+
+    #header-info table {
+      width: 100%;
+    }
+
+    #header-info td {
+      padding: 4px 12px;
+    }
+
+    #header-info td:first-child {
+      color: #888;
+      width: 180px;
+    }
+
+    /* コントロール */
+    #controls {
+      display: none;
+      gap: 12px;
+      margin-bottom: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: #00d4ff;
+      color: #1a1a2e;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #00b8d9; }
+    button:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+    #tempo-display, #position-display {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    /* テーブル */
+    #note-table-section {
+      display: none;
+      margin-bottom: 24px;
+    }
+
+    #note-table-wrap {
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+
+    #note-table-wrap::-webkit-scrollbar { width: 8px; }
+    #note-table-wrap::-webkit-scrollbar-track { background: #16213e; }
+    #note-table-wrap::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+    table.notes {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    table.notes th {
+      background: #0f3460;
+      color: #00d4ff;
+      padding: 8px 12px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    table.notes td {
+      padding: 6px 12px;
+      border-bottom: 1px solid #222;
+    }
+
+    table.notes tr:hover { background: #1a2a4a; }
+    table.notes tr.playing { background: #0f3460; }
+
+    /* TAB譜 */
+    #tab-section {
+      display: none;
+      margin-bottom: 24px;
+    }
+
+    #tab-output {
+      background: #0d1117;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+  <h1>MIDI Parser & TAB Generator</h1>
+
+  <div id="drop-zone">
+    <p>MIDIファイルをドラッグ&ドロップ</p>
+    <p class="hint">またはクリックしてファイルを選択</p>
+    <input type="file" id="file-input" accept=".mid,.midi">
+  </div>
+
+  <div id="header-info">
+    <h2>MIDIヘッダー</h2>
+    <table>
+      <tr><td>フォーマット</td><td id="info-format">-</td></tr>
+      <tr><td>トラック数</td><td id="info-tracks">-</td></tr>
+      <tr><td>タイムディビジョン</td><td id="info-division">-</td></tr>
+      <tr><td>テンポ</td><td id="info-tempo">-</td></tr>
+      <tr><td>ノート数</td><td id="info-notes">-</td></tr>
+    </table>
+  </div>
+
+  <div id="controls">
+    <button id="btn-play">&#9654; 再生</button>
+    <button id="btn-stop" disabled>&#9632; 停止</button>
+    <span id="tempo-display"></span>
+    <span id="position-display"></span>
+  </div>
+
+  <div id="note-table-section">
+    <h2>ノート一覧</h2>
+    <div id="note-table-wrap">
+      <table class="notes">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>時間 (s)</th>
+            <th>Ch</th>
+            <th>ノート</th>
+            <th>音名</th>
+            <th>Vel</th>
+            <th>長さ (s)</th>
+          </tr>
+        </thead>
+        <tbody id="note-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-section">
+    <h2>Guitar TAB</h2>
+    <div id="tab-output"></div>
+  </div>
+
+  <script>
+    // ============================================================
+    // MIDI バイナリパーサー
+    // ============================================================
+
+    class MidiParser {
+      constructor(buffer) {
+        this.data = new DataView(buffer);
+        this.pos = 0;
+      }
+
+      // 読み取りヘルパー
+      readUint8() { return this.data.getUint8(this.pos++); }
+      readUint16() { const v = this.data.getUint16(this.pos); this.pos += 2; return v; }
+      readUint32() { const v = this.data.getUint32(this.pos); this.pos += 4; return v; }
+      readBytes(n) {
+        const arr = new Uint8Array(this.data.buffer, this.pos, n);
+        this.pos += n;
+        return arr;
+      }
+
+      // 可変長数値
+      readVarLen() {
+        let value = 0;
+        for (let i = 0; i < 4; i++) {
+          const b = this.readUint8();
+          value = (value << 7) | (b & 0x7f);
+          if ((b & 0x80) === 0) break;
+        }
+        return value;
+      }
+
+      // チャンク識別子を文字列で読む
+      readChunkId() {
+        return String.fromCharCode(...this.readBytes(4));
+      }
+
+      parse() {
+        // ヘッダーチャンク
+        const headerId = this.readChunkId();
+        if (headerId !== 'MThd') throw new Error('MIDIファイルではありません');
+        const headerLen = this.readUint32();
+        const format = this.readUint16();
+        const numTracks = this.readUint16();
+        const timeDivision = this.readUint16();
+
+        // ティックベースの場合のデフォルトテンポ（120 BPM = 500000 μs/beat）
+        const ticksPerBeat = (timeDivision & 0x8000) === 0 ? timeDivision : 480;
+
+        const header = { format, numTracks, timeDivision, ticksPerBeat };
+        const tracks = [];
+
+        for (let t = 0; t < numTracks; t++) {
+          const trackId = this.readChunkId();
+          const trackLen = this.readUint32();
+          if (trackId !== 'MTrk') {
+            // 不明なチャンクはスキップ
+            this.pos += trackLen;
+            continue;
+          }
+          const trackEnd = this.pos + trackLen;
+          const events = [];
+          let runningStatus = 0;
+
+          while (this.pos < trackEnd) {
+            const delta = this.readVarLen();
+            let statusByte = this.data.getUint8(this.pos);
+
+            // ランニングステータス
+            if (statusByte < 0x80) {
+              statusByte = runningStatus;
+            } else {
+              this.pos++;
+              if (statusByte < 0xf0) runningStatus = statusByte;
+            }
+
+            const type = statusByte & 0xf0;
+            const channel = statusByte & 0x0f;
+
+            if (statusByte === 0xff) {
+              // メタイベント
+              const metaType = this.readUint8();
+              const len = this.readVarLen();
+              const metaData = this.readBytes(len);
+              events.push({ delta, type: 'meta', metaType, data: metaData });
+            } else if (statusByte === 0xf0 || statusByte === 0xf7) {
+              // SysExイベント
+              const len = this.readVarLen();
+              this.pos += len;
+              events.push({ delta, type: 'sysex' });
+            } else if (type === 0x90) {
+              // Note On
+              const note = this.readUint8();
+              const velocity = this.readUint8();
+              events.push({ delta, type: 'noteOn', channel, note, velocity });
+            } else if (type === 0x80) {
+              // Note Off
+              const note = this.readUint8();
+              const velocity = this.readUint8();
+              events.push({ delta, type: 'noteOff', channel, note, velocity });
+            } else if (type === 0xa0 || type === 0xb0 || type === 0xe0) {
+              // Aftertouch, CC, Pitch Bend (2バイト)
+              this.readUint8();
+              this.readUint8();
+              events.push({ delta, type: 'other' });
+            } else if (type === 0xc0 || type === 0xd0) {
+              // Program Change, Channel Pressure (1バイト)
+              this.readUint8();
+              events.push({ delta, type: 'other' });
+            } else {
+              // 未知のイベントはスキップ
+              events.push({ delta, type: 'unknown' });
+            }
+          }
+          this.pos = trackEnd;
+          tracks.push(events);
+        }
+
+        return { header, tracks };
+      }
+    }
+
+    // ============================================================
+    // MIDI データ → ノートリスト変換
+    // ============================================================
+
+    function extractNotes(parsed) {
+      const { header, tracks } = parsed;
+      const ticksPerBeat = header.ticksPerBeat;
+      let tempo = 500000; // デフォルト 120 BPM
+      const allNotes = [];
+
+      // テンポマップを構築（全トラックから収集）
+      const tempoMap = [];
+      for (const events of tracks) {
+        let tick = 0;
+        for (const e of events) {
+          tick += e.delta;
+          if (e.type === 'meta' && e.metaType === 0x51 && e.data.length === 3) {
+            const t = (e.data[0] << 16) | (e.data[1] << 8) | e.data[2];
+            tempoMap.push({ tick, tempo: t });
+          }
+        }
+      }
+      tempoMap.sort((a, b) => a.tick - b.tick);
+      if (tempoMap.length > 0) tempo = tempoMap[0].tempo;
+
+      // ティック → 秒変換
+      function tickToSec(targetTick) {
+        let currentTempo = tempoMap.length > 0 ? tempoMap[0].tempo : 500000;
+        let lastTick = 0;
+        let time = 0;
+        for (const tm of tempoMap) {
+          if (tm.tick >= targetTick) break;
+          time += ((tm.tick - lastTick) / ticksPerBeat) * (currentTempo / 1000000);
+          lastTick = tm.tick;
+          currentTempo = tm.tempo;
+        }
+        time += ((targetTick - lastTick) / ticksPerBeat) * (currentTempo / 1000000);
+        return time;
+      }
+
+      // 各トラックからノートを抽出
+      for (const events of tracks) {
+        let tick = 0;
+        const activeNotes = new Map(); // key: "ch-note"
+
+        for (const e of events) {
+          tick += e.delta;
+
+          if (e.type === 'noteOn' && e.velocity > 0) {
+            const key = `${e.channel}-${e.note}`;
+            activeNotes.set(key, { tick, channel: e.channel, note: e.note, velocity: e.velocity });
+          } else if (e.type === 'noteOff' || (e.type === 'noteOn' && e.velocity === 0)) {
+            const key = `${e.channel}-${e.note}`;
+            const start = activeNotes.get(key);
+            if (start) {
+              allNotes.push({
+                channel: start.channel,
+                note: start.note,
+                velocity: start.velocity,
+                startTick: start.tick,
+                endTick: tick,
+                startTime: tickToSec(start.tick),
+                duration: tickToSec(tick) - tickToSec(start.tick),
+              });
+              activeNotes.delete(key);
+            }
+          }
+        }
+      }
+
+      // 時間順ソート
+      allNotes.sort((a, b) => a.startTime - b.startTime || a.note - b.note);
+
+      const bpm = Math.round(60000000 / tempo);
+      return { notes: allNotes, tempo, bpm };
+    }
+
+    // ============================================================
+    // 音名変換
+    // ============================================================
+
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    function noteName(midiNote) {
+      const octave = Math.floor(midiNote / 12) - 1;
+      return NOTE_NAMES[midiNote % 12] + octave;
+    }
+
+    function midiToFreq(midiNote) {
+      return 440 * Math.pow(2, (midiNote - 69) / 12);
+    }
+
+    // ============================================================
+    // Guitar TAB 生成
+    // ============================================================
+
+    // スタンダードチューニング（6弦→1弦）
+    const STRING_TUNING = [40, 45, 50, 55, 59, 64]; // E2, A2, D3, G3, B3, E4
+    const STRING_LABELS = ['e', 'B', 'G', 'D', 'A', 'E'];
+    const MAX_FRET = 24;
+
+    function noteToTab(midiNote) {
+      // 全ての弦で弾ける可能性を計算し、最もフレットが低い（ポジションが近い）ものを選ぶ
+      let bestString = -1;
+      let bestFret = -1;
+      let bestDist = Infinity;
+
+      for (let s = 0; s < 6; s++) {
+        const fret = midiNote - STRING_TUNING[s];
+        if (fret >= 0 && fret <= MAX_FRET) {
+          if (fret < bestDist) {
+            bestDist = fret;
+            bestString = s;
+            bestFret = fret;
+          }
+        }
+      }
+      return bestString >= 0 ? { string: bestString, fret: bestFret } : null;
+    }
+
+    function generateTab(notes) {
+      if (notes.length === 0) return 'ノートがありません';
+
+      // 時間をグループ化（近い時間のノートは同時と見なす）
+      const groups = [];
+      const THRESHOLD = 0.03; // 30ms
+      let currentGroup = [];
+      let currentTime = -1;
+
+      for (const n of notes) {
+        if (currentTime < 0 || Math.abs(n.startTime - currentTime) > THRESHOLD) {
+          if (currentGroup.length > 0) groups.push(currentGroup);
+          currentGroup = [n];
+          currentTime = n.startTime;
+        } else {
+          currentGroup.push(n);
+        }
+      }
+      if (currentGroup.length > 0) groups.push(currentGroup);
+
+      // TAB譜を行に分割（1行あたりの最大グループ数）
+      const GROUPS_PER_LINE = 40;
+      const lines = [];
+
+      for (let i = 0; i < groups.length; i += GROUPS_PER_LINE) {
+        const lineGroups = groups.slice(i, i + GROUPS_PER_LINE);
+        // 6弦分の文字配列
+        const strings = Array.from({ length: 6 }, () => []);
+
+        for (const group of lineGroups) {
+          // このグループでどの弦が使われるか
+          const used = new Array(6).fill(false);
+          const frets = new Array(6).fill(-1);
+
+          for (const n of group) {
+            const tab = noteToTab(n.note);
+            if (tab && !used[tab.string]) {
+              used[tab.string] = true;
+              frets[tab.string] = tab.fret;
+            }
+          }
+
+          // 最大桁数を計算（2桁のフレットに対応）
+          let maxWidth = 1;
+          for (let s = 0; s < 6; s++) {
+            if (frets[s] >= 10) maxWidth = 2;
+          }
+
+          for (let s = 0; s < 6; s++) {
+            if (frets[s] >= 0) {
+              const fStr = String(frets[s]);
+              strings[s].push(fStr.padStart(maxWidth, '-'));
+            } else {
+              strings[s].push('-'.repeat(maxWidth));
+            }
+            strings[s].push('-');
+          }
+        }
+
+        // 表示順: 1弦(e)が上、6弦(E)が下
+        const lineText = [];
+        for (let s = 0; s < 6; s++) {
+          lineText.push(STRING_LABELS[s] + '|' + strings[s].join('') + '|');
+        }
+        lines.push(lineText.join('\n'));
+      }
+
+      return lines.join('\n\n');
+    }
+
+    // ============================================================
+    // Web Audio API 再生
+    // ============================================================
+
+    let audioCtx = null;
+    let isPlaying = false;
+    let scheduledNodes = [];
+    let animationTimer = null;
+
+    function playNotes(notes, bpm) {
+      stopPlayback();
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      isPlaying = true;
+      scheduledNodes = [];
+
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.3;
+      masterGain.connect(audioCtx.destination);
+
+      const startOffset = audioCtx.currentTime + 0.1;
+      const rows = document.querySelectorAll('#note-tbody tr');
+
+      for (let i = 0; i < notes.length; i++) {
+        const n = notes[i];
+        const freq = midiToFreq(n.note);
+        const dur = Math.max(n.duration, 0.05);
+        const t = startOffset + n.startTime;
+
+        // オシレーター
+        const osc = audioCtx.createOscillator();
+        const env = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+
+        // エンベロープ（アタック・リリース）
+        const vel = n.velocity / 127;
+        env.gain.setValueAtTime(0, t);
+        env.gain.linearRampToValueAtTime(vel * 0.5, t + 0.01);
+        env.gain.setValueAtTime(vel * 0.5, t + dur - Math.min(0.05, dur * 0.3));
+        env.gain.linearRampToValueAtTime(0, t + dur);
+
+        osc.connect(env);
+        env.connect(masterGain);
+
+        osc.start(t);
+        osc.stop(t + dur + 0.01);
+
+        scheduledNodes.push(osc);
+
+        // ハイライト用タイマー
+        const row = rows[i];
+        if (row) {
+          const delay = (t - audioCtx.currentTime) * 1000;
+          setTimeout(() => {
+            if (!isPlaying) return;
+            document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
+            row.classList.add('playing');
+            row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }, Math.max(0, delay));
+        }
+      }
+
+      // 再生終了検知
+      const totalDuration = notes.length > 0
+        ? notes[notes.length - 1].startTime + notes[notes.length - 1].duration
+        : 0;
+
+      btnPlay.disabled = true;
+      btnStop.disabled = false;
+
+      const posDisplay = document.getElementById('position-display');
+      const startReal = performance.now();
+      animationTimer = setInterval(() => {
+        const elapsed = (performance.now() - startReal) / 1000;
+        posDisplay.textContent = `${elapsed.toFixed(1)}s / ${totalDuration.toFixed(1)}s`;
+      }, 100);
+
+      setTimeout(() => {
+        if (isPlaying) stopPlayback();
+      }, (totalDuration + 0.5) * 1000);
+    }
+
+    function stopPlayback() {
+      isPlaying = false;
+      if (animationTimer) { clearInterval(animationTimer); animationTimer = null; }
+      for (const osc of scheduledNodes) {
+        try { osc.stop(); } catch {}
+      }
+      scheduledNodes = [];
+      if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
+      document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
+      btnPlay.disabled = false;
+      btnStop.disabled = true;
+      document.getElementById('position-display').textContent = '';
+    }
+
+    // ============================================================
+    // UI
+    // ============================================================
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const btnPlay = document.getElementById('btn-play');
+    const btnStop = document.getElementById('btn-stop');
+
+    let currentNotes = [];
+    let currentBpm = 120;
+
+    // ドラッグ&ドロップ
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) loadFile(e.dataTransfer.files[0]);
+    });
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
+    });
+
+    function loadFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          processMidi(e.target.result, file.name);
+        } catch (err) {
+          alert('MIDIパースエラー: ' + err.message);
+          console.error(err);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function processMidi(buffer, fileName) {
+      stopPlayback();
+
+      const parser = new MidiParser(buffer);
+      const parsed = parser.parse();
+      const { notes, tempo, bpm } = extractNotes(parsed);
+
+      currentNotes = notes;
+      currentBpm = bpm;
+
+      // ヘッダー情報表示
+      document.getElementById('info-format').textContent = `Type ${parsed.header.format}`;
+      document.getElementById('info-tracks').textContent = parsed.header.numTracks;
+      document.getElementById('info-division').textContent = parsed.header.timeDivision + ' ticks/beat';
+      document.getElementById('info-tempo').textContent = `${bpm} BPM (${tempo} μs/beat)`;
+      document.getElementById('info-notes').textContent = notes.length;
+      document.getElementById('header-info').style.display = 'block';
+
+      // テンポ表示
+      document.getElementById('tempo-display').textContent = `${bpm} BPM | ${fileName}`;
+
+      // ノートテーブル
+      const tbody = document.getElementById('note-tbody');
+      tbody.innerHTML = '';
+      notes.forEach((n, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          `<td>${i + 1}</td>` +
+          `<td>${n.startTime.toFixed(3)}</td>` +
+          `<td>${n.channel + 1}</td>` +
+          `<td>${n.note}</td>` +
+          `<td>${noteName(n.note)}</td>` +
+          `<td>${n.velocity}</td>` +
+          `<td>${n.duration.toFixed(3)}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // TAB譜生成
+      const tabOutput = document.getElementById('tab-output');
+      tabOutput.textContent = generateTab(notes);
+
+      // セクション表示
+      document.getElementById('controls').style.display = 'flex';
+      document.getElementById('note-table-section').style.display = 'block';
+      document.getElementById('tab-section').style.display = 'block';
+      btnPlay.disabled = false;
+      btnStop.disabled = true;
+    }
+
+    // 再生コントロール
+    btnPlay.addEventListener('click', () => playNotes(currentNotes, currentBpm));
+    btnStop.addEventListener('click', () => stopPlayback());
+  </script>
+</body>
+</html>
