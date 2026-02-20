@@ -67,14 +67,21 @@ h3 {
   width: 100%;
 }
 
+#file-info table {
+  table-layout: fixed;
+}
+
 #file-info td {
-  padding: 2px 0;
-  font-size: 0.8rem;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  vertical-align: top;
+  word-break: break-all;
 }
 
 #file-info td:first-child {
   color: #888;
-  width: 70px;
+  width: 65px;
+  white-space: nowrap;
 }
 
 /* 再生コントロール */
