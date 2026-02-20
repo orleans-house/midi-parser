@@ -18,8 +18,12 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   scheduledNodes = [];
 
   const masterGain = audioCtx.createGain();
-  const volumeSlider = document.getElementById('master-volume');
-  masterGain.gain.value = volumeSlider ? volumeSlider.value / 100 : 0.5;
+  const currentWave = document.getElementById('wave-type').value;
+  const waveSlider = document.querySelector(`.mixer-channel[data-wave="${currentWave}"] .mixer-vol`);
+  const masterSlider = document.getElementById('master-volume');
+  const waveVol = waveSlider ? waveSlider.value / 100 : 0.5;
+  const mVol = masterSlider ? masterSlider.value / 100 : 1.0;
+  masterGain.gain.value = waveVol * mVol;
   window._masterGain = masterGain;
 
   // マスター合成波用AnalyserNode
@@ -162,7 +166,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const osc = audioCtx.createOscillator();
       const env = audioCtx.createGain();
 
-      osc.type = document.getElementById('wave-type').value;
+      const waveType = document.getElementById('wave-type').value;
+      osc.type = waveType;
       osc.frequency.value = freq;
 
       const vel = n.velocity / 127;
