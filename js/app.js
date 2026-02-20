@@ -147,8 +147,7 @@ function processMidi(buffer, fileName) {
   document.getElementById('info-tempo').textContent = `${bpm} BPM`;
   document.getElementById('info-notes').textContent = notes.length;
 
-  // テンポ表示
-  document.getElementById('tempo-display').textContent = `${bpm} BPM | ${fileName}`;
+  // テンポ表示（不要 — ファイル情報に表示済み）
 
   // チャンネルUI構築
   buildChannelUI(currentChannels);
