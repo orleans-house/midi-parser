@@ -181,6 +181,66 @@ btnPlay.addEventListener('click', () => {
 });
 btnStop.addEventListener('click', () => stopPlayback());
 
+// FX コントロール
+const fxDistortionOn = document.getElementById('fx-distortion-on');
+const fxDistortion = document.getElementById('fx-distortion');
+const fxDistortionVal = document.getElementById('fx-distortion-val');
+const fxDelayOn = document.getElementById('fx-delay-on');
+const fxDelayTime = document.getElementById('fx-delay-time');
+const fxDelayVal = document.getElementById('fx-delay-val');
+const fxReverbOn = document.getElementById('fx-reverb-on');
+const fxReverb = document.getElementById('fx-reverb');
+const fxReverbVal = document.getElementById('fx-reverb-val');
+
+fxDistortionOn.addEventListener('change', () => {
+  fxDistortion.disabled = !fxDistortionOn.checked;
+  window._fxDistortionEnabled = fxDistortionOn.checked;
+  if (window._fxDistortion) {
+    if (fxDistortionOn.checked) {
+      updateDistortionCurve(window._fxDistortion, Number(fxDistortion.value));
+    } else {
+      window._fxDistortion.curve = null;
+    }
+  }
+});
+
+fxDistortion.addEventListener('input', () => {
+  fxDistortionVal.textContent = fxDistortion.value;
+  if (window._fxDistortion && window._fxDistortionEnabled) {
+    updateDistortionCurve(window._fxDistortion, Number(fxDistortion.value));
+  }
+});
+
+fxDelayOn.addEventListener('change', () => {
+  fxDelayTime.disabled = !fxDelayOn.checked;
+  window._fxDelayEnabled = fxDelayOn.checked;
+  if (window._fxDelayWet) {
+    window._fxDelayWet.gain.value = fxDelayOn.checked ? 0.5 : 0;
+  }
+});
+
+fxDelayTime.addEventListener('input', () => {
+  fxDelayVal.textContent = `${fxDelayTime.value}ms`;
+  if (window._fxDelay) {
+    window._fxDelay.delayTime.value = Number(fxDelayTime.value) / 1000;
+  }
+});
+
+fxReverbOn.addEventListener('change', () => {
+  fxReverb.disabled = !fxReverbOn.checked;
+  window._fxReverbEnabled = fxReverbOn.checked;
+  if (window._fxReverbWet) {
+    window._fxReverbWet.gain.value = fxReverbOn.checked ? Number(fxReverb.value) / 100 : 0;
+  }
+});
+
+fxReverb.addEventListener('input', () => {
+  fxReverbVal.textContent = fxReverb.value;
+  if (window._fxReverbWet && window._fxReverbEnabled) {
+    window._fxReverbWet.gain.value = Number(fxReverb.value) / 100;
+  }
+});
+
 // EQ スライダーイベント
 document.querySelectorAll('.eq-band').forEach((band, i) => {
   const slider = band.querySelector('.eq-slider');
