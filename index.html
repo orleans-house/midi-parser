@@ -261,11 +261,6 @@
     <span id="position-display"></span>
   </div>
 
-  <div id="seek-bar-container" style="display:none; padding: 0 20px; margin-bottom: 16px;">
-    <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1"
-      style="width:100%; accent-color:#00d4ff; cursor:pointer;">
-  </div>
-
   <!-- Piano Roll -->
   <div id="piano-roll-section" class="viz-section">
     <h2>ピアノロール</h2>
@@ -881,12 +876,6 @@
       btnStop.disabled = false;
 
       // シークバー表示・設定
-      const seekBar = document.getElementById('seek-bar');
-      const seekContainer = document.getElementById('seek-bar-container');
-      seekContainer.style.display = 'block';
-      seekBar.max = currentTotalDuration;
-      seekBar.value = seekOffset;
-
       const posDisplay = document.getElementById('position-display');
       const startReal = performance.now();
       playbackStartReal = startReal;
@@ -895,7 +884,6 @@
       animationTimer = setInterval(() => {
         const elapsed = (performance.now() - startReal) / 1000 + seekOffset;
         posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
-        if (!seekBar._dragging) seekBar.value = elapsed;
         // 可視化ヘッド更新
         updatePlayhead(elapsed);
       }, 100);
@@ -1041,18 +1029,6 @@
     // 再生コントロール
     btnPlay.addEventListener('click', () => playNotes(currentNotes, currentBpm));
     btnStop.addEventListener('click', () => stopPlayback());
-
-    // シークバー
-    const seekBar = document.getElementById('seek-bar');
-    seekBar.addEventListener('mousedown', () => { seekBar._dragging = true; });
-    seekBar.addEventListener('mouseup', () => { seekBar._dragging = false; });
-    seekBar.addEventListener('change', () => {
-      if (!currentNotes.length) return;
-      const seekTime = parseFloat(seekBar.value);
-      // 指定位置から再生し直す
-      stopPlayback();
-      playNotesFrom(currentNotes, currentBpm, seekTime);
-    });
 
     // ============================================================
     // ピアノロール描画
