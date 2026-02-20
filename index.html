@@ -105,73 +105,106 @@
     button:hover { background: #00b8d9; }
     button:disabled { background: #444; color: #888; cursor: not-allowed; }
 
+    select {
+      background: #16213e;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
     #tempo-display, #position-display {
       color: #888;
       font-size: 0.85rem;
     }
 
-    /* テーブル */
-    #note-table-section {
-      display: none;
-      margin-bottom: 24px;
+    /* チャンネルビジュアライザー */
+    #visualizer-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
     }
 
-    #note-table-wrap {
-      max-height: 400px;
-      overflow-y: auto;
+    .channel-card {
+      background: #16213e;
       border-radius: 8px;
+      padding: 10px;
       border: 1px solid #333;
     }
 
-    #note-table-wrap::-webkit-scrollbar { width: 8px; }
-    #note-table-wrap::-webkit-scrollbar-track { background: #16213e; }
-    #note-table-wrap::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
-
-    table.notes {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
+    .channel-card.channel-inactive {
+      opacity: 0.4;
     }
 
-    table.notes th {
-      background: #0f3460;
-      color: #00d4ff;
-      padding: 8px 12px;
-      text-align: left;
-      position: sticky;
-      top: 0;
-      z-index: 1;
+    .channel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
-    table.notes td {
-      padding: 6px 12px;
-      border-bottom: 1px solid #222;
-    }
-
-    table.notes tr:hover { background: #1a2a4a; }
-    table.notes tr.playing { background: #0f3460; }
-
-    /* TAB譜 */
-    #tab-section {
-      display: none;
-      margin-bottom: 24px;
-    }
-
-    #tab-output {
-      background: #0d1117;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 16px;
-      overflow-x: auto;
-      white-space: pre;
+    .channel-label {
+      font-weight: bold;
       font-size: 0.85rem;
-      line-height: 1.6;
-      color: #c9d1d9;
+      flex: 1;
     }
+
+    .btn-ch {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 0.7rem;
+      border-radius: 4px;
+      background: #2a2a4a;
+      color: #888;
+      border: 1px solid #444;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-ch:hover {
+      background: #3a3a5a;
+      color: #ccc;
+    }
+
+    .btn-mute.active {
+      background: #e03131;
+      color: #fff;
+      border-color: #e03131;
+    }
+
+    .btn-solo.active {
+      background: #f59f00;
+      color: #1a1a2e;
+      border-color: #f59f00;
+    }
+
+    /* フィルターバー */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .filter-bar label {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .filter-bar select {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+
   </style>
 </head>
 <body>
-  <h1>MIDI Parser & TAB Generator</h1>
+  <!-- <h1>MIDI Parser & TAB Generator</h1> -->
 
   <div id="drop-zone">
     <p>MIDIファイルをドラッグ&ドロップ</p>
@@ -179,7 +212,7 @@
     <input type="file" id="file-input" accept=".mid,.midi">
   </div>
 
-  <div id="header-info">
+  <div id="header-info" style="display:none;">
     <h2>MIDIヘッダー</h2>
     <table>
       <tr><td>フォーマット</td><td id="info-format">-</td></tr>
@@ -190,36 +223,27 @@
     </table>
   </div>
 
+  <div id="visualizer-section" style="display:none; margin-bottom: 20px;">
+    <!-- <h2>波形（チャンネル別）</h2> -->
+    <div id="visualizer-container"></div>
+  </div>
+
   <div id="controls">
     <button id="btn-play">&#9654; 再生</button>
     <button id="btn-stop" disabled>&#9632; 停止</button>
+    <select id="wave-type">
+      <option value="triangle">🔺 Triangle</option>
+      <option value="sine">🔵 Sine</option>
+      <option value="square">🟧 Square</option>
+      <option value="sawtooth">🔶 Sawtooth</option>
+    </select>
     <span id="tempo-display"></span>
     <span id="position-display"></span>
   </div>
 
-  <div id="note-table-section">
-    <h2>ノート一覧</h2>
-    <div id="note-table-wrap">
-      <table class="notes">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>時間 (s)</th>
-            <th>Ch</th>
-            <th>ノート</th>
-            <th>音名</th>
-            <th>Vel</th>
-            <th>長さ (s)</th>
-          </tr>
-        </thead>
-        <tbody id="note-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="tab-section">
-    <h2>Guitar TAB</h2>
-    <div id="tab-output"></div>
+  <div id="seek-bar-container" style="display:none; padding: 0 20px; margin-bottom: 16px;">
+    <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1"
+      style="width:100%; accent-color:#00d4ff; cursor:pointer;">
   </div>
 
   <script>
@@ -286,6 +310,7 @@
           const events = [];
           let runningStatus = 0;
 
+          try {
           while (this.pos < trackEnd) {
             const delta = this.readVarLen();
             let statusByte = this.data.getUint8(this.pos);
@@ -327,14 +352,22 @@
               this.readUint8();
               this.readUint8();
               events.push({ delta, type: 'other' });
-            } else if (type === 0xc0 || type === 0xd0) {
-              // Program Change, Channel Pressure (1バイト)
+            } else if (type === 0xc0) {
+              // Program Change (1バイト)
+              const program = this.readUint8();
+              events.push({ delta, type: 'programChange', channel, program });
+            } else if (type === 0xd0) {
+              // Channel Pressure (1バイト)
               this.readUint8();
               events.push({ delta, type: 'other' });
             } else {
-              // 未知のイベントはスキップ
+              // 未知のイベントはスキップ（1バイト消費して進む）
+              this.pos++;
               events.push({ delta, type: 'unknown' });
             }
+          }
+          } catch (e) {
+            console.warn(`Track ${t} parse error:`, e.message);
           }
           this.pos = trackEnd;
           tracks.push(events);
@@ -432,106 +465,207 @@
       return NOTE_NAMES[midiNote % 12] + octave;
     }
 
+    // ============================================================
+    // General MIDI 音色マップ（128種類）
+    // ============================================================
+
+    const GM_INSTRUMENTS = [
+      // Piano (0-7)
+      'Acoustic Grand Piano', 'Bright Acoustic Piano', 'Electric Grand Piano', 'Honky-tonk Piano',
+      'Electric Piano 1', 'Electric Piano 2', 'Harpsichord', 'Clavinet',
+      // Chromatic Percussion (8-15)
+      'Celesta', 'Glockenspiel', 'Music Box', 'Vibraphone',
+      'Marimba', 'Xylophone', 'Tubular Bells', 'Dulcimer',
+      // Organ (16-23)
+      'Drawbar Organ', 'Percussive Organ', 'Rock Organ', 'Church Organ',
+      'Reed Organ', 'Accordion', 'Harmonica', 'Tango Accordion',
+      // Guitar (24-31)
+      'Acoustic Guitar (nylon)', 'Acoustic Guitar (steel)', 'Electric Guitar (jazz)', 'Electric Guitar (clean)',
+      'Electric Guitar (muted)', 'Overdriven Guitar', 'Distortion Guitar', 'Guitar Harmonics',
+      // Bass (32-39)
+      'Acoustic Bass', 'Electric Bass (finger)', 'Electric Bass (pick)', 'Fretless Bass',
+      'Slap Bass 1', 'Slap Bass 2', 'Synth Bass 1', 'Synth Bass 2',
+      // Strings (40-47)
+      'Violin', 'Viola', 'Cello', 'Contrabass',
+      'Tremolo Strings', 'Pizzicato Strings', 'Orchestral Harp', 'Timpani',
+      // Ensemble (48-55)
+      'String Ensemble 1', 'String Ensemble 2', 'Synth Strings 1', 'Synth Strings 2',
+      'Choir Aahs', 'Voice Oohs', 'Synth Choir', 'Orchestra Hit',
+      // Brass (56-63)
+      'Trumpet', 'Trombone', 'Tuba', 'Muted Trumpet',
+      'French Horn', 'Brass Section', 'Synth Brass 1', 'Synth Brass 2',
+      // Reed (64-71)
+      'Soprano Sax', 'Alto Sax', 'Tenor Sax', 'Baritone Sax',
+      'Oboe', 'English Horn', 'Bassoon', 'Clarinet',
+      // Pipe (72-79)
+      'Piccolo', 'Flute', 'Recorder', 'Pan Flute',
+      'Blown Bottle', 'Shakuhachi', 'Whistle', 'Ocarina',
+      // Synth Lead (80-87)
+      'Lead 1 (square)', 'Lead 2 (sawtooth)', 'Lead 3 (calliope)', 'Lead 4 (chiff)',
+      'Lead 5 (charang)', 'Lead 6 (voice)', 'Lead 7 (fifths)', 'Lead 8 (bass + lead)',
+      // Synth Pad (88-95)
+      'Pad 1 (new age)', 'Pad 2 (warm)', 'Pad 3 (polysynth)', 'Pad 4 (choir)',
+      'Pad 5 (bowed)', 'Pad 6 (metallic)', 'Pad 7 (halo)', 'Pad 8 (sweep)',
+      // Synth Effects (96-103)
+      'FX 1 (rain)', 'FX 2 (soundtrack)', 'FX 3 (crystal)', 'FX 4 (atmosphere)',
+      'FX 5 (brightness)', 'FX 6 (goblins)', 'FX 7 (echoes)', 'FX 8 (sci-fi)',
+      // Ethnic (104-111)
+      'Sitar', 'Banjo', 'Shamisen', 'Koto',
+      'Kalimba', 'Bagpipe', 'Fiddle', 'Shanai',
+      // Percussive (112-119)
+      'Tinkle Bell', 'Agogo', 'Steel Drums', 'Woodblock',
+      'Taiko Drum', 'Melodic Tom', 'Synth Drum', 'Reverse Cymbal',
+      // Sound Effects (120-127)
+      'Guitar Fret Noise', 'Breath Noise', 'Seashore', 'Bird Tweet',
+      'Telephone Ring', 'Helicopter', 'Applause', 'Gunshot',
+    ];
+
+    function getInstrumentName(program) {
+      return GM_INSTRUMENTS[program] || `Program ${program}`;
+    }
+
+    // チャンネルごとのプログラム番号（楽器）
+    let channelPrograms = {};
+
+    function extractChannelPrograms(parsed) {
+      const programs = {};
+      for (const events of parsed.tracks) {
+        for (const e of events) {
+          if (e.type === 'programChange') {
+            programs[e.channel] = e.program;
+          }
+        }
+      }
+      return programs;
+    }
+
     function midiToFreq(midiNote) {
       return 440 * Math.pow(2, (midiNote - 69) / 12);
     }
 
     // ============================================================
-    // Guitar TAB 生成
+    // ============================================================
+    // チャンネル管理
     // ============================================================
 
-    // スタンダードチューニング（6弦→1弦）
-    const STRING_TUNING = [40, 45, 50, 55, 59, 64]; // E2, A2, D3, G3, B3, E4
-    const STRING_LABELS = ['e', 'B', 'G', 'D', 'A', 'E'];
-    const MAX_FRET = 24;
+    const CHANNEL_COLORS = [
+      '#00d4ff', '#ff6b6b', '#51cf66', '#ffd43b',
+      '#cc5de8', '#ff922b', '#20c997', '#748ffc',
+      '#f06595', '#94d82d', '#22b8cf', '#ff8787',
+      '#69db7c', '#ffa94d', '#da77f2', '#5c7cfa'
+    ];
 
-    function noteToTab(midiNote) {
-      // 全ての弦で弾ける可能性を計算し、最もフレットが低い（ポジションが近い）ものを選ぶ
-      let bestString = -1;
-      let bestFret = -1;
-      let bestDist = Infinity;
+    let channelStates = {}; // { [ch]: { muted, soloed, gainNode, analyser } }
+    let currentChannels = [];
 
-      for (let s = 0; s < 6; s++) {
-        const fret = midiNote - STRING_TUNING[s];
-        if (fret >= 0 && fret <= MAX_FRET) {
-          if (fret < bestDist) {
-            bestDist = fret;
-            bestString = s;
-            bestFret = fret;
-          }
-        }
+    function getChannelLabel(ch) {
+      const num = ch + 1;
+      if (num === 10) return 'Ch.10 (Drums)';
+      const program = channelPrograms[ch];
+      if (program !== undefined) {
+        return `Ch.${num} - ${getInstrumentName(program)}`;
       }
-      return bestString >= 0 ? { string: bestString, fret: bestFret } : null;
+      return `Ch.${num}`;
     }
 
-    function generateTab(notes) {
-      if (notes.length === 0) return 'ノートがありません';
+    function getChannelColor(ch) {
+      return CHANNEL_COLORS[ch % CHANNEL_COLORS.length];
+    }
 
-      // 時間をグループ化（近い時間のノートは同時と見なす）
-      const groups = [];
-      const THRESHOLD = 0.03; // 30ms
-      let currentGroup = [];
-      let currentTime = -1;
+    function detectChannels(notes) {
+      const channels = new Set();
+      for (const n of notes) channels.add(n.channel);
+      return [...channels].sort((a, b) => a - b);
+    }
 
-      for (const n of notes) {
-        if (currentTime < 0 || Math.abs(n.startTime - currentTime) > THRESHOLD) {
-          if (currentGroup.length > 0) groups.push(currentGroup);
-          currentGroup = [n];
-          currentTime = n.startTime;
-        } else {
-          currentGroup.push(n);
+    function buildChannelUI(channels) {
+      const container = document.getElementById('visualizer-container');
+      container.innerHTML = '';
+      channelStates = {};
+
+      // 全16チャンネル表示（0-15）
+      const allChannels = Array.from({length: 16}, (_, i) => i);
+
+      for (const ch of allChannels) {
+        const isActive = channels.includes(ch);
+        channelStates[ch] = { muted: !isActive, soloed: false, gainNode: null, analyser: null, active: isActive };
+
+        const card = document.createElement('div');
+        card.className = 'channel-card' + (isActive ? '' : ' channel-inactive');
+        card.id = `channel-card-${ch}`;
+
+        const header = document.createElement('div');
+        header.className = 'channel-header';
+
+        const label = document.createElement('span');
+        label.className = 'channel-label';
+        label.style.color = getChannelColor(ch);
+        label.textContent = getChannelLabel(ch);
+
+        const btnMute = document.createElement('button');
+        btnMute.className = 'btn-ch btn-mute';
+        btnMute.textContent = 'M';
+        btnMute.title = 'Mute';
+        btnMute.addEventListener('click', () => toggleMute(ch));
+
+        const btnSolo = document.createElement('button');
+        btnSolo.className = 'btn-ch btn-solo';
+        btnSolo.textContent = 'S';
+        btnSolo.title = 'Solo';
+        btnSolo.addEventListener('click', () => toggleSolo(ch));
+
+        header.append(label, btnMute, btnSolo);
+
+        const canvas = document.createElement('canvas');
+        canvas.id = `waveform-${ch}`;
+        canvas.height = 80;
+        canvas.style.width = '100%';
+        canvas.style.background = '#0d1117';
+        canvas.style.borderRadius = '4px';
+        canvas.style.display = 'block';
+
+        card.append(header, canvas);
+        container.appendChild(card);
+
+        // NO SIGNAL表示
+        if (!isActive) {
+          requestAnimationFrame(() => {
+            canvas.width = canvas.offsetWidth;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#0d1117';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333';
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('NO SIGNAL', canvas.width / 2, canvas.height / 2 + 4);
+          });
         }
       }
-      if (currentGroup.length > 0) groups.push(currentGroup);
+    }
 
-      // TAB譜を行に分割（1行あたりの最大グループ数）
-      const GROUPS_PER_LINE = 40;
-      const lines = [];
+    function toggleMute(ch) {
+      const state = channelStates[ch];
+      state.muted = !state.muted;
+      const btn = document.querySelector(`#channel-card-${ch} .btn-mute`);
+      btn.classList.toggle('active', state.muted);
+      updateChannelGains();
+    }
 
-      for (let i = 0; i < groups.length; i += GROUPS_PER_LINE) {
-        const lineGroups = groups.slice(i, i + GROUPS_PER_LINE);
-        // 6弦分の文字配列
-        const strings = Array.from({ length: 6 }, () => []);
+    function toggleSolo(ch) {
+      const state = channelStates[ch];
+      state.soloed = !state.soloed;
+      const btn = document.querySelector(`#channel-card-${ch} .btn-solo`);
+      btn.classList.toggle('active', state.soloed);
+      updateChannelGains();
+    }
 
-        for (const group of lineGroups) {
-          // このグループでどの弦が使われるか
-          const used = new Array(6).fill(false);
-          const frets = new Array(6).fill(-1);
-
-          for (const n of group) {
-            const tab = noteToTab(n.note);
-            if (tab && !used[tab.string]) {
-              used[tab.string] = true;
-              frets[tab.string] = tab.fret;
-            }
-          }
-
-          // 最大桁数を計算（2桁のフレットに対応）
-          let maxWidth = 1;
-          for (let s = 0; s < 6; s++) {
-            if (frets[s] >= 10) maxWidth = 2;
-          }
-
-          for (let s = 0; s < 6; s++) {
-            if (frets[s] >= 0) {
-              const fStr = String(frets[s]);
-              strings[s].push(fStr.padStart(maxWidth, '-'));
-            } else {
-              strings[s].push('-'.repeat(maxWidth));
-            }
-            strings[s].push('-');
-          }
-        }
-
-        // 表示順: 1弦(e)が上、6弦(E)が下
-        const lineText = [];
-        for (let s = 0; s < 6; s++) {
-          lineText.push(STRING_LABELS[s] + '|' + strings[s].join('') + '|');
-        }
-        lines.push(lineText.join('\n'));
+    function updateChannelGains() {
+      const anySolo = Object.values(channelStates).some(s => s.soloed);
+      for (const [ch, state] of Object.entries(channelStates)) {
+        if (!state.gainNode) continue;
+        const shouldPlay = anySolo ? (state.soloed && !state.muted) : !state.muted;
+        state.gainNode.gain.value = shouldPlay ? 1 : 0;
       }
-
-      return lines.join('\n\n');
     }
 
     // ============================================================
@@ -542,93 +676,215 @@
     let isPlaying = false;
     let scheduledNodes = [];
     let animationTimer = null;
+    let schedulerTimer = null;
 
-    function playNotes(notes, bpm) {
+    async function playNotes(notes, bpm, seekOffset = 0) {
       stopPlayback();
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
       isPlaying = true;
       scheduledNodes = [];
 
       const masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.3;
+      masterGain.gain.value = 0.5;
       masterGain.connect(audioCtx.destination);
 
-      const startOffset = audioCtx.currentTime + 0.1;
-      const rows = document.querySelectorAll('#note-tbody tr');
+      // チャンネルごとのオーディオノード作成
+      for (const ch of currentChannels) {
+        const state = channelStates[ch];
 
-      for (let i = 0; i < notes.length; i++) {
-        const n = notes[i];
-        const freq = midiToFreq(n.note);
-        const dur = Math.max(n.duration, 0.05);
-        const t = startOffset + n.startTime;
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 1;
 
-        // オシレーター
-        const osc = audioCtx.createOscillator();
-        const env = audioCtx.createGain();
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
 
-        osc.type = 'triangle';
-        osc.frequency.value = freq;
+        gainNode.connect(analyser);
+        analyser.connect(masterGain);
 
-        // エンベロープ（アタック・リリース）
-        const vel = n.velocity / 127;
-        env.gain.setValueAtTime(0, t);
-        env.gain.linearRampToValueAtTime(vel * 0.5, t + 0.01);
-        env.gain.setValueAtTime(vel * 0.5, t + dur - Math.min(0.05, dur * 0.3));
-        env.gain.linearRampToValueAtTime(0, t + dur);
+        state.gainNode = gainNode;
+        state.analyser = analyser;
 
-        osc.connect(env);
-        env.connect(masterGain);
+        // Canvasサイズ設定
+        const canvas = document.getElementById(`waveform-${ch}`);
+        if (canvas) canvas.width = canvas.offsetWidth;
+      }
 
-        osc.start(t);
-        osc.stop(t + dur + 0.01);
+      // ミュート/ソロ状態を適用
+      updateChannelGains();
 
-        scheduledNodes.push(osc);
+      // ビジュアライザー表示
+      document.getElementById('visualizer-section').style.display = 'block';
 
-        // ハイライト用タイマー
-        const row = rows[i];
-        if (row) {
-          const delay = (t - audioCtx.currentTime) * 1000;
-          setTimeout(() => {
-            if (!isPlaying) return;
-            document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
-            row.classList.add('playing');
-            row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          }, Math.max(0, delay));
+      // 波形描画ループ
+      function drawWaveforms() {
+        if (!isPlaying) {
+          for (const ch of currentChannels) {
+            const canvas = document.getElementById(`waveform-${ch}`);
+            if (canvas) {
+              const ctx = canvas.getContext('2d');
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+          }
+          return;
+        }
+        requestAnimationFrame(drawWaveforms);
+
+        for (const ch of currentChannels) {
+          const state = channelStates[ch];
+          if (!state.analyser) continue;
+
+          const canvas = document.getElementById(`waveform-${ch}`);
+          if (!canvas) continue;
+
+          const ctx = canvas.getContext('2d');
+          const analyser = state.analyser;
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+          analyser.getByteTimeDomainData(dataArray);
+
+          ctx.fillStyle = '#0d1117';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = getChannelColor(ch);
+          ctx.beginPath();
+
+          const sliceWidth = canvas.width / bufferLength;
+          let x = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128.0;
+            const y = (v * canvas.height) / 2;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+            x += sliceWidth;
+          }
+          ctx.lineTo(canvas.width, canvas.height / 2);
+          ctx.stroke();
         }
       }
+      drawWaveforms();
+
+      const startOffset = audioCtx.currentTime + 0.1;
+
+      // AudioContext時間ベースの先読みスケジューラ
+      const LOOK_AHEAD = 15;
+      const CHECK_INTERVAL = 200;
+      let chunkIndex = 0;
+
+      function scheduler() {
+        if (!isPlaying || !audioCtx) return;
+        const horizon = audioCtx.currentTime + LOOK_AHEAD;
+
+        while (chunkIndex < notes.length) {
+          const t = startOffset + notes[chunkIndex].startTime;
+          if (t > horizon) break;
+
+          const n = notes[chunkIndex];
+          const freq = midiToFreq(n.note);
+          const dur = Math.max(n.duration, 0.05);
+
+          const osc = audioCtx.createOscillator();
+          const env = audioCtx.createGain();
+
+          osc.type = document.getElementById('wave-type').value;
+          osc.frequency.value = freq;
+
+          const vel = n.velocity / 127;
+          env.gain.setValueAtTime(0, t);
+          env.gain.linearRampToValueAtTime(vel * 0.15, t + 0.01);
+          env.gain.setValueAtTime(vel * 0.15, t + dur - Math.min(0.05, dur * 0.3));
+          env.gain.linearRampToValueAtTime(0, t + dur);
+
+          osc.connect(env);
+
+          // チャンネル別ゲインノードにルーティング
+          const chState = channelStates[n.channel];
+          if (chState && chState.gainNode) {
+            env.connect(chState.gainNode);
+          } else {
+            env.connect(masterGain);
+          }
+
+          osc.start(t);
+          osc.stop(t + dur + 0.01);
+
+          scheduledNodes.push(osc);
+          chunkIndex++;
+        }
+
+        if (chunkIndex < notes.length && isPlaying) {
+          schedulerTimer = setTimeout(scheduler, CHECK_INTERVAL);
+        }
+      }
+
+      scheduler();
 
       // 再生終了検知
       const totalDuration = notes.length > 0
         ? notes[notes.length - 1].startTime + notes[notes.length - 1].duration
         : 0;
 
+      if (seekOffset === 0) currentTotalDuration = totalDuration;
+
       btnPlay.disabled = true;
       btnStop.disabled = false;
 
+      // シークバー表示・設定
+      const seekBar = document.getElementById('seek-bar');
+      const seekContainer = document.getElementById('seek-bar-container');
+      seekContainer.style.display = 'block';
+      seekBar.max = currentTotalDuration;
+      seekBar.value = seekOffset;
+
       const posDisplay = document.getElementById('position-display');
       const startReal = performance.now();
+      playbackStartReal = startReal;
+      playbackStartOffset = seekOffset;
+
       animationTimer = setInterval(() => {
-        const elapsed = (performance.now() - startReal) / 1000;
-        posDisplay.textContent = `${elapsed.toFixed(1)}s / ${totalDuration.toFixed(1)}s`;
+        const elapsed = (performance.now() - startReal) / 1000 + seekOffset;
+        posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
+        if (!seekBar._dragging) seekBar.value = elapsed;
       }, 100);
 
+      const remainingDuration = seekOffset > 0 ? totalDuration : totalDuration;
       setTimeout(() => {
         if (isPlaying) stopPlayback();
-      }, (totalDuration + 0.5) * 1000);
+      }, (remainingDuration + 0.5) * 1000);
     }
 
     function stopPlayback() {
       isPlaying = false;
+      if (schedulerTimer) { clearTimeout(schedulerTimer); schedulerTimer = null; }
       if (animationTimer) { clearInterval(animationTimer); animationTimer = null; }
       for (const osc of scheduledNodes) {
         try { osc.stop(); } catch {}
       }
       scheduledNodes = [];
+      // チャンネルオーディオノードのクリーンアップ
+      for (const ch of Object.keys(channelStates)) {
+        channelStates[ch].gainNode = null;
+        channelStates[ch].analyser = null;
+      }
       if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
-      document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
       btnPlay.disabled = false;
       btnStop.disabled = true;
       document.getElementById('position-display').textContent = '';
+    }
+
+    function playNotesFrom(notes, bpm, fromTime) {
+      // fromTime以降のノートだけをオフセットして再生（元インデックス保持）
+      const offsetNotes = notes
+        .filter(n => (n.startTime + n.duration) > fromTime)
+        .map(n => ({
+          ...n,
+          startTime: Math.max(0, n.startTime - fromTime),
+          duration: n.startTime < fromTime ? n.duration - (fromTime - n.startTime) : n.duration
+        }));
+      playNotes(offsetNotes, bpm, fromTime);
     }
 
     // ============================================================
@@ -642,6 +898,9 @@
 
     let currentNotes = [];
     let currentBpm = 120;
+    let currentTotalDuration = 0;
+    let playbackStartReal = 0;
+    let playbackStartOffset = 0;
 
     // ドラッグ&ドロップ
     dropZone.addEventListener('dragover', (e) => {
@@ -682,41 +941,29 @@
       currentNotes = notes;
       currentBpm = bpm;
 
+      // チャンネルごとの楽器情報を抽出
+      channelPrograms = extractChannelPrograms(parsed);
+
+      // チャンネル検出
+      currentChannels = detectChannels(notes);
+
       // ヘッダー情報表示
       document.getElementById('info-format').textContent = `Type ${parsed.header.format}`;
       document.getElementById('info-tracks').textContent = parsed.header.numTracks;
       document.getElementById('info-division').textContent = parsed.header.timeDivision + ' ticks/beat';
       document.getElementById('info-tempo').textContent = `${bpm} BPM (${tempo} μs/beat)`;
       document.getElementById('info-notes').textContent = notes.length;
-      document.getElementById('header-info').style.display = 'block';
+      // document.getElementById('header-info').style.display = 'block';
 
       // テンポ表示
       document.getElementById('tempo-display').textContent = `${bpm} BPM | ${fileName}`;
 
-      // ノートテーブル
-      const tbody = document.getElementById('note-tbody');
-      tbody.innerHTML = '';
-      notes.forEach((n, i) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          `<td>${i + 1}</td>` +
-          `<td>${n.startTime.toFixed(3)}</td>` +
-          `<td>${n.channel + 1}</td>` +
-          `<td>${n.note}</td>` +
-          `<td>${noteName(n.note)}</td>` +
-          `<td>${n.velocity}</td>` +
-          `<td>${n.duration.toFixed(3)}</td>`;
-        tbody.appendChild(tr);
-      });
-
-      // TAB譜生成
-      const tabOutput = document.getElementById('tab-output');
-      tabOutput.textContent = generateTab(notes);
+      // チャンネルUI構築
+      buildChannelUI(currentChannels);
+      document.getElementById('visualizer-section').style.display = 'block';
 
       // セクション表示
       document.getElementById('controls').style.display = 'flex';
-      document.getElementById('note-table-section').style.display = 'block';
-      document.getElementById('tab-section').style.display = 'block';
       btnPlay.disabled = false;
       btnStop.disabled = true;
     }
@@ -724,6 +971,18 @@
     // 再生コントロール
     btnPlay.addEventListener('click', () => playNotes(currentNotes, currentBpm));
     btnStop.addEventListener('click', () => stopPlayback());
+
+    // シークバー
+    const seekBar = document.getElementById('seek-bar');
+    seekBar.addEventListener('mousedown', () => { seekBar._dragging = true; });
+    seekBar.addEventListener('mouseup', () => { seekBar._dragging = false; });
+    seekBar.addEventListener('change', () => {
+      if (!currentNotes.length) return;
+      const seekTime = parseFloat(seekBar.value);
+      // 指定位置から再生し直す
+      stopPlayback();
+      playNotesFrom(currentNotes, currentBpm, seekTime);
+    });
   </script>
 </body>
 </html>
