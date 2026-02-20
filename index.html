@@ -1019,14 +1019,23 @@
       btnPlay.disabled = false;
       btnStop.disabled = true;
 
-      // 可視化描画
-      drawPianoRoll();
-      drawDensityGraph();
-      drawDonutChart();
-      drawVelocityHistogram();
+      // 全体の長さを事前計算
+      currentTotalDuration = notes.length > 0
+        ? Math.max(...notes.map(n => n.startTime + n.duration))
+        : 0;
+
+      // 可視化セクションを先に表示（Canvas描画にclientWidth必要）
       document.getElementById('piano-roll-section').style.display = 'block';
       document.getElementById('density-section').style.display = 'block';
       document.getElementById('charts-row').style.display = 'flex';
+
+      // 描画（表示後に実行）
+      requestAnimationFrame(() => {
+        drawPianoRoll();
+        drawDensityGraph();
+        drawDonutChart();
+        drawVelocityHistogram();
+      });
     }
 
     // 再生コントロール
