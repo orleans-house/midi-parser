@@ -1,0 +1,25 @@
+{
+  "name": "midi-parser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "fix": "biome check --fix ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orleans-house/midi-parser.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/orleans-house/midi-parser/issues"
+  },
+  "homepage": "https://github.com/orleans-house/midi-parser#readme",
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.3"
+  }
+}

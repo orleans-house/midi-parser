@@ -4,12 +4,23 @@
 // ============================================================
 
 const CHANNEL_COLORS = [
-  '#00d4ff', '#ff6b6b', '#51cf66', '#ffd43b',
-  '#cc5de8', '#ff922b', '#20c997', '#748ffc',
-  '#f06595', '#94d82d', '#22b8cf', '#ff8787',
-  '#69db7c', '#ffa94d', '#da77f2', '#5c7cfa'
+  '#00d4ff',
+  '#ff6b6b',
+  '#51cf66',
+  '#ffd43b',
+  '#cc5de8',
+  '#ff922b',
+  '#20c997',
+  '#748ffc',
+  '#f06595',
+  '#94d82d',
+  '#22b8cf',
+  '#ff8787',
+  '#69db7c',
+  '#ffa94d',
+  '#da77f2',
+  '#5c7cfa',
 ];
-
 
 function getChannelLabel(ch) {
   const num = ch + 1;
@@ -57,14 +68,14 @@ function buildChannelUI(channels) {
   container.appendChild(masterCard);
 
   // 全16チャンネル表示（0-15）
-  const allChannels = Array.from({length: 16}, (_, i) => i);
+  const allChannels = Array.from({ length: 16 }, (_, i) => i);
 
   for (const ch of allChannels) {
     const isActive = channels.includes(ch);
     channelStates[ch] = { muted: !isActive, soloed: false, gainNode: null, analyser: null, active: isActive };
 
     const card = document.createElement('div');
-    card.className = 'channel-card' + (isActive ? '' : ' channel-inactive');
+    card.className = `channel-card${isActive ? '' : ' channel-inactive'}`;
     card.id = `channel-card-${ch}`;
 
     const header = document.createElement('div');
@@ -133,11 +144,10 @@ function toggleSolo(ch) {
 }
 
 function updateChannelGains() {
-  const anySolo = Object.values(channelStates).some(s => s.soloed);
+  const anySolo = Object.values(channelStates).some((s) => s.soloed);
   for (const [ch, state] of Object.entries(channelStates)) {
     if (!state.gainNode) continue;
-    const shouldPlay = anySolo ? (state.soloed && !state.muted) : !state.muted;
+    const shouldPlay = anySolo ? state.soloed && !state.muted : !state.muted;
     state.gainNode.gain.value = shouldPlay ? 1 : 0;
   }
 }
-

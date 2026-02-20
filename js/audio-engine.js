@@ -59,7 +59,10 @@ async function playNotes(notes, bpm, seekOffset = 0) {
     if (!isPlaying) {
       // マスタークリア
       const mc = document.getElementById('waveform-master');
-      if (mc) { const mctx = mc.getContext('2d'); mctx.clearRect(0, 0, mc.width, mc.height); }
+      if (mc) {
+        const mctx = mc.getContext('2d');
+        mctx.clearRect(0, 0, mc.width, mc.height);
+      }
       for (const ch of currentChannels) {
         const canvas = document.getElementById(`waveform-${ch}`);
         if (canvas) {
@@ -91,7 +94,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
         for (let i = 0; i < bufLen; i++) {
           const v = data[i] / 128.0;
           const y = (v * mc.height) / 2;
-          if (i === 0) mctx.moveTo(mx, y); else mctx.lineTo(mx, y);
+          if (i === 0) mctx.moveTo(mx, y);
+          else mctx.lineTo(mx, y);
           mx += sw;
         }
         mctx.lineTo(mc.width, mc.height / 2);
@@ -169,7 +173,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
       // チャンネル別ゲインノードにルーティング
       const chState = channelStates[n.channel];
-      if (chState && chState.gainNode) {
+      if (chState?.gainNode) {
         env.connect(chState.gainNode);
       } else {
         env.connect(masterGain);
@@ -190,9 +194,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   scheduler();
 
   // 再生終了検知
-  const totalDuration = notes.length > 0
-    ? Math.max(...notes.map(n => n.startTime + n.duration))
-    : 0;
+  const totalDuration = notes.length > 0 ? Math.max(...notes.map((n) => n.startTime + n.duration)) : 0;
 
   if (seekOffset === 0) currentTotalDuration = totalDuration;
 
@@ -212,20 +214,34 @@ async function playNotes(notes, bpm, seekOffset = 0) {
     updatePlayhead(elapsed);
   }, 100);
 
-  stopTimerId = setTimeout(() => {
-    if (isPlaying) stopPlayback();
-  }, (totalDuration + 1.0) * 1000);
+  stopTimerId = setTimeout(
+    () => {
+      if (isPlaying) stopPlayback();
+    },
+    (totalDuration + 1.0) * 1000,
+  );
 }
 
 let stopTimerId = null;
 
 function stopPlayback() {
   isPlaying = false;
-  if (stopTimerId) { clearTimeout(stopTimerId); stopTimerId = null; }
-  if (schedulerTimer) { clearTimeout(schedulerTimer); schedulerTimer = null; }
-  if (animationTimer) { clearInterval(animationTimer); animationTimer = null; }
+  if (stopTimerId) {
+    clearTimeout(stopTimerId);
+    stopTimerId = null;
+  }
+  if (schedulerTimer) {
+    clearTimeout(schedulerTimer);
+    schedulerTimer = null;
+  }
+  if (animationTimer) {
+    clearInterval(animationTimer);
+    animationTimer = null;
+  }
   for (const osc of scheduledNodes) {
-    try { osc.stop(); } catch {}
+    try {
+      osc.stop();
+    } catch {}
   }
   scheduledNodes = [];
   // チャンネルオーディオノードのクリーンアップ
@@ -233,7 +249,10 @@ function stopPlayback() {
     channelStates[ch].gainNode = null;
     channelStates[ch].analyser = null;
   }
-  if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
+  if (audioCtx) {
+    audioCtx.close().catch(() => {});
+    audioCtx = null;
+  }
   btnPlay.disabled = false;
   btnStop.disabled = true;
   document.getElementById('position-display').textContent = '';
@@ -242,12 +261,11 @@ function stopPlayback() {
 function playNotesFrom(notes, bpm, fromTime) {
   // fromTime以降のノートだけをオフセットして再生（元インデックス保持）
   const offsetNotes = notes
-    .filter(n => (n.startTime + n.duration) > fromTime)
-    .map(n => ({
+    .filter((n) => n.startTime + n.duration > fromTime)
+    .map((n) => ({
       ...n,
       startTime: Math.max(0, n.startTime - fromTime),
-      duration: n.startTime < fromTime ? n.duration - (fromTime - n.startTime) : n.duration
+      duration: n.startTime < fromTime ? n.duration - (fromTime - n.startTime) : n.duration,
     }));
   playNotes(offsetNotes, bpm, fromTime);
 }
-
