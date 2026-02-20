@@ -178,7 +178,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const waveGain = WAVE_GAIN_COMPENSATION[waveType] || 1.0;
       env.gain.setValueAtTime(0, t);
       env.gain.linearRampToValueAtTime(vel * 0.15 * waveGain, t + 0.01);
-      env.gain.setValueAtTime(vel * 0.15, t + dur - Math.min(0.05, dur * 0.3));
+      env.gain.setValueAtTime(vel * 0.15 * waveGain, t + dur - Math.min(0.05, dur * 0.3));
       env.gain.linearRampToValueAtTime(0, t + dur);
 
       osc.connect(env);
