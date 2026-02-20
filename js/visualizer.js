@@ -146,11 +146,15 @@ function buildFxModules(allChannels, activeChannels) {
   }
   fxContainer.innerHTML = '';
 
-  // ケーブル接続SVG
-  const cableSection = document.createElement('div');
-  cableSection.id = 'cable-section';
-  cableSection.className = 'cable-section';
-  fxContainer.before(cableSection);
+  // ケーブル接続SVG（既存を再利用 or 新規作成）
+  let cableSection = document.getElementById('cable-section');
+  if (!cableSection) {
+    cableSection = document.createElement('div');
+    cableSection.id = 'cable-section';
+    cableSection.className = 'cable-section';
+    fxContainer.before(cableSection);
+  }
+  cableSection.innerHTML = '';
 
   for (const ch of allChannels) {
     const isActive = activeChannels.includes(ch);

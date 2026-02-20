@@ -62,8 +62,8 @@ function setActiveWave(newWave) {
     for (const osc of scheduledNodes) {
       try {
         const chFx = getChannelFx(osc._channel);
-        // チャンネル別FXモジュールで明示的に変更されていなければグローバルに従う
-        if (!channelFxState[osc._channel]) {
+        // チャンネル別で明示的に変更されていなければグローバルに従う
+        if (!chFx.customWave) {
           osc.type = newWave;
         }
       } catch (_) {
@@ -277,6 +277,7 @@ document.addEventListener('click', (e) => {
     const wave = waveBtn.dataset.wave;
     const chFx = getChannelFx(ch);
     chFx.waveType = wave;
+    chFx.customWave = true;
 
     // ボタンのactive状態を更新
     const container = waveBtn.closest('.fx-wave-btns');

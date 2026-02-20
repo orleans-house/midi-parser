@@ -271,7 +271,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const env = audioCtx.createGain();
 
       const chFx = getChannelFx(n.channel);
-      const waveType = chFx.waveType || document.getElementById('wave-type').value;
+      const waveType = chFx.customWave ? chFx.waveType : document.getElementById('wave-type').value;
       osc.type = waveType;
       osc.frequency.value = freq;
 
