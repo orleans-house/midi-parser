@@ -232,7 +232,6 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
 let stopTimerId = null;
 let isPaused = false;
-let pausedAt = 0;
 
 let pauseDuration = 0;
 let pauseStartTime = 0;
