@@ -30,8 +30,6 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   // EQ フィルターチェーン
   const eqBands = document.querySelectorAll('.eq-band');
   const eqFilters = [];
-  const EQ_TYPES = { 0: 'lowshelf', last: 'highshelf' };
-
   eqBands.forEach((band, i) => {
     const freq = Number(band.dataset.freq);
     const filter = audioCtx.createBiquadFilter();
