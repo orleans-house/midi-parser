@@ -2,6 +2,35 @@
 // Web Audio API 再生
 // ============================================================
 
+// ディストーションカーブ生成
+function makeDistortionCurve(amount) {
+  const samples = 44100;
+  const curve = new Float32Array(samples);
+  const k = amount;
+  for (let i = 0; i < samples; i++) {
+    const x = (i * 2) / samples - 1;
+    curve[i] = ((3 + k) * x * 20 * (Math.PI / 180)) / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
+function updateDistortionCurve(node, value) {
+  node.curve = value > 0 ? makeDistortionCurve(value) : null;
+}
+
+// リバーブIR生成
+function createReverbIR(ctx, duration, decay) {
+  const length = ctx.sampleRate * duration;
+  const ir = ctx.createBuffer(2, length, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = ir.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** decay;
+    }
+  }
+  return ir;
+}
+
 let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
@@ -47,10 +76,57 @@ async function playNotes(notes, bpm, seekOffset = 0) {
     prevNode = filter;
   }
 
+  // Distortion (WaveShaperNode)
+  const distortion = audioCtx.createWaveShaper();
+  distortion.oversample = '4x';
+  window._fxDistortion = distortion;
+  window._fxDistortionEnabled = document.getElementById('fx-distortion-on').checked;
+  if (window._fxDistortionEnabled) {
+    updateDistortionCurve(distortion, Number(document.getElementById('fx-distortion').value));
+  }
+
+  // Delay (DelayNode + feedback)
+  const delay = audioCtx.createDelay(1.0);
+  delay.delayTime.value = Number(document.getElementById('fx-delay-time').value) / 1000;
+  const delayFeedback = audioCtx.createGain();
+  delayFeedback.gain.value = 0.3;
+  const delayWet = audioCtx.createGain();
+  delayWet.gain.value = 0;
+  delay.connect(delayFeedback);
+  delayFeedback.connect(delay);
+  delay.connect(delayWet);
+  window._fxDelay = delay;
+  window._fxDelayFeedback = delayFeedback;
+  window._fxDelayWet = delayWet;
+  window._fxDelayEnabled = document.getElementById('fx-delay-on').checked;
+  if (window._fxDelayEnabled) delayWet.gain.value = 0.5;
+
+  // Reverb (ConvolverNode)
+  const reverbWet = audioCtx.createGain();
+  reverbWet.gain.value = 0;
+  const convolver = audioCtx.createConvolver();
+  convolver.buffer = createReverbIR(audioCtx, 2, 2);
+  convolver.connect(reverbWet);
+  window._fxConvolver = convolver;
+  window._fxReverbWet = reverbWet;
+  window._fxReverbEnabled = document.getElementById('fx-reverb-on').checked;
+  if (window._fxReverbEnabled) {
+    reverbWet.gain.value = Number(document.getElementById('fx-reverb').value) / 100;
+  }
+
+  // Chain: EQ → distortion → analyser → destination
+  //                        → delay → delayWet → destination
+  //                        → convolver → reverbWet → destination
+  prevNode.connect(distortion);
+  distortion.connect(delay);
+
   const masterAnalyser = audioCtx.createAnalyser();
   masterAnalyser.fftSize = 2048;
-  prevNode.connect(masterAnalyser);
+  distortion.connect(masterAnalyser);
   masterAnalyser.connect(audioCtx.destination);
+  delayWet.connect(audioCtx.destination);
+  prevNode.connect(convolver);
+  reverbWet.connect(audioCtx.destination);
   window._eqFilters = eqFilters;
   window._masterAnalyser = masterAnalyser;
 

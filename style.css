@@ -315,6 +315,53 @@ h3 svg,
   font-size: 0.65rem;
 }
 
+/* ===== エフェクト ===== */
+#fx-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.fx-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fx-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  min-width: 80px;
+  cursor: pointer;
+}
+
+.fx-toggle input[type="checkbox"] {
+  accent-color: var(--accent-green);
+}
+
+.fx-slider {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+}
+
+.fx-slider:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.fx-val {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  min-width: 36px;
+  text-align: right;
+}
+
 /* ===== ボタン共通 ===== */
 button {
   background: var(--accent-purple);
