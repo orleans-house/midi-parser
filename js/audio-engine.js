@@ -120,13 +120,20 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   prevNode.connect(distortion);
   distortion.connect(delay);
 
+  // FX Master Trim (最終段ゲイン)
+  const fxTrim = audioCtx.createGain();
+  const fxTrimSlider = document.getElementById('fx-trim');
+  fxTrim.gain.value = fxTrimSlider ? Number(fxTrimSlider.value) / 100 : 1;
+  window._fxTrim = fxTrim;
+
   const masterAnalyser = audioCtx.createAnalyser();
   masterAnalyser.fftSize = 2048;
-  distortion.connect(masterAnalyser);
-  masterAnalyser.connect(audioCtx.destination);
-  delayWet.connect(audioCtx.destination);
+  distortion.connect(fxTrim);
+  delayWet.connect(fxTrim);
   prevNode.connect(convolver);
-  reverbWet.connect(audioCtx.destination);
+  reverbWet.connect(fxTrim);
+  fxTrim.connect(masterAnalyser);
+  masterAnalyser.connect(audioCtx.destination);
   window._eqFilters = eqFilters;
   window._masterAnalyser = masterAnalyser;
 
