@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "biome check .",
     "format": "biome format --write .",
-    "fix": "biome check --fix ."
+    "fix": "biome check --fix .",
+    "test": "npx playwright test",
+    "test:e2e": "npx playwright test"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,7 @@
   },
   "homepage": "https://github.com/orleans-house/midi-parser#readme",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.3"
+    "@biomejs/biome": "^2.4.3",
+    "@playwright/test": "^1.58.2"
   }
 }
