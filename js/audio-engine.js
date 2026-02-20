@@ -18,7 +18,9 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   scheduledNodes = [];
 
   const masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.5;
+  const volumeSlider = document.getElementById('master-volume');
+  masterGain.gain.value = volumeSlider ? volumeSlider.value / 100 : 0.5;
+  window._masterGain = masterGain;
 
   // マスター合成波用AnalyserNode
   const masterAnalyser = audioCtx.createAnalyser();
