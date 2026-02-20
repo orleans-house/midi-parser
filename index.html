@@ -1135,10 +1135,10 @@
     function playNotesFrom(notes, bpm, fromTime) {
       // fromTime以降のノートだけをオフセットして再生（元インデックス保持）
       const offsetNotes = notes
+        .map((n, idx) => ({ ...n, _origIndex: idx }))
         .filter(n => (n.startTime + n.duration) > fromTime)
-        .map((n, _, __, idx = notes.indexOf(n)) => ({
+        .map(n => ({
           ...n,
-          _origIndex: idx,
           startTime: Math.max(0, n.startTime - fromTime),
           duration: n.startTime < fromTime ? n.duration - (fromTime - n.startTime) : n.duration
         }));
