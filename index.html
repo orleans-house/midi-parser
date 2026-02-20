@@ -201,64 +201,6 @@
       font-size: 0.85rem;
     }
 
-    /* テーブル */
-    #note-table-section {
-      display: none;
-      margin-bottom: 24px;
-    }
-
-    #note-table-wrap {
-      max-height: 400px;
-      overflow-y: auto;
-      border-radius: 8px;
-      border: 1px solid #333;
-    }
-
-    #note-table-wrap::-webkit-scrollbar { width: 8px; }
-    #note-table-wrap::-webkit-scrollbar-track { background: #16213e; }
-    #note-table-wrap::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
-
-    table.notes {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-
-    table.notes th {
-      background: #0f3460;
-      color: #00d4ff;
-      padding: 8px 12px;
-      text-align: left;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    table.notes td {
-      padding: 6px 12px;
-      border-bottom: 1px solid #222;
-    }
-
-    table.notes tr:hover { background: #1a2a4a; }
-    table.notes tr.playing { background: #0f3460; }
-
-    /* TAB譜 */
-    #tab-section {
-      display: none;
-      margin-bottom: 24px;
-    }
-
-    #tab-output {
-      background: #0d1117;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 16px;
-      overflow-x: auto;
-      white-space: pre;
-      font-size: 0.85rem;
-      line-height: 1.6;
-      color: #c9d1d9;
-    }
   </style>
 </head>
 <body>
@@ -302,44 +244,6 @@
   <div id="seek-bar-container" style="display:none; padding: 0 20px; margin-bottom: 16px;">
     <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1"
       style="width:100%; accent-color:#00d4ff; cursor:pointer;">
-  </div>
-
-  <div id="note-table-section" style="display:none !important;">
-    <h2>ノート一覧</h2>
-    <div class="filter-bar">
-      <label for="note-channel-filter">チャンネル:</label>
-      <select id="note-channel-filter">
-        <option value="all">全て</option>
-      </select>
-    </div>
-    <div id="note-table-wrap">
-      <table class="notes">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>時間 (s)</th>
-            <th>Ch</th>
-            <th>楽器</th>
-            <th>ノート</th>
-            <th>音名</th>
-            <th>Vel</th>
-            <th>長さ (s)</th>
-          </tr>
-        </thead>
-        <tbody id="note-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="tab-section" style="display:none !important;">
-    <h2>Guitar TAB</h2>
-    <div class="filter-bar">
-      <label for="tab-channel-select">対象チャンネル:</label>
-      <select id="tab-channel-select">
-        <option value="non-drum">全て（ドラム除く）</option>
-      </select>
-    </div>
-    <div id="tab-output"></div>
   </div>
 
   <script>
@@ -640,103 +544,6 @@
     }
 
     // ============================================================
-    // Guitar TAB 生成
-    // ============================================================
-
-    // スタンダードチューニング（6弦→1弦）
-    const STRING_TUNING = [40, 45, 50, 55, 59, 64]; // E2, A2, D3, G3, B3, E4
-    const STRING_LABELS = ['e', 'B', 'G', 'D', 'A', 'E'];
-    const MAX_FRET = 24;
-
-    function noteToTab(midiNote) {
-      // 全ての弦で弾ける可能性を計算し、最もフレットが低い（ポジションが近い）ものを選ぶ
-      let bestString = -1;
-      let bestFret = -1;
-      let bestDist = Infinity;
-
-      for (let s = 0; s < 6; s++) {
-        const fret = midiNote - STRING_TUNING[s];
-        if (fret >= 0 && fret <= MAX_FRET) {
-          if (fret < bestDist) {
-            bestDist = fret;
-            bestString = s;
-            bestFret = fret;
-          }
-        }
-      }
-      return bestString >= 0 ? { string: bestString, fret: bestFret } : null;
-    }
-
-    function generateTab(notes) {
-      if (notes.length === 0) return 'ノートがありません';
-
-      // 時間をグループ化（近い時間のノートは同時と見なす）
-      const groups = [];
-      const THRESHOLD = 0.03; // 30ms
-      let currentGroup = [];
-      let currentTime = -1;
-
-      for (const n of notes) {
-        if (currentTime < 0 || Math.abs(n.startTime - currentTime) > THRESHOLD) {
-          if (currentGroup.length > 0) groups.push(currentGroup);
-          currentGroup = [n];
-          currentTime = n.startTime;
-        } else {
-          currentGroup.push(n);
-        }
-      }
-      if (currentGroup.length > 0) groups.push(currentGroup);
-
-      // TAB譜を行に分割（1行あたりの最大グループ数）
-      const GROUPS_PER_LINE = 40;
-      const lines = [];
-
-      for (let i = 0; i < groups.length; i += GROUPS_PER_LINE) {
-        const lineGroups = groups.slice(i, i + GROUPS_PER_LINE);
-        // 6弦分の文字配列
-        const strings = Array.from({ length: 6 }, () => []);
-
-        for (const group of lineGroups) {
-          // このグループでどの弦が使われるか
-          const used = new Array(6).fill(false);
-          const frets = new Array(6).fill(-1);
-
-          for (const n of group) {
-            const tab = noteToTab(n.note);
-            if (tab && !used[tab.string]) {
-              used[tab.string] = true;
-              frets[tab.string] = tab.fret;
-            }
-          }
-
-          // 最大桁数を計算（2桁のフレットに対応）
-          let maxWidth = 1;
-          for (let s = 0; s < 6; s++) {
-            if (frets[s] >= 10) maxWidth = 2;
-          }
-
-          for (let s = 0; s < 6; s++) {
-            if (frets[s] >= 0) {
-              const fStr = String(frets[s]);
-              strings[s].push(fStr.padStart(maxWidth, '-'));
-            } else {
-              strings[s].push('-'.repeat(maxWidth));
-            }
-            strings[s].push('-');
-          }
-        }
-
-        // 表示順: 1弦(e)が上、6弦(E)が下
-        const lineText = [];
-        for (let s = 0; s < 6; s++) {
-          lineText.push(STRING_LABELS[s] + '|' + strings[s].join('') + '|');
-        }
-        lines.push(lineText.join('\n'));
-      }
-
-      return lines.join('\n\n');
-    }
-
     // ============================================================
     // チャンネル管理
     // ============================================================
@@ -859,53 +666,6 @@
         const shouldPlay = anySolo ? (state.soloed && !state.muted) : !state.muted;
         state.gainNode.gain.value = shouldPlay ? 1 : 0;
       }
-    }
-
-    function populateChannelFilter(channels) {
-      // ノートテーブルフィルター
-      const noteFilter = document.getElementById('note-channel-filter');
-      noteFilter.innerHTML = '<option value="all">全て</option>';
-      for (const ch of channels) {
-        const opt = document.createElement('option');
-        opt.value = ch;
-        opt.textContent = getChannelLabel(ch);
-        noteFilter.appendChild(opt);
-      }
-
-      // TABチャンネルセレクター
-      const tabSelect = document.getElementById('tab-channel-select');
-      tabSelect.innerHTML = '<option value="non-drum">全て（ドラム除く）</option>';
-      tabSelect.innerHTML += '<option value="all">全て</option>';
-      for (const ch of channels) {
-        const opt = document.createElement('option');
-        opt.value = ch;
-        opt.textContent = getChannelLabel(ch);
-        tabSelect.appendChild(opt);
-      }
-    }
-
-    function filterNoteTable(channelValue) {
-      const rows = document.querySelectorAll('#note-tbody tr');
-      rows.forEach(row => {
-        if (channelValue === 'all' || row.dataset.channel === String(channelValue)) {
-          row.style.display = '';
-        } else {
-          row.style.display = 'none';
-        }
-      });
-    }
-
-    function updateTab(filterValue) {
-      let filtered;
-      if (filterValue === 'non-drum') {
-        filtered = currentNotes.filter(n => n.channel !== 9);
-      } else if (filterValue === 'all') {
-        filtered = currentNotes;
-      } else {
-        const ch = parseInt(filterValue);
-        filtered = currentNotes.filter(n => n.channel === ch);
-      }
-      document.getElementById('tab-output').textContent = generateTab(filtered);
     }
 
     // ============================================================
@@ -1062,22 +822,6 @@
 
       scheduler();
 
-      // ハイライト用タイマー
-      for (let i = 0; i < notes.length; i++) {
-        const n = notes[i];
-        const t = startOffset + n.startTime;
-        const rowIndex = n._origIndex !== undefined ? n._origIndex : i;
-        const row = document.querySelector(`#note-tbody tr[data-index="${rowIndex}"]`);
-        if (row) {
-          const delay = (t - audioCtx.currentTime) * 1000;
-          setTimeout(() => {
-            if (!isPlaying) return;
-            document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
-            row.classList.add('playing');
-          }, Math.max(0, delay));
-        }
-      }
-
       // 再生終了検知
       const totalDuration = notes.length > 0
         ? notes[notes.length - 1].startTime + notes[notes.length - 1].duration
@@ -1126,7 +870,6 @@
         channelStates[ch].analyser = null;
       }
       if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
-      document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
       btnPlay.disabled = false;
       btnStop.disabled = true;
       document.getElementById('position-display').textContent = '';
@@ -1135,7 +878,6 @@
     function playNotesFrom(notes, bpm, fromTime) {
       // fromTime以降のノートだけをオフセットして再生（元インデックス保持）
       const offsetNotes = notes
-        .map((n, idx) => ({ ...n, _origIndex: idx }))
         .filter(n => (n.startTime + n.duration) > fromTime)
         .map(n => ({
           ...n,
@@ -1174,15 +916,6 @@
     dropZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
       if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
-    });
-
-    // チャンネルフィルターイベント
-    document.getElementById('note-channel-filter').addEventListener('change', (e) => {
-      filterNoteTable(e.target.value);
-    });
-
-    document.getElementById('tab-channel-select').addEventListener('change', (e) => {
-      updateTab(e.target.value);
     });
 
     function loadFile(file) {
@@ -1229,37 +962,8 @@
       buildChannelUI(currentChannels);
       document.getElementById('visualizer-section').style.display = 'block';
 
-      // チャンネルフィルター設定
-      populateChannelFilter(currentChannels);
-
-      // ノートテーブル
-      const tbody = document.getElementById('note-tbody');
-      tbody.innerHTML = '';
-      notes.forEach((n, i) => {
-        const tr = document.createElement('tr');
-        tr.dataset.channel = n.channel;
-        tr.dataset.index = i;
-        const instrName = n.channel === 9 ? 'Drums' :
-          (channelPrograms[n.channel] !== undefined ? getInstrumentName(channelPrograms[n.channel]) : '-');
-        tr.innerHTML =
-          `<td>${i + 1}</td>` +
-          `<td>${n.startTime.toFixed(3)}</td>` +
-          `<td>${n.channel + 1}</td>` +
-          `<td>${instrName}</td>` +
-          `<td>${n.note}</td>` +
-          `<td>${noteName(n.note)}</td>` +
-          `<td>${n.velocity}</td>` +
-          `<td>${n.duration.toFixed(3)}</td>`;
-        tbody.appendChild(tr);
-      });
-
-      // TAB譜生成（デフォルト: ドラム除く）
-      updateTab('non-drum');
-
       // セクション表示
       document.getElementById('controls').style.display = 'flex';
-      // document.getElementById('note-table-section').style.display = 'block';
-      // document.getElementById('tab-section').style.display = 'block';
       btnPlay.disabled = false;
       btnStop.disabled = true;
     }
