@@ -201,6 +201,12 @@
       font-size: 0.85rem;
     }
 
+    /* レイアウト制約 */
+    body {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
     /* 可視化セクション */
     .viz-section {
       display: none;
@@ -220,6 +226,23 @@
       border: 1px solid #333;
       background: #0d1117;
       cursor: crosshair;
+    }
+
+    /* チャートグリッド 4列固定 */
+    #charts-row {
+      display: grid !important;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    #charts-row > div {
+      text-align: center;
+    }
+
+    #charts-row canvas {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
     }
   </style>
 </head>
@@ -274,7 +297,7 @@
   </div>
 
   <!-- Instrument Donut + Active Notes + Velocity Histogram -->
-  <div id="charts-row" class="viz-section" style="display:none; flex-wrap:wrap; gap:24px; justify-content:center;">
+  <div id="charts-row" class="viz-section">
     <div>
       <h2>楽器使用率</h2>
       <canvas id="donut-canvas" width="300" height="300"></canvas>
@@ -1015,7 +1038,7 @@
       // 可視化セクションを先に表示（Canvas描画にclientWidth必要）
       document.getElementById('piano-roll-section').style.display = 'block';
       document.getElementById('density-section').style.display = 'block';
-      document.getElementById('charts-row').style.display = 'flex';
+      document.getElementById('charts-row').style.display = 'grid';
 
       // 描画（表示後に実行）
       requestAnimationFrame(() => {
