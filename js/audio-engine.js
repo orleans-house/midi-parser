@@ -205,7 +205,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
   if (seekOffset === 0) currentTotalDuration = totalDuration;
 
-  btnPlay.disabled = true;
+  btnPlay.textContent = '\u23f8 一時停止';
+  btnPlay.disabled = false;
   btnStop.disabled = false;
 
   // シークバー表示・設定
@@ -230,8 +231,38 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 }
 
 let stopTimerId = null;
+let isPaused = false;
+let pausedAt = 0;
+
+function pausePlayback() {
+  if (!isPlaying || !audioCtx || isPaused) return;
+  isPaused = true;
+  audioCtx.suspend();
+  // タイマーを一時停止（clearせず、resume時に再開される）
+  if (animationTimer) {
+    clearInterval(animationTimer);
+    animationTimer = null;
+  }
+  btnPlay.textContent = '\u25b6 再生';
+  btnPlay.disabled = false;
+}
+
+function resumePlayback() {
+  if (!isPlaying || !audioCtx || !isPaused) return;
+  isPaused = false;
+  audioCtx.resume();
+  // アニメーションタイマー再開
+  const posDisplay = document.getElementById('position-display');
+  animationTimer = setInterval(() => {
+    const elapsed = (performance.now() - playbackStartReal) / 1000 + playbackStartOffset;
+    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
+    updatePlayhead(elapsed);
+  }, 100);
+  btnPlay.textContent = '\u23f8 一時停止';
+}
 
 function stopPlayback() {
+  isPaused = false;
   isPlaying = false;
   if (stopTimerId) {
     clearTimeout(stopTimerId);
@@ -260,6 +291,7 @@ function stopPlayback() {
     audioCtx.close().catch(() => {});
     audioCtx = null;
   }
+  btnPlay.textContent = '\u25b6 再生';
   btnPlay.disabled = false;
   btnStop.disabled = true;
   document.getElementById('position-display').textContent = '';

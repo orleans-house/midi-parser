@@ -171,5 +171,13 @@ function processMidi(buffer, fileName) {
 }
 
 // 再生コントロール
-btnPlay.addEventListener('click', () => playNotes(currentNotes, currentBpm));
+btnPlay.addEventListener('click', () => {
+  if (isPlaying && !isPaused) {
+    pausePlayback();
+  } else if (isPlaying && isPaused) {
+    resumePlayback();
+  } else {
+    playNotes(currentNotes, currentBpm);
+  }
+});
 btnStop.addEventListener('click', () => stopPlayback());
