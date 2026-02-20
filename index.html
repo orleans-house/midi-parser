@@ -124,7 +124,7 @@
     /* チャンネルビジュアライザー */
     #visualizer-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
     }
 
@@ -133,6 +133,10 @@
       border-radius: 8px;
       padding: 10px;
       border: 1px solid #333;
+    }
+
+    .channel-card canvas {
+      height: 80px;
     }
 
     .channel-card.channel-inactive {
@@ -201,6 +205,33 @@
       font-size: 0.85rem;
     }
 
+    /* 可視化セクション */
+    .viz-section {
+      display: none;
+      margin-bottom: 24px;
+    }
+
+    .viz-section h2 {
+      color: #00d4ff;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .viz-section canvas {
+      width: 100%;
+      border-radius: 4px;
+      background: #0d1117;
+      display: block;
+      cursor: crosshair;
+    }
+
+    #piano-roll-section {
+      background: #16213e;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid #333;
+    }
+
   </style>
 </head>
 <body>
@@ -241,9 +272,9 @@
     <span id="position-display"></span>
   </div>
 
-  <div id="seek-bar-container" style="display:none; padding: 0 20px; margin-bottom: 16px;">
-    <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1"
-      style="width:100%; accent-color:#00d4ff; cursor:pointer;">
+  <!-- Piano Roll -->
+  <div id="piano-roll-section" class="viz-section">
+    <canvas id="piano-roll-canvas" width="1200" height="300"></canvas>
   </div>
 
   <script>
@@ -583,6 +614,26 @@
       container.innerHTML = '';
       channelStates = {};
 
+      // マスター合成波カード（4列幅）
+      const masterCard = document.createElement('div');
+      masterCard.className = 'channel-card';
+      masterCard.style.gridColumn = '1 / -1';
+      const masterHeader = document.createElement('div');
+      masterHeader.className = 'channel-header';
+      const masterLabel = document.createElement('span');
+      masterLabel.className = 'channel-label';
+      masterLabel.textContent = '🔊 Master';
+      masterHeader.append(masterLabel);
+      const masterCanvas = document.createElement('canvas');
+      masterCanvas.id = 'waveform-master';
+      masterCanvas.height = 80;
+      masterCanvas.style.width = '100%';
+      masterCanvas.style.background = '#0d1117';
+      masterCanvas.style.borderRadius = '4px';
+      masterCanvas.style.display = 'block';
+      masterCard.append(masterHeader, masterCanvas);
+      container.appendChild(masterCard);
+
       // 全16チャンネル表示（0-15）
       const allChannels = Array.from({length: 16}, (_, i) => i);
 
@@ -689,7 +740,13 @@
 
       const masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.5;
-      masterGain.connect(audioCtx.destination);
+
+      // マスター合成波用AnalyserNode
+      const masterAnalyser = audioCtx.createAnalyser();
+      masterAnalyser.fftSize = 2048;
+      masterGain.connect(masterAnalyser);
+      masterAnalyser.connect(audioCtx.destination);
+      window._masterAnalyser = masterAnalyser;
 
       // チャンネルごとのオーディオノード作成
       for (const ch of currentChannels) {
@@ -721,6 +778,9 @@
       // 波形描画ループ
       function drawWaveforms() {
         if (!isPlaying) {
+          // マスタークリア
+          const mc = document.getElementById('waveform-master');
+          if (mc) { const mctx = mc.getContext('2d'); mctx.clearRect(0, 0, mc.width, mc.height); }
           for (const ch of currentChannels) {
             const canvas = document.getElementById(`waveform-${ch}`);
             if (canvas) {
@@ -731,6 +791,34 @@
           return;
         }
         requestAnimationFrame(drawWaveforms);
+
+        // マスター合成波描画
+        if (window._masterAnalyser) {
+          const mc = document.getElementById('waveform-master');
+          if (mc) {
+            mc.width = mc.offsetWidth;
+            const mctx = mc.getContext('2d');
+            const ma = window._masterAnalyser;
+            const bufLen = ma.frequencyBinCount;
+            const data = new Uint8Array(bufLen);
+            ma.getByteTimeDomainData(data);
+            mctx.fillStyle = '#0d1117';
+            mctx.fillRect(0, 0, mc.width, mc.height);
+            mctx.lineWidth = 2;
+            mctx.strokeStyle = '#00d4ff';
+            mctx.beginPath();
+            const sw = mc.width / bufLen;
+            let mx = 0;
+            for (let i = 0; i < bufLen; i++) {
+              const v = data[i] / 128.0;
+              const y = (v * mc.height) / 2;
+              if (i === 0) mctx.moveTo(mx, y); else mctx.lineTo(mx, y);
+              mx += sw;
+            }
+            mctx.lineTo(mc.width, mc.height / 2);
+            mctx.stroke();
+          }
+        }
 
         for (const ch of currentChannels) {
           const state = channelStates[ch];
@@ -824,7 +912,7 @@
 
       // 再生終了検知
       const totalDuration = notes.length > 0
-        ? notes[notes.length - 1].startTime + notes[notes.length - 1].duration
+        ? Math.max(...notes.map(n => n.startTime + n.duration))
         : 0;
 
       if (seekOffset === 0) currentTotalDuration = totalDuration;
@@ -833,12 +921,6 @@
       btnStop.disabled = false;
 
       // シークバー表示・設定
-      const seekBar = document.getElementById('seek-bar');
-      const seekContainer = document.getElementById('seek-bar-container');
-      seekContainer.style.display = 'block';
-      seekBar.max = currentTotalDuration;
-      seekBar.value = seekOffset;
-
       const posDisplay = document.getElementById('position-display');
       const startReal = performance.now();
       playbackStartReal = startReal;
@@ -847,17 +929,20 @@
       animationTimer = setInterval(() => {
         const elapsed = (performance.now() - startReal) / 1000 + seekOffset;
         posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
-        if (!seekBar._dragging) seekBar.value = elapsed;
+        // 可視化ヘッド更新
+        updatePlayhead(elapsed);
       }, 100);
 
-      const remainingDuration = seekOffset > 0 ? totalDuration : totalDuration;
-      setTimeout(() => {
+      stopTimerId = setTimeout(() => {
         if (isPlaying) stopPlayback();
-      }, (remainingDuration + 0.5) * 1000);
+      }, (totalDuration + 1.0) * 1000);
     }
+
+    let stopTimerId = null;
 
     function stopPlayback() {
       isPlaying = false;
+      if (stopTimerId) { clearTimeout(stopTimerId); stopTimerId = null; }
       if (schedulerTimer) { clearTimeout(schedulerTimer); schedulerTimer = null; }
       if (animationTimer) { clearInterval(animationTimer); animationTimer = null; }
       for (const osc of scheduledNodes) {
@@ -966,23 +1051,130 @@
       document.getElementById('controls').style.display = 'flex';
       btnPlay.disabled = false;
       btnStop.disabled = true;
+
+      // 全体の長さを事前計算
+      currentTotalDuration = notes.length > 0
+        ? Math.max(...notes.map(n => n.startTime + n.duration))
+        : 0;
+
+      // 可視化セクションを先に表示（Canvas描画にclientWidth必要）
+      document.getElementById('piano-roll-section').style.display = 'block';
+
+      // 描画（表示後に実行）
+      requestAnimationFrame(() => {
+        drawPianoRoll();
+      });
     }
 
     // 再生コントロール
     btnPlay.addEventListener('click', () => playNotes(currentNotes, currentBpm));
     btnStop.addEventListener('click', () => stopPlayback());
 
-    // シークバー
-    const seekBar = document.getElementById('seek-bar');
-    seekBar.addEventListener('mousedown', () => { seekBar._dragging = true; });
-    seekBar.addEventListener('mouseup', () => { seekBar._dragging = false; });
-    seekBar.addEventListener('change', () => {
+    // ============================================================
+    // ピアノロール描画
+    // ============================================================
+
+    function drawPianoRoll() {
+      const canvas = document.getElementById('piano-roll-canvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
+      const W = canvas.clientWidth;
+      const H = canvas.clientHeight;
+
+      ctx.clearRect(0, 0, W, H);
       if (!currentNotes.length) return;
-      const seekTime = parseFloat(seekBar.value);
-      // 指定位置から再生し直す
+
+      const dur = currentTotalDuration || Math.max(...currentNotes.map(n => n.startTime + n.duration));
+      // 音域検出（パディング付き）
+      let minNote = 127, maxNote = 0;
+      for (const n of currentNotes) {
+        if (n.note < minNote) minNote = n.note;
+        if (n.note > maxNote) maxNote = n.note;
+      }
+      minNote = Math.max(0, minNote - 4);
+      maxNote = Math.min(127, maxNote + 4);
+      const noteRange = maxNote - minNote + 1;
+
+      const plotW = W;
+      const plotH = H;
+
+      // ノート描画
+      for (const n of currentNotes) {
+        const isMuted = channelStates[n.channel]?.muted;
+        const anySolo = Object.values(channelStates).some(s => s.soloed);
+        const isSoloed = channelStates[n.channel]?.soloed;
+        const hidden = anySolo ? !isSoloed : isMuted;
+
+        const x = (n.startTime / dur) * plotW;
+        const w = Math.max(1, (n.duration / dur) * plotW);
+        const y = plotH - ((n.note - minNote + 1) / noteRange) * plotH;
+        const h = Math.max(1, plotH / noteRange);
+
+        const color = CHANNEL_COLORS[n.channel] || '#888';
+        ctx.globalAlpha = hidden ? 0.15 : 0.85;
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+      }
+      ctx.globalAlpha = 1;
+
+      // Y軸ラベル（C音のみ）
+      ctx.fillStyle = '#555';
+      ctx.font = '9px monospace';
+      for (let note = minNote; note <= maxNote; note++) {
+        if (note % 12 === 0) {
+          const y = plotH - ((note - minNote + 0.5) / noteRange) * plotH;
+          ctx.fillText(`C${Math.floor(note / 12) - 1}`, 2, y + 3);
+        }
+      }
+    }
+
+    // ピアノロールクリックでシーク
+    document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
+      if (!currentNotes.length) return;
+      const canvas = e.target;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const PADDING_LEFT = 0;
+      const plotW = canvas.clientWidth - PADDING_LEFT;
+      const ratio = (x - PADDING_LEFT) / plotW;
+      if (ratio < 0 || ratio > 1) return;
+      const seekTime = ratio * (currentTotalDuration || 1);
       stopPlayback();
       playNotesFrom(currentNotes, currentBpm, seekTime);
     });
+
+    // (removed: drum roll, density graph, donut chart, velocity histogram)
+
+    // ============================================================
+    // 再生ヘッド統合更新
+    // ============================================================
+
+    function updatePlayhead(elapsed) {
+      // ピアノロール再描画 + ヘッド
+      const prCanvas = document.getElementById('piano-roll-canvas');
+      if (prCanvas.clientWidth > 0) {
+        drawPianoRoll();
+        const ctx = prCanvas.getContext('2d');
+        const W = prCanvas.clientWidth;
+        const H = prCanvas.clientHeight;
+        const PADDING_LEFT = 0;
+        const plotW = W - PADDING_LEFT;
+        const dur = currentTotalDuration || 1;
+        const x = PADDING_LEFT + (elapsed / dur) * plotW;
+        ctx.save();
+        ctx.strokeStyle = '#ff4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
   </script>
 </body>
 </html>
