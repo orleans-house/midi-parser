@@ -126,10 +126,135 @@ function buildChannelUI(channels) {
     }
   }
 
+  // エフェクターモジュールグリッド
+  buildFxModules(allChannels, channels);
+
   // Lucide アイコン再初期化
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
+}
+
+function buildFxModules(allChannels, activeChannels) {
+  let fxContainer = document.getElementById('fx-module-container');
+  if (!fxContainer) {
+    fxContainer = document.createElement('div');
+    fxContainer.id = 'fx-module-container';
+    fxContainer.className = 'fx-module-grid';
+    const vizSection = document.getElementById('visualizer-section');
+    vizSection.appendChild(fxContainer);
+  }
+  fxContainer.innerHTML = '';
+
+  // ケーブル接続SVG（既存を再利用 or 新規作成）
+  let cableSection = document.getElementById('cable-section');
+  if (!cableSection) {
+    cableSection = document.createElement('div');
+    cableSection.id = 'cable-section';
+    cableSection.className = 'cable-section';
+    fxContainer.before(cableSection);
+  }
+  cableSection.innerHTML = '';
+
+  for (const ch of allChannels) {
+    const isActive = activeChannels.includes(ch);
+    const mod = document.createElement('div');
+    mod.className = `fx-module${isActive ? '' : ' fx-module-inactive'}`;
+    mod.id = `fx-module-${ch}`;
+
+    const header = document.createElement('div');
+    header.className = 'fx-module-header';
+    header.innerHTML = `<span class="fx-module-label" style="color:${getChannelColor(ch)}">Ch.${ch + 1}</span>
+      <button class="fx-module-toggle btn-ch" title="展開"><i data-lucide="chevron-down"></i></button>`;
+
+    const body = document.createElement('div');
+    body.className = 'fx-module-body';
+    body.style.display = 'none';
+
+    // 波形選択
+    const waveSection = document.createElement('div');
+    waveSection.className = 'fx-mod-section';
+    waveSection.innerHTML = `<span class="fx-mod-title">Wave</span>
+      <div class="fx-wave-btns">
+        <button class="fx-wave-btn active" data-ch="${ch}" data-wave="triangle"><svg class="wave-icon" role="img" aria-hidden="true" viewBox="0 0 24 16"><polyline points="0,12 6,4 12,12 18,4 24,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg></button>
+        <button class="fx-wave-btn" data-ch="${ch}" data-wave="sine"><svg class="wave-icon" role="img" aria-hidden="true" viewBox="0 0 24 16"><path d="M0,8 C3,2 6,2 8,8 C10,14 13,14 16,8 C18,2 21,2 24,8" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+        <button class="fx-wave-btn" data-ch="${ch}" data-wave="square"><svg class="wave-icon" role="img" aria-hidden="true" viewBox="0 0 24 16"><polyline points="0,12 0,4 6,4 6,12 12,12 12,4 18,4 18,12 24,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg></button>
+        <button class="fx-wave-btn" data-ch="${ch}" data-wave="sawtooth"><svg class="wave-icon" role="img" aria-hidden="true" viewBox="0 0 24 16"><polyline points="0,12 12,4 12,12 24,4 24,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></svg></button>
+      </div>`;
+
+    // ディストーション
+    const distSection = document.createElement('div');
+    distSection.className = 'fx-mod-section';
+    distSection.innerHTML = `<label class="fx-mod-row"><input type="checkbox" class="ch-fx-toggle" data-ch="${ch}" data-fx="distortion"> <span>Dist</span>
+      <input type="range" class="ch-fx-slider" data-ch="${ch}" data-fx="distortion" min="0" max="100" value="50" disabled>
+      <span class="ch-fx-val">50</span></label>`;
+
+    // ディレイ
+    const delaySection = document.createElement('div');
+    delaySection.className = 'fx-mod-section';
+    delaySection.innerHTML = `<label class="fx-mod-row"><input type="checkbox" class="ch-fx-toggle" data-ch="${ch}" data-fx="delay"> <span>Delay</span>
+      <input type="range" class="ch-fx-slider" data-ch="${ch}" data-fx="delay" min="50" max="800" value="300" disabled>
+      <span class="ch-fx-val">300</span></label>`;
+
+    // リバーブ
+    const reverbSection = document.createElement('div');
+    reverbSection.className = 'fx-mod-section';
+    reverbSection.innerHTML = `<label class="fx-mod-row"><input type="checkbox" class="ch-fx-toggle" data-ch="${ch}" data-fx="reverb"> <span>Reverb</span>
+      <input type="range" class="ch-fx-slider" data-ch="${ch}" data-fx="reverb" min="0" max="100" value="40" disabled>
+      <span class="ch-fx-val">40</span></label>`;
+
+    body.append(waveSection, distSection, delaySection, reverbSection);
+    mod.append(header, body);
+    fxContainer.appendChild(mod);
+
+    // 折りたたみトグル
+    header.querySelector('.fx-module-toggle').addEventListener('click', () => {
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      header.querySelector('.fx-module-toggle i').setAttribute('data-lucide', isOpen ? 'chevron-down' : 'chevron-up');
+      if (typeof lucide !== 'undefined') lucide.createIcons({ node: header });
+    });
+  }
+
+  // ケーブルSVG描画
+  requestAnimationFrame(() => drawCables(allChannels));
+}
+
+function drawCables(allChannels) {
+  const cableSection = document.getElementById('cable-section');
+  if (!cableSection) return;
+  cableSection.innerHTML = '';
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'cable-svg');
+  svg.style.width = '100%';
+  svg.style.height = '32px';
+  svg.style.overflow = 'visible';
+
+  for (const ch of allChannels) {
+    const card = document.getElementById(`channel-card-${ch}`);
+    const mod = document.getElementById(`fx-module-${ch}`);
+    if (!card || !mod) continue;
+
+    const cardRect = card.getBoundingClientRect();
+    const modRect = mod.getBoundingClientRect();
+    const svgRect = svg.getBoundingClientRect ? cableSection.getBoundingClientRect() : { left: 0, top: 0 };
+
+    const x1 = cardRect.left + cardRect.width / 2 - svgRect.left;
+    const x2 = modRect.left + modRect.width / 2 - svgRect.left;
+    const y1 = 0;
+    const y2 = 32;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M${x1},${y1} C${x1},${y1 + 16} ${x2},${y2 - 16} ${x2},${y2}`);
+    path.setAttribute('stroke', getChannelColor(ch));
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', '0.4');
+    svg.appendChild(path);
+  }
+
+  cableSection.appendChild(svg);
 }
 
 function toggleMute(ch) {

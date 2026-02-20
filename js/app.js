@@ -57,11 +57,15 @@ function setActiveWave(newWave) {
   }
   applyCurrentWaveVolume();
 
-  // 再生中のオシレーターの波形を変更
+  // 再生中のオシレーターの波形を変更（個別設定のないチャンネルのみ）
   if (typeof scheduledNodes !== 'undefined') {
     for (const osc of scheduledNodes) {
       try {
-        osc.type = newWave;
+        const chFx = getChannelFx(osc._channel);
+        // チャンネル別で明示的に変更されていなければグローバルに従う
+        if (!chFx.customWave) {
+          osc.type = newWave;
+        }
       } catch (_) {
         /* already stopped */
       }
@@ -262,6 +266,63 @@ document.querySelectorAll('.eq-band').forEach((band, i) => {
       window._eqFilters[i].gain.value = val;
     }
   });
+});
+
+// チャンネル別FXモジュールイベント（動的要素なのでdelegation）
+document.addEventListener('click', (e) => {
+  // 波形ボタン
+  const waveBtn = e.target.closest('.fx-wave-btn');
+  if (waveBtn) {
+    const ch = Number(waveBtn.dataset.ch);
+    const wave = waveBtn.dataset.wave;
+    const chFx = getChannelFx(ch);
+    chFx.waveType = wave;
+    chFx.customWave = true;
+
+    // ボタンのactive状態を更新
+    const container = waveBtn.closest('.fx-wave-btns');
+    for (const b of container.querySelectorAll('.fx-wave-btn')) {
+      b.classList.remove('active');
+    }
+    waveBtn.classList.add('active');
+
+    // 再生中のオシレーターの波形を変更
+    if (typeof scheduledNodes !== 'undefined') {
+      for (const osc of scheduledNodes) {
+        try {
+          if (osc._channel === ch) osc.type = wave;
+        } catch (_) {
+          /* already stopped */
+        }
+      }
+    }
+  }
+});
+
+document.addEventListener('change', (e) => {
+  // FXトグル
+  if (e.target.classList.contains('ch-fx-toggle')) {
+    const ch = Number(e.target.dataset.ch);
+    const fx = e.target.dataset.fx;
+    const chFx = getChannelFx(ch);
+    const slider = e.target.closest('.fx-mod-row').querySelector('.ch-fx-slider');
+    slider.disabled = !e.target.checked;
+    chFx[fx].enabled = e.target.checked;
+  }
+});
+
+document.addEventListener('input', (e) => {
+  // FXスライダー
+  if (e.target.classList.contains('ch-fx-slider')) {
+    const ch = Number(e.target.dataset.ch);
+    const fx = e.target.dataset.fx;
+    const chFx = getChannelFx(ch);
+    const valDisplay = e.target.closest('.fx-mod-row').querySelector('.ch-fx-val');
+    valDisplay.textContent = e.target.value;
+    if (fx === 'distortion') chFx.distortion.amount = Number(e.target.value);
+    else if (fx === 'delay') chFx.delay.time = Number(e.target.value);
+    else if (fx === 'reverb') chFx.reverb.mix = Number(e.target.value);
+  }
 });
 
 // Lucide アイコン初期化

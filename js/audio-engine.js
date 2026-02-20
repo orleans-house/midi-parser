@@ -270,7 +270,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const osc = audioCtx.createOscillator();
       const env = audioCtx.createGain();
 
-      const waveType = document.getElementById('wave-type').value;
+      const chFx = getChannelFx(n.channel);
+      const waveType = chFx.customWave ? chFx.waveType : document.getElementById('wave-type').value;
       osc.type = waveType;
       osc.frequency.value = freq;
 
@@ -290,6 +291,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
         env.connect(masterGain);
       }
 
+      osc._channel = n.channel;
       osc.start(t);
       osc.stop(t + dur + 0.01);
 
