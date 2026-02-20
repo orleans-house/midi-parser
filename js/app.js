@@ -181,6 +181,19 @@ btnPlay.addEventListener('click', () => {
 });
 btnStop.addEventListener('click', () => stopPlayback());
 
+// EQ スライダーイベント
+document.querySelectorAll('.eq-band').forEach((band, i) => {
+  const slider = band.querySelector('.eq-slider');
+  const valDisplay = band.querySelector('.eq-val');
+  slider.addEventListener('input', () => {
+    const val = Number(slider.value);
+    valDisplay.textContent = val > 0 ? `+${val}` : `${val}`;
+    if (window._eqFilters && window._eqFilters[i]) {
+      window._eqFilters[i].gain.value = val;
+    }
+  });
+});
+
 // Lucide アイコン初期化
 if (typeof lucide !== 'undefined') {
   lucide.createIcons();

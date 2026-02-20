@@ -27,10 +27,31 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   window._masterGain = masterGain;
 
   // マスター合成波用AnalyserNode
+  // EQ フィルターチェーン
+  const eqBands = document.querySelectorAll('.eq-band');
+  const eqFilters = [];
+  eqBands.forEach((band, i) => {
+    const freq = Number(band.dataset.freq);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = i === 0 ? 'lowshelf' : i === eqBands.length - 1 ? 'highshelf' : 'peaking';
+    filter.frequency.value = freq;
+    filter.gain.value = Number(band.querySelector('.eq-slider').value);
+    if (filter.type === 'peaking') filter.Q.value = 1.4;
+    eqFilters.push(filter);
+  });
+
+  // masterGain → EQ chain → analyser → destination
+  let prevNode = masterGain;
+  for (const filter of eqFilters) {
+    prevNode.connect(filter);
+    prevNode = filter;
+  }
+
   const masterAnalyser = audioCtx.createAnalyser();
   masterAnalyser.fftSize = 2048;
-  masterGain.connect(masterAnalyser);
+  prevNode.connect(masterAnalyser);
   masterAnalyser.connect(audioCtx.destination);
+  window._eqFilters = eqFilters;
   window._masterAnalyser = masterAnalyser;
 
   // チャンネルごとのオーディオノード作成

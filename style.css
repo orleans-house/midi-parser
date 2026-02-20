@@ -278,6 +278,43 @@ h3 svg,
   gap: 12px;
 }
 
+/* ===== イコライザー ===== */
+#eq-mixer {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.eq-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.eq-val {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  min-width: 24px;
+  text-align: center;
+}
+
+.eq-slider {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: slider-vertical;
+  width: 20px;
+  height: 70px;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+}
+
+.eq-label {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
 /* ===== ボタン共通 ===== */
 button {
   background: var(--accent-purple);
