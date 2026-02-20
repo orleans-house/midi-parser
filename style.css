@@ -104,6 +104,7 @@ h3 {
 
 #playback-controls button {
   flex: 1;
+  min-height: 38px;
 }
 
 #playback-controls select {
