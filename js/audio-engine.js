@@ -18,8 +18,12 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   scheduledNodes = [];
 
   const masterGain = audioCtx.createGain();
-  const volumeSlider = document.getElementById('master-volume');
-  masterGain.gain.value = volumeSlider ? volumeSlider.value / 100 : 0.5;
+  const currentWave = document.getElementById('wave-type').value;
+  const waveSlider = document.querySelector(`.mixer-channel[data-wave="${currentWave}"] .mixer-vol`);
+  const masterSlider = document.getElementById('master-volume');
+  const waveVol = waveSlider ? waveSlider.value / 100 : 0.5;
+  const mVol = masterSlider ? masterSlider.value / 100 : 1.0;
+  masterGain.gain.value = waveVol * mVol;
   window._masterGain = masterGain;
 
   // マスター合成波用AnalyserNode
@@ -162,7 +166,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const osc = audioCtx.createOscillator();
       const env = audioCtx.createGain();
 
-      osc.type = document.getElementById('wave-type').value;
+      const waveType = document.getElementById('wave-type').value;
+      osc.type = waveType;
       osc.frequency.value = freq;
 
       const vel = n.velocity / 127;
@@ -200,7 +205,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
   if (seekOffset === 0) currentTotalDuration = totalDuration;
 
-  btnPlay.disabled = true;
+  btnPlay.textContent = '\u23f8 一時停止';
+  btnPlay.disabled = false;
   btnStop.disabled = false;
 
   // シークバー表示・設定
@@ -210,7 +216,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   playbackStartOffset = seekOffset;
 
   animationTimer = setInterval(() => {
-    const elapsed = (performance.now() - startReal) / 1000 + seekOffset;
+    const elapsed = (performance.now() - startReal - pauseDuration) / 1000 + seekOffset;
     posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
     // 可視化ヘッド更新
     updatePlayhead(elapsed);
@@ -225,8 +231,58 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 }
 
 let stopTimerId = null;
+let isPaused = false;
+
+let pauseDuration = 0;
+let pauseStartTime = 0;
+
+function pausePlayback() {
+  if (!isPlaying || !audioCtx || isPaused) return;
+  isPaused = true;
+  pauseStartTime = performance.now();
+  audioCtx.suspend();
+  if (animationTimer) {
+    clearInterval(animationTimer);
+    animationTimer = null;
+  }
+  if (stopTimerId) {
+    clearTimeout(stopTimerId);
+    stopTimerId = null;
+  }
+  btnPlay.textContent = '\u25b6 再生';
+  btnPlay.disabled = false;
+}
+
+function resumePlayback() {
+  if (!isPlaying || !audioCtx || !isPaused) return;
+  isPaused = false;
+  pauseDuration += performance.now() - pauseStartTime;
+  audioCtx.resume();
+  // アニメーションタイマー再開（pause時間を差し引いて計算）
+  const posDisplay = document.getElementById('position-display');
+  animationTimer = setInterval(() => {
+    const elapsed = (performance.now() - playbackStartReal - pauseDuration) / 1000 + playbackStartOffset;
+    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
+    updatePlayhead(elapsed);
+  }, 100);
+  // 残り時間で停止タイマー再設定
+  const currentElapsed = (performance.now() - playbackStartReal - pauseDuration) / 1000 + playbackStartOffset;
+  const remaining = currentTotalDuration - currentElapsed;
+  if (remaining > 0) {
+    stopTimerId = setTimeout(
+      () => {
+        if (isPlaying) stopPlayback();
+      },
+      (remaining + 1.0) * 1000,
+    );
+  }
+  btnPlay.textContent = '\u23f8 一時停止';
+}
 
 function stopPlayback() {
+  isPaused = false;
+  pauseDuration = 0;
+  pauseStartTime = 0;
   isPlaying = false;
   if (stopTimerId) {
     clearTimeout(stopTimerId);
@@ -255,6 +311,7 @@ function stopPlayback() {
     audioCtx.close().catch(() => {});
     audioCtx = null;
   }
+  btnPlay.textContent = '\u25b6 再生';
   btnPlay.disabled = false;
   btnStop.disabled = true;
   document.getElementById('position-display').textContent = '';

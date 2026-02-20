@@ -6,8 +6,72 @@ const fileInput = document.getElementById('file-input');
 const btnOpen = document.getElementById('btn-open');
 const btnPlay = document.getElementById('btn-play');
 const btnStop = document.getElementById('btn-stop');
+const waveTypeSelect = document.getElementById('wave-type');
+
+// 波形ミキサー
+const mixerChannels = document.querySelectorAll('.mixer-channel');
+const mixerSliders = {};
+const mixerDisplays = {};
+const mixerBtns = {};
+for (const ch of mixerChannels) {
+  const wave = ch.dataset.wave;
+  if (!wave) continue; // skip master (no data-wave)
+  mixerSliders[wave] = ch.querySelector('.mixer-vol');
+  mixerDisplays[wave] = ch.querySelector('.mixer-pct');
+  mixerBtns[wave] = ch.querySelector('.mixer-btn');
+}
+
+// マスターボリューム
 const masterVolume = document.getElementById('master-volume');
-const volumeDisplay = document.getElementById('volume-display');
+const masterVolPct = document.getElementById('master-vol-pct');
+
+masterVolume.addEventListener('input', () => {
+  masterVolPct.textContent = `${masterVolume.value}%`;
+  applyCurrentWaveVolume();
+});
+
+// 現在の波形の音量 × マスター を masterGain に反映
+function applyCurrentWaveVolume() {
+  const currentWave = waveTypeSelect.value;
+  const slider = mixerSliders[currentWave];
+  if (slider && window._masterGain) {
+    const waveVol = slider.value / 100;
+    const masterVol = masterVolume.value / 100;
+    window._masterGain.gain.value = waveVol * masterVol;
+  }
+}
+
+// スライダーイベント
+for (const [wave, slider] of Object.entries(mixerSliders)) {
+  slider.addEventListener('input', () => {
+    mixerDisplays[wave].textContent = `${slider.value}%`;
+    applyCurrentWaveVolume();
+  });
+}
+
+// 波形切替ボタン
+function setActiveWave(newWave) {
+  waveTypeSelect.value = newWave;
+  for (const [wave, btn] of Object.entries(mixerBtns)) {
+    btn.classList.toggle('active', wave === newWave);
+  }
+  applyCurrentWaveVolume();
+
+  // 再生中のオシレーターの波形を変更
+  if (typeof scheduledNodes !== 'undefined') {
+    for (const osc of scheduledNodes) {
+      try {
+        osc.type = newWave;
+      } catch (_) {
+        /* already stopped */
+      }
+    }
+  }
+}
+
+for (const [wave, btn] of Object.entries(mixerBtns)) {
+  btn.addEventListener('click', () => setActiveWave(wave));
+}
 
 // ファイル選択ボタン
 btnOpen.addEventListener('click', () => fileInput.click());
@@ -44,30 +108,6 @@ document.addEventListener('drop', (e) => {
 });
 fileInput.addEventListener('change', () => {
   if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
-});
-
-// 波形リアルタイム切替
-const waveType = document.getElementById('wave-type');
-waveType.addEventListener('change', () => {
-  const newType = waveType.value;
-  if (typeof scheduledNodes !== 'undefined') {
-    for (const osc of scheduledNodes) {
-      try {
-        osc.type = newType;
-      } catch (_) {
-        /* already stopped */
-      }
-    }
-  }
-});
-
-// ボリュームコントロール
-masterVolume.addEventListener('input', () => {
-  const val = masterVolume.value;
-  volumeDisplay.textContent = `${val}%`;
-  if (window._masterGain) {
-    window._masterGain.gain.value = val / 100;
-  }
 });
 
 function loadFile(file) {
@@ -107,8 +147,7 @@ function processMidi(buffer, fileName) {
   document.getElementById('info-tempo').textContent = `${bpm} BPM`;
   document.getElementById('info-notes').textContent = notes.length;
 
-  // テンポ表示
-  document.getElementById('tempo-display').textContent = `${bpm} BPM | ${fileName}`;
+  // テンポ表示（不要 — ファイル情報に表示済み）
 
   // チャンネルUI構築
   buildChannelUI(currentChannels);
@@ -131,5 +170,13 @@ function processMidi(buffer, fileName) {
 }
 
 // 再生コントロール
-btnPlay.addEventListener('click', () => playNotes(currentNotes, currentBpm));
+btnPlay.addEventListener('click', () => {
+  if (isPlaying && !isPaused) {
+    pausePlayback();
+  } else if (isPlaying && isPaused) {
+    resumePlayback();
+  } else {
+    playNotes(currentNotes, currentBpm);
+  }
+});
 btnStop.addEventListener('click', () => stopPlayback());

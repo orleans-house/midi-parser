@@ -122,8 +122,13 @@ test.describe('MIDI Parser App', () => {
     await expect(page.locator('#btn-stop')).toBeDisabled({ timeout: 5000 });
   });
 
-  test('volume slider exists and has default value', async ({ page }) => {
+  test('wave mixer with master + 4 wave channels exists', async ({ page }) => {
+    // Master + 4 wave channels = 5
+    const channels = page.locator('.mixer-channel');
+    await expect(channels).toHaveCount(5);
+    // Triangle button should be active by default
+    await expect(page.locator('.mixer-channel[data-wave="triangle"] .mixer-btn')).toHaveClass(/active/);
+    // Master volume should exist
     await expect(page.locator('#master-volume')).toBeVisible();
-    await expect(page.locator('#volume-display')).toHaveText('50%');
   });
 });

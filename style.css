@@ -104,23 +104,87 @@ h3 {
 
 #playback-controls button {
   flex: 1;
+  min-height: 38px;
 }
 
 #playback-controls select {
   flex: 1;
 }
 
-#master-volume {
-  flex: 1;
+/* 波形ミキサー */
+#wave-mixer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.mixer-channel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.mixer-pct {
+  color: #888;
+  font-size: 0.7rem;
+}
+
+.mixer-vol {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: slider-vertical;
+  width: 24px;
+  height: 80px;
   accent-color: #00d4ff;
   cursor: pointer;
 }
 
-#volume-display {
+.mixer-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 1rem;
+  border-radius: 6px;
+  background: #2a2a4a;
   color: #888;
-  font-size: 0.8rem;
-  min-width: 32px;
-  text-align: right;
+  border: 1px solid #444;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.mixer-btn:hover {
+  background: #3a3a5a;
+}
+
+.mixer-btn.active {
+  background: #00d4ff;
+  color: #1a1a2e;
+  border-color: #00d4ff;
+}
+
+.mixer-label {
+  color: #888;
+  font-size: 0.7rem;
+}
+
+.mixer-divider {
+  width: 1px;
+  background: #444;
+  align-self: stretch;
+  margin: 0 2px;
+}
+
+.master-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
 }
 
 /* ポジション情報 */

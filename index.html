@@ -38,24 +38,42 @@
           <button type="button" id="btn-play" disabled>&#9654; 再生</button>
           <button type="button" id="btn-stop" disabled>&#9632; 停止</button>
         </div>
-        <div class="control-row">
-          <label for="wave-type">波形</label>
-          <select id="wave-type">
-            <option value="triangle">🔺 Triangle</option>
-            <option value="sine">🔵 Sine</option>
-            <option value="square">🟧 Square</option>
-            <option value="sawtooth">🔶 Sawtooth</option>
-          </select>
-        </div>
-        <div class="control-row">
-          <label for="master-volume">音量</label>
-          <input type="range" id="master-volume" min="0" max="100" value="50">
-          <span id="volume-display">50%</span>
+        <div id="wave-mixer">
+          <div class="mixer-channel mixer-master">
+            <span class="mixer-pct" id="master-vol-pct">100%</span>
+            <input type="range" class="mixer-vol" id="master-volume" min="0" max="100" value="100" orient="vertical">
+            <span class="master-icon">🔊</span>
+            <span class="mixer-label">Master</span>
+          </div>
+          <div class="mixer-divider"></div>
+          <div class="mixer-channel" data-wave="triangle">
+            <span class="mixer-pct">50%</span>
+            <input type="range" class="mixer-vol" min="0" max="100" value="50" orient="vertical">
+            <button type="button" class="mixer-btn active">🔺</button>
+            <span class="mixer-label">Tri</span>
+          </div>
+          <div class="mixer-channel" data-wave="sine">
+            <span class="mixer-pct">50%</span>
+            <input type="range" class="mixer-vol" min="0" max="100" value="50" orient="vertical">
+            <button type="button" class="mixer-btn">🔵</button>
+            <span class="mixer-label">Sin</span>
+          </div>
+          <div class="mixer-channel" data-wave="square">
+            <span class="mixer-pct">20%</span>
+            <input type="range" class="mixer-vol" min="0" max="100" value="20" orient="vertical">
+            <button type="button" class="mixer-btn">🟧</button>
+            <span class="mixer-label">Sq</span>
+          </div>
+          <div class="mixer-channel" data-wave="sawtooth">
+            <span class="mixer-pct">24%</span>
+            <input type="range" class="mixer-vol" min="0" max="100" value="24" orient="vertical">
+            <button type="button" class="mixer-btn">🔶</button>
+            <span class="mixer-label">Saw</span>
+          </div>
         </div>
       </div>
 
       <div id="position-info" class="panel-section">
-        <span id="tempo-display">-</span>
         <span id="position-display"></span>
       </div>
     </div>
@@ -65,6 +83,13 @@
       <div id="visualizer-container"></div>
     </div>
   </div>
+
+  <select id="wave-type" style="display:none;">
+    <option value="triangle" selected>Triangle</option>
+    <option value="sine">Sine</option>
+    <option value="square">Square</option>
+    <option value="sawtooth">Sawtooth</option>
+  </select>
 
   <div id="header-info" style="display:none;">
     <table>
