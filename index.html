@@ -543,9 +543,12 @@
     let scheduledNodes = [];
     let animationTimer = null;
 
-    function playNotes(notes, bpm) {
+    async function playNotes(notes, bpm) {
       stopPlayback();
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
       isPlaying = true;
       scheduledNodes = [];
 
