@@ -314,6 +314,7 @@
             <th>#</th>
             <th>時間 (s)</th>
             <th>Ch</th>
+            <th>楽器</th>
             <th>ノート</th>
             <th>音名</th>
             <th>Vel</th>
@@ -441,8 +442,12 @@
               this.readUint8();
               this.readUint8();
               events.push({ delta, type: 'other' });
-            } else if (type === 0xc0 || type === 0xd0) {
-              // Program Change, Channel Pressure (1バイト)
+            } else if (type === 0xc0) {
+              // Program Change (1バイト)
+              const program = this.readUint8();
+              events.push({ delta, type: 'programChange', channel, program });
+            } else if (type === 0xd0) {
+              // Channel Pressure (1バイト)
               this.readUint8();
               events.push({ delta, type: 'other' });
             } else {
@@ -544,6 +549,80 @@
     function noteName(midiNote) {
       const octave = Math.floor(midiNote / 12) - 1;
       return NOTE_NAMES[midiNote % 12] + octave;
+    }
+
+    // ============================================================
+    // General MIDI 音色マップ（128種類）
+    // ============================================================
+
+    const GM_INSTRUMENTS = [
+      // Piano (0-7)
+      'Acoustic Grand Piano', 'Bright Acoustic Piano', 'Electric Grand Piano', 'Honky-tonk Piano',
+      'Electric Piano 1', 'Electric Piano 2', 'Harpsichord', 'Clavinet',
+      // Chromatic Percussion (8-15)
+      'Celesta', 'Glockenspiel', 'Music Box', 'Vibraphone',
+      'Marimba', 'Xylophone', 'Tubular Bells', 'Dulcimer',
+      // Organ (16-23)
+      'Drawbar Organ', 'Percussive Organ', 'Rock Organ', 'Church Organ',
+      'Reed Organ', 'Accordion', 'Harmonica', 'Tango Accordion',
+      // Guitar (24-31)
+      'Acoustic Guitar (nylon)', 'Acoustic Guitar (steel)', 'Electric Guitar (jazz)', 'Electric Guitar (clean)',
+      'Electric Guitar (muted)', 'Overdriven Guitar', 'Distortion Guitar', 'Guitar Harmonics',
+      // Bass (32-39)
+      'Acoustic Bass', 'Electric Bass (finger)', 'Electric Bass (pick)', 'Fretless Bass',
+      'Slap Bass 1', 'Slap Bass 2', 'Synth Bass 1', 'Synth Bass 2',
+      // Strings (40-47)
+      'Violin', 'Viola', 'Cello', 'Contrabass',
+      'Tremolo Strings', 'Pizzicato Strings', 'Orchestral Harp', 'Timpani',
+      // Ensemble (48-55)
+      'String Ensemble 1', 'String Ensemble 2', 'Synth Strings 1', 'Synth Strings 2',
+      'Choir Aahs', 'Voice Oohs', 'Synth Choir', 'Orchestra Hit',
+      // Brass (56-63)
+      'Trumpet', 'Trombone', 'Tuba', 'Muted Trumpet',
+      'French Horn', 'Brass Section', 'Synth Brass 1', 'Synth Brass 2',
+      // Reed (64-71)
+      'Soprano Sax', 'Alto Sax', 'Tenor Sax', 'Baritone Sax',
+      'Oboe', 'English Horn', 'Bassoon', 'Clarinet',
+      // Pipe (72-79)
+      'Piccolo', 'Flute', 'Recorder', 'Pan Flute',
+      'Blown Bottle', 'Shakuhachi', 'Whistle', 'Ocarina',
+      // Synth Lead (80-87)
+      'Lead 1 (square)', 'Lead 2 (sawtooth)', 'Lead 3 (calliope)', 'Lead 4 (chiff)',
+      'Lead 5 (charang)', 'Lead 6 (voice)', 'Lead 7 (fifths)', 'Lead 8 (bass + lead)',
+      // Synth Pad (88-95)
+      'Pad 1 (new age)', 'Pad 2 (warm)', 'Pad 3 (polysynth)', 'Pad 4 (choir)',
+      'Pad 5 (bowed)', 'Pad 6 (metallic)', 'Pad 7 (halo)', 'Pad 8 (sweep)',
+      // Synth Effects (96-103)
+      'FX 1 (rain)', 'FX 2 (soundtrack)', 'FX 3 (crystal)', 'FX 4 (atmosphere)',
+      'FX 5 (brightness)', 'FX 6 (goblins)', 'FX 7 (echoes)', 'FX 8 (sci-fi)',
+      // Ethnic (104-111)
+      'Sitar', 'Banjo', 'Shamisen', 'Koto',
+      'Kalimba', 'Bagpipe', 'Fiddle', 'Shanai',
+      // Percussive (112-119)
+      'Tinkle Bell', 'Agogo', 'Steel Drums', 'Woodblock',
+      'Taiko Drum', 'Melodic Tom', 'Synth Drum', 'Reverse Cymbal',
+      // Sound Effects (120-127)
+      'Guitar Fret Noise', 'Breath Noise', 'Seashore', 'Bird Tweet',
+      'Telephone Ring', 'Helicopter', 'Applause', 'Gunshot',
+    ];
+
+    function getInstrumentName(program) {
+      return GM_INSTRUMENTS[program] || `Program ${program}`;
+    }
+
+    // チャンネルごとのプログラム番号（楽器）
+    let channelPrograms = {};
+
+    function extractChannelPrograms(parsed) {
+      const programs = {};
+      for (const events of parsed.tracks) {
+        for (const e of events) {
+          if (e.type === 'programChange') {
+            programs[e.channel] = e.program;
+          }
+        }
+      }
+      return programs;
     }
 
     function midiToFreq(midiNote) {
@@ -664,7 +743,12 @@
 
     function getChannelLabel(ch) {
       const num = ch + 1;
-      return num === 10 ? 'Ch.10 (Drums)' : `Ch.${num}`;
+      if (num === 10) return 'Ch.10 (Drums)';
+      const program = channelPrograms[ch];
+      if (program !== undefined) {
+        return `Ch.${num} - ${getInstrumentName(program)}`;
+      }
+      return `Ch.${num}`;
     }
 
     function getChannelColor(ch) {
@@ -1083,6 +1167,9 @@
       currentNotes = notes;
       currentBpm = bpm;
 
+      // チャンネルごとの楽器情報を抽出
+      channelPrograms = extractChannelPrograms(parsed);
+
       // チャンネル検出
       currentChannels = detectChannels(notes);
 
@@ -1111,10 +1198,13 @@
         const tr = document.createElement('tr');
         tr.dataset.channel = n.channel;
         tr.dataset.index = i;
+        const instrName = n.channel === 9 ? 'Drums' :
+          (channelPrograms[n.channel] !== undefined ? getInstrumentName(channelPrograms[n.channel]) : '-');
         tr.innerHTML =
           `<td>${i + 1}</td>` +
           `<td>${n.startTime.toFixed(3)}</td>` +
           `<td>${n.channel + 1}</td>` +
+          `<td>${instrName}</td>` +
           `<td>${n.note}</td>` +
           `<td>${noteName(n.note)}</td>` +
           `<td>${n.velocity}</td>` +
