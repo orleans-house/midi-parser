@@ -201,6 +201,26 @@
       font-size: 0.85rem;
     }
 
+    /* 可視化セクション */
+    .viz-section {
+      display: none;
+      margin-bottom: 24px;
+      padding: 0 20px;
+    }
+
+    .viz-section h2 {
+      color: #00d4ff;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .viz-section canvas {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #0d1117;
+      cursor: crosshair;
+    }
   </style>
 </head>
 <body>
@@ -244,6 +264,34 @@
   <div id="seek-bar-container" style="display:none; padding: 0 20px; margin-bottom: 16px;">
     <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1"
       style="width:100%; accent-color:#00d4ff; cursor:pointer;">
+  </div>
+
+  <!-- Piano Roll -->
+  <div id="piano-roll-section" class="viz-section">
+    <h2>ピアノロール</h2>
+    <canvas id="piano-roll-canvas" width="1200" height="300"></canvas>
+  </div>
+
+  <!-- Section Density Graph -->
+  <div id="density-section" class="viz-section">
+    <h2>セクション密度</h2>
+    <canvas id="density-canvas" width="1200" height="150"></canvas>
+  </div>
+
+  <!-- Instrument Donut + Active Notes + Velocity Histogram -->
+  <div id="charts-row" class="viz-section" style="display:none; flex-wrap:wrap; gap:24px; justify-content:center;">
+    <div>
+      <h2>楽器使用率</h2>
+      <canvas id="donut-canvas" width="300" height="300"></canvas>
+    </div>
+    <div>
+      <h2>アクティブノート数</h2>
+      <canvas id="active-notes-canvas" width="300" height="300"></canvas>
+    </div>
+    <div>
+      <h2>ベロシティ分布</h2>
+      <canvas id="velocity-canvas" width="300" height="300"></canvas>
+    </div>
   </div>
 
   <script>
@@ -824,7 +872,7 @@
 
       // 再生終了検知
       const totalDuration = notes.length > 0
-        ? notes[notes.length - 1].startTime + notes[notes.length - 1].duration
+        ? Math.max(...notes.map(n => n.startTime + n.duration))
         : 0;
 
       if (seekOffset === 0) currentTotalDuration = totalDuration;
@@ -848,12 +896,13 @@
         const elapsed = (performance.now() - startReal) / 1000 + seekOffset;
         posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
         if (!seekBar._dragging) seekBar.value = elapsed;
+        // 可視化ヘッド更新
+        updatePlayhead(elapsed);
       }, 100);
 
-      const remainingDuration = seekOffset > 0 ? totalDuration : totalDuration;
       setTimeout(() => {
         if (isPlaying) stopPlayback();
-      }, (remainingDuration + 0.5) * 1000);
+      }, (totalDuration + 1.0) * 1000);
     }
 
     function stopPlayback() {
@@ -966,6 +1015,15 @@
       document.getElementById('controls').style.display = 'flex';
       btnPlay.disabled = false;
       btnStop.disabled = true;
+
+      // 可視化描画
+      drawPianoRoll();
+      drawDensityGraph();
+      drawDonutChart();
+      drawVelocityHistogram();
+      document.getElementById('piano-roll-section').style.display = 'block';
+      document.getElementById('density-section').style.display = 'block';
+      document.getElementById('charts-row').style.display = 'flex';
     }
 
     // 再生コントロール
@@ -983,6 +1041,381 @@
       stopPlayback();
       playNotesFrom(currentNotes, currentBpm, seekTime);
     });
+
+    // ============================================================
+    // ピアノロール描画
+    // ============================================================
+
+    let pianoRollAnimId = null;
+
+    function drawPianoRoll() {
+      const canvas = document.getElementById('piano-roll-canvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
+      const W = canvas.clientWidth;
+      const H = canvas.clientHeight;
+
+      ctx.clearRect(0, 0, W, H);
+      if (!currentNotes.length) return;
+
+      const dur = currentTotalDuration || Math.max(...currentNotes.map(n => n.startTime + n.duration));
+      // 音域検出（パディング付き）
+      let minNote = 127, maxNote = 0;
+      for (const n of currentNotes) {
+        if (n.note < minNote) minNote = n.note;
+        if (n.note > maxNote) maxNote = n.note;
+      }
+      minNote = Math.max(0, minNote - 4);
+      maxNote = Math.min(127, maxNote + 4);
+      const noteRange = maxNote - minNote + 1;
+
+      const PADDING_LEFT = 30;
+      const PADDING_BOTTOM = 20;
+      const plotW = W - PADDING_LEFT;
+      const plotH = H - PADDING_BOTTOM;
+
+      // グリッド線（10秒ごと）
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 0.5;
+      const gridInterval = dur > 120 ? 30 : dur > 30 ? 10 : 5;
+      for (let t = 0; t <= dur; t += gridInterval) {
+        const x = PADDING_LEFT + (t / dur) * plotW;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, plotH);
+        ctx.stroke();
+        // 時刻ラベル
+        ctx.fillStyle = '#666';
+        ctx.font = '10px monospace';
+        ctx.fillText(`${t}s`, x + 2, H - 4);
+      }
+
+      // ノート描画
+      for (const n of currentNotes) {
+        const isMuted = channelStates[n.channel]?.muted;
+        const anySolo = Object.values(channelStates).some(s => s.soloed);
+        const isSoloed = channelStates[n.channel]?.soloed;
+        const hidden = anySolo ? !isSoloed : isMuted;
+
+        const x = PADDING_LEFT + (n.startTime / dur) * plotW;
+        const w = Math.max(1, (n.duration / dur) * plotW);
+        const y = plotH - ((n.note - minNote + 1) / noteRange) * plotH;
+        const h = Math.max(1, plotH / noteRange);
+
+        const color = CHANNEL_COLORS[n.channel] || '#888';
+        ctx.globalAlpha = hidden ? 0.15 : 0.85;
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+      }
+      ctx.globalAlpha = 1;
+
+      // Y軸ラベル（C音のみ）
+      ctx.fillStyle = '#555';
+      ctx.font = '9px monospace';
+      for (let note = minNote; note <= maxNote; note++) {
+        if (note % 12 === 0) {
+          const y = plotH - ((note - minNote + 0.5) / noteRange) * plotH;
+          ctx.fillText(`C${Math.floor(note / 12) - 1}`, 2, y + 3);
+        }
+      }
+    }
+
+    // ピアノロール再生ヘッド
+    function startPianoRollPlayhead() {
+      cancelAnimationFrame(pianoRollAnimId);
+      const canvas = document.getElementById('piano-roll-canvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      function frame() {
+        if (!isPlaying) return;
+        const elapsed = (performance.now() - playbackStartReal) / 1000 + playbackStartOffset;
+        const dur = currentTotalDuration || 1;
+
+        // 再描画
+        drawPianoRoll();
+        const W = canvas.clientWidth;
+        const H = canvas.clientHeight;
+        const PADDING_LEFT = 30;
+        const plotW = W - PADDING_LEFT;
+
+        // ヘッドライン
+        const x = PADDING_LEFT + (elapsed / dur) * plotW;
+        ctx.save();
+        ctx.strokeStyle = '#ff4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H - 20);
+        ctx.stroke();
+        ctx.restore();
+
+        pianoRollAnimId = requestAnimationFrame(frame);
+      }
+      pianoRollAnimId = requestAnimationFrame(frame);
+    }
+
+    // ピアノロールクリックでシーク
+    document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
+      if (!currentNotes.length) return;
+      const canvas = e.target;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const PADDING_LEFT = 30;
+      const plotW = canvas.clientWidth - PADDING_LEFT;
+      const ratio = (x - PADDING_LEFT) / plotW;
+      if (ratio < 0 || ratio > 1) return;
+      const seekTime = ratio * (currentTotalDuration || 1);
+      stopPlayback();
+      playNotesFrom(currentNotes, currentBpm, seekTime);
+    });
+
+    // ============================================================
+    // セクション密度グラフ
+    // ============================================================
+
+    function drawDensityGraph() {
+      const canvas = document.getElementById('density-canvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
+      const W = canvas.clientWidth;
+      const H = canvas.clientHeight;
+
+      ctx.clearRect(0, 0, W, H);
+      if (!currentNotes.length) return;
+
+      const dur = currentTotalDuration || Math.max(...currentNotes.map(n => n.startTime + n.duration));
+      const bucketCount = Math.ceil(dur);
+      const buckets = new Array(bucketCount).fill(0);
+      for (const n of currentNotes) {
+        const idx = Math.min(Math.floor(n.startTime), bucketCount - 1);
+        buckets[idx]++;
+      }
+      const maxCount = Math.max(...buckets, 1);
+
+      const PADDING_LEFT = 30;
+      const PADDING_BOTTOM = 20;
+      const plotW = W - PADDING_LEFT;
+      const plotH = H - PADDING_BOTTOM;
+
+      // 塗りつぶし
+      ctx.beginPath();
+      ctx.moveTo(PADDING_LEFT, plotH);
+      for (let i = 0; i < bucketCount; i++) {
+        const x = PADDING_LEFT + (i / bucketCount) * plotW;
+        const y = plotH - (buckets[i] / maxCount) * plotH;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(PADDING_LEFT + plotW, plotH);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(0, 212, 255, 0.15)';
+      ctx.fill();
+
+      // 線
+      ctx.beginPath();
+      for (let i = 0; i < bucketCount; i++) {
+        const x = PADDING_LEFT + (i / bucketCount) * plotW;
+        const y = plotH - (buckets[i] / maxCount) * plotH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#00d4ff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Y軸ラベル
+      ctx.fillStyle = '#555';
+      ctx.font = '9px monospace';
+      ctx.fillText(`${maxCount}`, 2, 12);
+      ctx.fillText('0', 2, plotH);
+
+      // X軸ラベル
+      const gridInterval = dur > 120 ? 30 : dur > 30 ? 10 : 5;
+      for (let t = 0; t <= dur; t += gridInterval) {
+        const x = PADDING_LEFT + (t / dur) * plotW;
+        ctx.fillText(`${t}s`, x + 2, H - 4);
+      }
+    }
+
+    // 密度グラフ再生ヘッド
+    function drawDensityPlayhead(elapsed) {
+      const canvas = document.getElementById('density-canvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.clientWidth;
+      const H = canvas.clientHeight;
+      const PADDING_LEFT = 30;
+      const plotW = W - PADDING_LEFT;
+      const dur = currentTotalDuration || 1;
+
+      drawDensityGraph();
+      const x = PADDING_LEFT + (elapsed / dur) * plotW;
+      ctx.save();
+      ctx.strokeStyle = '#ff4444';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H - 20);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ============================================================
+    // 楽器使用率ドーナツチャート
+    // ============================================================
+
+    function drawDonutChart() {
+      const canvas = document.getElementById('donut-canvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = 300 * dpr;
+      canvas.height = 300 * dpr;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, 300, 300);
+      if (!currentNotes.length) return;
+
+      // チャンネルごとのノート数
+      const counts = {};
+      for (const n of currentNotes) {
+        counts[n.channel] = (counts[n.channel] || 0) + 1;
+      }
+
+      const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      const total = currentNotes.length;
+
+      const cx = 150, cy = 140, outerR = 120, innerR = 65;
+      let startAngle = -Math.PI / 2;
+
+      for (const [ch, count] of entries) {
+        const slice = (count / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, outerR, startAngle, startAngle + slice);
+        ctx.arc(cx, cy, innerR, startAngle + slice, startAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = CHANNEL_COLORS[parseInt(ch)] || '#888';
+        ctx.fill();
+        startAngle += slice;
+      }
+
+      // 中央テキスト
+      ctx.fillStyle = '#e0e0e0';
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${total} notes`, cx, cy - 4);
+      ctx.font = '11px monospace';
+      ctx.fillText(`${entries.length} channels`, cx, cy + 14);
+
+      // 凡例
+      ctx.textAlign = 'left';
+      ctx.font = '9px monospace';
+      const legendY = 280;
+      let lx = 10;
+      for (const [ch, count] of entries.slice(0, 8)) {
+        const chNum = parseInt(ch);
+        const name = chNum === 9 ? 'Drums' :
+          (channelPrograms[chNum] !== undefined ? getInstrumentName(channelPrograms[chNum]) : `Ch${chNum + 1}`);
+        const pct = ((count / total) * 100).toFixed(0);
+        ctx.fillStyle = CHANNEL_COLORS[chNum] || '#888';
+        ctx.fillRect(lx, legendY - 6, 8, 8);
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(`${name} ${pct}%`, lx + 11, legendY);
+        lx += ctx.measureText(`${name} ${pct}%`).width + 20;
+        if (lx > 270) break;
+      }
+    }
+
+    // ============================================================
+    // ベロシティ分布ヒストグラム
+    // ============================================================
+
+    function drawVelocityHistogram() {
+      const canvas = document.getElementById('velocity-canvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = 300 * dpr;
+      canvas.height = 300 * dpr;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, 300, 300);
+      if (!currentNotes.length) return;
+
+      // 16段階のバケット（0-7, 8-15, ... 120-127）
+      const BUCKETS = 16;
+      const buckets = new Array(BUCKETS).fill(0);
+      for (const n of currentNotes) {
+        const idx = Math.min(Math.floor(n.velocity / 8), BUCKETS - 1);
+        buckets[idx]++;
+      }
+      const maxCount = Math.max(...buckets, 1);
+
+      const PADDING = { left: 30, right: 10, top: 10, bottom: 30 };
+      const plotW = 300 - PADDING.left - PADDING.right;
+      const plotH = 300 - PADDING.top - PADDING.bottom;
+      const barW = plotW / BUCKETS - 2;
+
+      for (let i = 0; i < BUCKETS; i++) {
+        const x = PADDING.left + (i / BUCKETS) * plotW + 1;
+        const h = (buckets[i] / maxCount) * plotH;
+        const y = PADDING.top + plotH - h;
+
+        // 色: 低ベロシティ=青、高ベロシティ=赤
+        const ratio = i / (BUCKETS - 1);
+        const r = Math.round(ratio * 255);
+        const b = Math.round((1 - ratio) * 255);
+        ctx.fillStyle = `rgb(${r}, 80, ${b})`;
+        ctx.fillRect(x, y, barW, h);
+      }
+
+      // X軸
+      ctx.fillStyle = '#666';
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < BUCKETS; i += 4) {
+        const x = PADDING.left + ((i + 0.5) / BUCKETS) * plotW;
+        ctx.fillText(`${i * 8}`, x, 300 - 8);
+      }
+      ctx.fillText('127', PADDING.left + ((15.5) / BUCKETS) * plotW, 300 - 8);
+
+      // Y軸
+      ctx.textAlign = 'right';
+      ctx.fillText(`${maxCount}`, PADDING.left - 4, PADDING.top + 10);
+    }
+
+    // ============================================================
+    // 再生ヘッド統合更新
+    // ============================================================
+
+    function updatePlayhead(elapsed) {
+      // ピアノロール再描画 + ヘッド
+      const prCanvas = document.getElementById('piano-roll-canvas');
+      if (prCanvas.clientWidth > 0) {
+        drawPianoRoll();
+        const ctx = prCanvas.getContext('2d');
+        const W = prCanvas.clientWidth;
+        const H = prCanvas.clientHeight;
+        const PADDING_LEFT = 30;
+        const plotW = W - PADDING_LEFT;
+        const dur = currentTotalDuration || 1;
+        const x = PADDING_LEFT + (elapsed / dur) * plotW;
+        ctx.save();
+        ctx.strokeStyle = '#ff4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H - 20);
+        ctx.stroke();
+        ctx.restore();
+      }
+      // 密度グラフ再描画 + ヘッド
+      drawDensityPlayhead(elapsed);
+    }
+
   </script>
 </body>
 </html>
