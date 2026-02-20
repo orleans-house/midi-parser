@@ -2,6 +2,14 @@
 // Web Audio API 再生
 // ============================================================
 
+// 波形ごとの音量補正（倍音が多い波形ほど聴感上大きいため）
+const WAVE_GAIN_COMPENSATION = {
+  sine: 1.0,
+  triangle: 1.0,
+  square: 0.6,
+  sawtooth: 0.65,
+};
+
 let audioCtx = null;
 let isPlaying = false;
 let scheduledNodes = [];
@@ -162,12 +170,14 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const osc = audioCtx.createOscillator();
       const env = audioCtx.createGain();
 
-      osc.type = document.getElementById('wave-type').value;
+      const waveType = document.getElementById('wave-type').value;
+      osc.type = waveType;
       osc.frequency.value = freq;
 
       const vel = n.velocity / 127;
+      const waveGain = WAVE_GAIN_COMPENSATION[waveType] || 1.0;
       env.gain.setValueAtTime(0, t);
-      env.gain.linearRampToValueAtTime(vel * 0.15, t + 0.01);
+      env.gain.linearRampToValueAtTime(vel * 0.15 * waveGain, t + 0.01);
       env.gain.setValueAtTime(vel * 0.15, t + dur - Math.min(0.05, dur * 0.3));
       env.gain.linearRampToValueAtTime(0, t + dur);
 
