@@ -105,6 +105,17 @@
     button:hover { background: #00b8d9; }
     button:disabled { background: #444; color: #888; cursor: not-allowed; }
 
+    select {
+      background: #16213e;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
     #tempo-display, #position-display {
       color: #888;
       font-size: 0.85rem;
@@ -190,9 +201,20 @@
     </table>
   </div>
 
+  <div id="visualizer-section" style="display:none; margin-bottom: 20px;">
+    <h2>波形</h2>
+    <canvas id="waveform" height="120" style="width:100%; background:#16213e; border-radius:8px;"></canvas>
+  </div>
+
   <div id="controls">
     <button id="btn-play">&#9654; 再生</button>
     <button id="btn-stop" disabled>&#9632; 停止</button>
+    <select id="wave-type">
+      <option value="triangle">🔺 Triangle</option>
+      <option value="sine">🔵 Sine</option>
+      <option value="square">🟧 Square</option>
+      <option value="sawtooth">🔶 Sawtooth</option>
+    </select>
     <span id="tempo-display"></span>
     <span id="position-display"></span>
   </div>
@@ -542,6 +564,7 @@
     let isPlaying = false;
     let scheduledNodes = [];
     let animationTimer = null;
+    let schedulerTimer = null;
 
     async function playNotes(notes, bpm) {
       stopPlayback();
@@ -553,41 +576,105 @@
       scheduledNodes = [];
 
       const masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.3;
-      masterGain.connect(audioCtx.destination);
+      masterGain.gain.value = 0.5;
+
+      // Analyser for waveform visualization
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+      masterGain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      // Show visualizer
+      const vizSection = document.getElementById('visualizer-section');
+      vizSection.style.display = 'block';
+      const canvas = document.getElementById('waveform');
+      canvas.width = canvas.offsetWidth;
+      const canvasCtx = canvas.getContext('2d');
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function drawWaveform() {
+        if (!isPlaying) {
+          canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+        requestAnimationFrame(drawWaveform);
+        analyser.getByteTimeDomainData(dataArray);
+
+        canvasCtx.fillStyle = '#16213e';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = '#00d4ff';
+        canvasCtx.beginPath();
+
+        const sliceWidth = canvas.width / bufferLength;
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * canvas.height) / 2;
+          if (i === 0) canvasCtx.moveTo(x, y);
+          else canvasCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
+        canvasCtx.lineTo(canvas.width, canvas.height / 2);
+        canvasCtx.stroke();
+      }
+      drawWaveform();
 
       const startOffset = audioCtx.currentTime + 0.1;
       const rows = document.querySelectorAll('#note-tbody tr');
 
+      // AudioContext時間ベースの先読みスケジューラ
+      const LOOK_AHEAD = 15; // 15秒先まで常にスケジュール
+      const CHECK_INTERVAL = 200; // 200msごとにチェック
+      let chunkIndex = 0;
+
+      function scheduler() {
+        if (!isPlaying || !audioCtx) return;
+        const horizon = audioCtx.currentTime + LOOK_AHEAD;
+
+        while (chunkIndex < notes.length) {
+          const t = startOffset + notes[chunkIndex].startTime;
+          if (t > horizon) break;
+
+          const n = notes[chunkIndex];
+          const freq = midiToFreq(n.note);
+          const dur = Math.max(n.duration, 0.05);
+
+          const osc = audioCtx.createOscillator();
+          const env = audioCtx.createGain();
+
+          osc.type = document.getElementById('wave-type').value;
+          osc.frequency.value = freq;
+
+          const vel = n.velocity / 127;
+          env.gain.setValueAtTime(0, t);
+          env.gain.linearRampToValueAtTime(vel * 0.15, t + 0.01);
+          env.gain.setValueAtTime(vel * 0.15, t + dur - Math.min(0.05, dur * 0.3));
+          env.gain.linearRampToValueAtTime(0, t + dur);
+
+          osc.connect(env);
+          env.connect(masterGain);
+
+          osc.start(t);
+          osc.stop(t + dur + 0.01);
+
+          scheduledNodes.push(osc);
+          chunkIndex++;
+        }
+
+        if (chunkIndex < notes.length && isPlaying) {
+          schedulerTimer = setTimeout(scheduler, CHECK_INTERVAL);
+        }
+      }
+
+      scheduler();
+
+      // ハイライト用タイマー
       for (let i = 0; i < notes.length; i++) {
         const n = notes[i];
-        const freq = midiToFreq(n.note);
-        const dur = Math.max(n.duration, 0.05);
         const t = startOffset + n.startTime;
-
-        // オシレーター
-        const osc = audioCtx.createOscillator();
-        const env = audioCtx.createGain();
-
-        osc.type = 'triangle';
-        osc.frequency.value = freq;
-
-        // エンベロープ（アタック・リリース）
-        const vel = n.velocity / 127;
-        env.gain.setValueAtTime(0, t);
-        env.gain.linearRampToValueAtTime(vel * 0.5, t + 0.01);
-        env.gain.setValueAtTime(vel * 0.5, t + dur - Math.min(0.05, dur * 0.3));
-        env.gain.linearRampToValueAtTime(0, t + dur);
-
-        osc.connect(env);
-        env.connect(masterGain);
-
-        osc.start(t);
-        osc.stop(t + dur + 0.01);
-
-        scheduledNodes.push(osc);
-
-        // ハイライト用タイマー
         const row = rows[i];
         if (row) {
           const delay = (t - audioCtx.currentTime) * 1000;
@@ -595,7 +682,7 @@
             if (!isPlaying) return;
             document.querySelectorAll('#note-tbody tr.playing').forEach(r => r.classList.remove('playing'));
             row.classList.add('playing');
-            row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            // row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
           }, Math.max(0, delay));
         }
       }
@@ -622,6 +709,7 @@
 
     function stopPlayback() {
       isPlaying = false;
+      if (schedulerTimer) { clearTimeout(schedulerTimer); schedulerTimer = null; }
       if (animationTimer) { clearInterval(animationTimer); animationTimer = null; }
       for (const osc of scheduledNodes) {
         try { osc.stop(); } catch {}
