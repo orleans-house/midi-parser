@@ -25,80 +25,139 @@ h2 {
   font-size: 1.1rem;
 }
 
-/* ドロップゾーン */
-#drop-zone {
-  border: 2px dashed #444;
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    background 0.2s;
+h3 {
+  color: #00d4ff;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+/* ===== メインコンテナ (2カラム) ===== */
+#main-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
   margin-bottom: 24px;
+}
+
+/* ===== 左カラム: コントロールパネル ===== */
+#control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel-section {
   background: #16213e;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #333;
 }
 
-#drop-zone.dragover {
-  border-color: #00d4ff;
-  background: #1a2a4a;
-}
-
-#drop-zone p {
-  font-size: 1rem;
-  color: #888;
-}
-
-#drop-zone .hint {
-  font-size: 0.8rem;
-  color: #555;
-  margin-top: 8px;
+/* ファイル選択 */
+#btn-open {
+  width: 100%;
 }
 
 #file-input {
   display: none;
 }
 
-/* ヘッダー情報 */
-#header-info {
-  background: #16213e;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 24px;
-  display: none;
-}
-
-#header-info table {
+/* ファイル情報 */
+#file-info table {
   width: 100%;
 }
 
-#header-info td {
-  padding: 4px 12px;
+#file-info table {
+  table-layout: fixed;
 }
 
-#header-info td:first-child {
+#file-info td {
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  vertical-align: top;
+  word-break: break-all;
+}
+
+#file-info td:first-child {
   color: #888;
-  width: 180px;
+  width: 65px;
+  white-space: nowrap;
 }
 
-/* コントロール */
-#controls {
-  display: none;
-  gap: 12px;
-  margin-bottom: 24px;
+/* 再生コントロール */
+#playback-controls .control-row {
+  display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
+#playback-controls .control-row:last-child {
+  margin-bottom: 0;
+}
+
+#playback-controls label {
+  color: #888;
+  font-size: 0.8rem;
+  min-width: 32px;
+}
+
+#playback-controls button {
+  flex: 1;
+}
+
+#playback-controls select {
+  flex: 1;
+}
+
+#master-volume {
+  flex: 1;
+  accent-color: #00d4ff;
+  cursor: pointer;
+}
+
+#volume-display {
+  color: #888;
+  font-size: 0.8rem;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ポジション情報 */
+#position-info {
+  background: #16213e;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid #333;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+#position-info span {
+  display: block;
+}
+
+/* ===== 右カラム: ビジュアライザー ===== */
+#visualizer-section {
+  min-width: 0;
+}
+
+#visualizer-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* ===== ボタン共通 ===== */
 button {
   background: #00d4ff;
   color: #1a1a2e;
   border: none;
-  padding: 10px 24px;
+  padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: bold;
   transition: background 0.2s;
 }
@@ -106,6 +165,7 @@ button {
 button:hover {
   background: #00b8d9;
 }
+
 button:disabled {
   background: #444;
   color: #888;
@@ -116,26 +176,14 @@ select {
   background: #16213e;
   color: #e0e0e0;
   border: 1px solid #444;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 6px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
-#tempo-display,
-#position-display {
-  color: #888;
-  font-size: 0.85rem;
-}
-
-/* チャンネルビジュアライザー */
-#visualizer-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
+/* ===== チャンネルカード ===== */
 .channel-card {
   background: #16213e;
   border-radius: 8px;
@@ -197,34 +245,10 @@ select {
   border-color: #f59f00;
 }
 
-/* フィルターバー */
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.filter-bar label {
-  color: #888;
-  font-size: 0.85rem;
-}
-
-.filter-bar select {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-}
-
-/* 可視化セクション */
+/* ===== ピアノロール ===== */
 .viz-section {
   display: none;
-  margin-bottom: 24px;
-}
-
-.viz-section h2 {
-  color: #00d4ff;
-  margin-bottom: 8px;
-  font-size: 1rem;
+  margin-bottom: 16px;
 }
 
 .viz-section canvas {
@@ -240,4 +264,45 @@ select {
   border-radius: 8px;
   padding: 10px;
   border: 1px solid #333;
+}
+
+/* ===== 全画面ドラッグオーバーレイ ===== */
+#drag-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 212, 255, 0.08);
+  border: 3px dashed #00d4ff;
+  z-index: 9999;
+  pointer-events: none;
+  justify-content: center;
+  align-items: center;
+}
+
+#drag-overlay.active {
+  display: flex;
+}
+
+.drag-overlay-content {
+  font-size: 1.5rem;
+  color: #00d4ff;
+  background: rgba(26, 26, 46, 0.9);
+  padding: 20px 40px;
+  border-radius: 12px;
+}
+
+/* ===== 非表示の旧要素 ===== */
+#header-info {
+  display: none;
+}
+
+#controls {
+  display: none;
+}
+
+/* ===== テンポ・ポジション表示 ===== */
+#tempo-display,
+#position-display {
+  color: #888;
+  font-size: 0.8rem;
 }

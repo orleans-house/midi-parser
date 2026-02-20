@@ -8,42 +8,74 @@
 </head>
 <body>
 
-  <div id="drop-zone">
-    <p>MIDIファイルをドラッグ&ドロップ</p>
-    <p class="hint">またはクリックしてファイルを選択</p>
-    <input type="file" id="file-input" accept=".mid,.midi">
+  <div id="piano-roll-section" class="viz-section">
+    <canvas id="piano-roll-canvas" width="1200" height="300"></canvas>
+  </div>
+
+  <div id="main-container">
+    <!-- 左カラム: コントロールパネル -->
+    <div id="control-panel">
+      <div class="panel-section">
+        <button type="button" id="btn-open">📂 ファイルを開く</button>
+        <input type="file" id="file-input" accept=".mid,.midi">
+      </div>
+
+      <div id="file-info" class="panel-section">
+        <h3>📄 ファイル情報</h3>
+        <table>
+          <tr><td>File</td><td id="info-filename">-</td></tr>
+          <tr><td>Format</td><td id="info-format">-</td></tr>
+          <tr><td>Tracks</td><td id="info-tracks">-</td></tr>
+          <tr><td>Div</td><td id="info-division">-</td></tr>
+          <tr><td>Tempo</td><td id="info-tempo">-</td></tr>
+          <tr><td>Notes</td><td id="info-notes">-</td></tr>
+        </table>
+      </div>
+
+      <div id="playback-controls" class="panel-section">
+        <h3>🎛️ コントロール</h3>
+        <div class="control-row">
+          <button type="button" id="btn-play" disabled>&#9654; 再生</button>
+          <button type="button" id="btn-stop" disabled>&#9632; 停止</button>
+        </div>
+        <div class="control-row">
+          <label for="wave-type">波形</label>
+          <select id="wave-type">
+            <option value="triangle">🔺 Triangle</option>
+            <option value="sine">🔵 Sine</option>
+            <option value="square">🟧 Square</option>
+            <option value="sawtooth">🔶 Sawtooth</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <label for="master-volume">音量</label>
+          <input type="range" id="master-volume" min="0" max="100" value="50">
+          <span id="volume-display">50%</span>
+        </div>
+      </div>
+
+      <div id="position-info" class="panel-section">
+        <span id="tempo-display">-</span>
+        <span id="position-display"></span>
+      </div>
+    </div>
+
+    <!-- 右カラム: チャンネル波形 -->
+    <div id="visualizer-section">
+      <div id="visualizer-container"></div>
+    </div>
   </div>
 
   <div id="header-info" style="display:none;">
-    <h2>MIDIヘッダー</h2>
     <table>
-      <tr><td>フォーマット</td><td id="info-format">-</td></tr>
-      <tr><td>トラック数</td><td id="info-tracks">-</td></tr>
-      <tr><td>タイムディビジョン</td><td id="info-division">-</td></tr>
-      <tr><td>テンポ</td><td id="info-tempo">-</td></tr>
-      <tr><td>ノート数</td><td id="info-notes">-</td></tr>
+      <tr><td>フォーマット</td><td id="info-format-legacy">-</td></tr>
     </table>
   </div>
 
-  <div id="visualizer-section" style="display:none; margin-bottom: 20px;">
-    <div id="visualizer-container"></div>
-  </div>
+  <div id="controls" style="display:none;"></div>
 
-  <div id="controls">
-    <button type="button" id="btn-play">&#9654; 再生</button>
-    <button type="button" id="btn-stop" disabled>&#9632; 停止</button>
-    <select id="wave-type">
-      <option value="triangle">🔺 Triangle</option>
-      <option value="sine">🔵 Sine</option>
-      <option value="square">🟧 Square</option>
-      <option value="sawtooth">🔶 Sawtooth</option>
-    </select>
-    <span id="tempo-display"></span>
-    <span id="position-display"></span>
-  </div>
-
-  <div id="piano-roll-section" class="viz-section">
-    <canvas id="piano-roll-canvas" width="1200" height="300"></canvas>
+  <div id="drag-overlay">
+    <div class="drag-overlay-content">🎵 ここにドロップ</div>
   </div>
 
   <script src="js/globals.js"></script>
