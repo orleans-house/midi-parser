@@ -226,6 +226,14 @@ function stopPlayback() {
     clearInterval(animationTimer);
     animationTimer = null;
   }
+  // オーディオファイルソースの停止
+  if (audioFileSource) {
+    try {
+      audioFileSource.stop();
+    } catch {}
+    audioFileSource = null;
+  }
+
   for (const osc of scheduledNodes) {
     try {
       osc.stop();
