@@ -356,6 +356,17 @@ h3 svg,
   color: var(--text-secondary, #a89cc0);
 }
 
+.fx-row > label {
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.fx-row > span:last-child {
+  min-width: 48px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
 .fx-toggle {
   display: flex;
   align-items: center;
