@@ -397,20 +397,19 @@ test.describe('MIDI Parser App', () => {
 
   // ===== Drag & Drop =====
 
-  test('drag and drop zone is set up on body', async ({ page }) => {
-    // Verify the drop overlay exists
-    const overlay = page.locator('#drop-overlay');
-    // The overlay is created dynamically, check if body has dragover handler
-    // by triggering a dragenter event
+  test('drag overlay activates on dragenter with files', async ({ page }) => {
+    const overlay = page.locator('#drag-overlay');
+    await expect(overlay).not.toHaveClass(/active/);
+
+    // Simulate dragenter with Files type
     await page.evaluate(() => {
-      const event = new DragEvent('dragenter', { bubbles: true });
+      const dt = new DataTransfer();
+      dt.items.add(new File([''], 'test.mid', { type: 'audio/midi' }));
+      const event = new DragEvent('dragenter', { bubbles: true, dataTransfer: dt });
       document.body.dispatchEvent(event);
     });
-    await expect(overlay)
-      .toBeVisible({ timeout: 2000 })
-      .catch(() => {
-        // drop-overlay may or may not exist depending on implementation
-      });
+
+    await expect(overlay).toHaveClass(/active/, { timeout: 2000 });
   });
 
   // ===== Right Panel =====
