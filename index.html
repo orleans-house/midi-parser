@@ -219,6 +219,12 @@
       </div>
       <div class="panel-section">
         <h3><i data-lucide="move"></i> Filter XY</h3>
+        <div id="filter-mode-btns">
+          <button type="button" class="filter-mode-btn active" data-mode="hpf-lpf">HPF/LPF</button>
+          <button type="button" class="filter-mode-btn" data-mode="bandpass">Band</button>
+          <button type="button" class="filter-mode-btn" data-mode="notch">Notch</button>
+          <button type="button" class="filter-mode-btn" data-mode="peaking">Peak</button>
+        </div>
         <div id="xy-pad-wrapper" style="position:relative;">
           <canvas id="xy-pad" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
           <span id="xy-hpf-label" style="position:absolute; bottom:4px; left:4px; font-size:10px; color:var(--text-muted);">HPF: 20Hz</span>

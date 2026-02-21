@@ -69,10 +69,35 @@ function buildMasterChain(audioCtx) {
   });
   window._eqFilters = eqFilters;
 
-  // MasterGain → HPF → LPF → EQ chain
+  // Bandpass フィルター（バイパス可能）
+  const bandpass = audioCtx.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.frequency.value = window._bpFreq || 1000;
+  bandpass.Q.value = window._bpQ || 1;
+  window._bandpass = bandpass;
+
+  // Notch フィルター（バイパス可能）
+  const notch = audioCtx.createBiquadFilter();
+  notch.type = 'notch';
+  notch.frequency.value = window._notchFreq || 1000;
+  notch.Q.value = window._notchQ || 1;
+  window._notch = notch;
+
+  // Peaking フィルター（バイパス可能）
+  const peaking = audioCtx.createBiquadFilter();
+  peaking.type = 'peaking';
+  peaking.frequency.value = window._peakFreq || 1000;
+  peaking.Q.value = window._peakQ || 1;
+  peaking.gain.value = window._peakGain || 0;
+  window._peaking = peaking;
+
+  // MasterGain → HPF → LPF → Bandpass → Notch → Peaking → EQ chain
   masterGain.connect(hpf);
   hpf.connect(lpf);
-  let prevNode = lpf;
+  lpf.connect(bandpass);
+  bandpass.connect(notch);
+  notch.connect(peaking);
+  let prevNode = peaking;
   for (const filter of eqFilters) {
     prevNode.connect(filter);
     prevNode = filter;
