@@ -68,10 +68,12 @@ function setActiveWave(newWave) {
   }
   applyCurrentWaveVolume();
 
-  // 全チャンネルの波形を一括変更
+  // 全チャンネルの波形を一括変更（channelFxState全体 + currentChannels）
+  for (const ch of Object.keys(channelFxState)) {
+    channelFxState[ch].waveType = newWave;
+  }
   for (const ch of currentChannels) {
-    const chFx = getChannelFx(ch);
-    chFx.waveType = newWave;
+    getChannelFx(ch).waveType = newWave;
   }
 
   // FXモジュールの波形ボタンUIも同期
