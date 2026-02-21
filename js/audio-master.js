@@ -45,14 +45,14 @@ function buildMasterChain(audioCtx) {
   hpf.type = 'highpass';
   hpf.frequency.value = window._hpfFreq || 20;
   const hpfQSlider = document.getElementById('hpf-q');
-  hpf.Q.value = hpfQSlider ? Number(hpfQSlider.value) : 0.7;
+  hpf.Q.value = hpfQSlider ? Number(hpfQSlider.value) : 10;
   window._hpf = hpf;
 
   const lpf = audioCtx.createBiquadFilter();
   lpf.type = 'lowpass';
   lpf.frequency.value = window._lpfFreq || 20000;
   const lpfQSlider = document.getElementById('lpf-q');
-  lpf.Q.value = lpfQSlider ? Number(lpfQSlider.value) : 0.7;
+  lpf.Q.value = lpfQSlider ? Number(lpfQSlider.value) : 10;
   window._lpf = lpf;
 
   // EQ フィルターチェーン
