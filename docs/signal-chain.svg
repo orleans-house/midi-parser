@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="'Segoe UI', sans-serif" font-size="13">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 820" font-family="'Segoe UI', sans-serif" font-size="12">
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6" fill="#b39ddb"/>
@@ -6,117 +6,161 @@
     <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6" fill="#81c784"/>
     </marker>
-    <marker id="arrow-cyan" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="#4dd0e1"/>
+    <marker id="arrow-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#ef5350"/>
     </marker>
   </defs>
 
-  <rect width="960" height="500" rx="12" fill="#0e0a14"/>
+  <rect width="800" height="820" rx="12" fill="#0e0a14"/>
 
-  <!-- Source Layer -->
-  <rect x="20" y="20" width="160" height="400" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
-  <text x="100" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Source</text>
-  <text x="100" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-source.js</text>
+  <!-- ============ Source Layer (top center) ============ -->
+  <rect x="280" y="15" width="240" height="110" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
+  <text x="400" y="38" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Source</text>
+  <text x="400" y="53" text-anchor="middle" fill="#7a6d90" font-size="10">audio-source.js</text>
+  <rect x="335" y="62" width="130" height="24" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="400" y="78" text-anchor="middle" fill="#e0d6f0">Oscillator</text>
+  <line x1="400" y1="86" x2="400" y2="93" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="335" y="93" width="130" height="24" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="400" y="109" text-anchor="middle" fill="#e0d6f0">Envelope</text>
 
-  <rect x="35" y="80" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="100" y="100" text-anchor="middle" fill="#e0d6f0">Oscillator</text>
-  <line x1="100" y1="110" x2="100" y2="130" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="35" y="130" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="100" y="150" text-anchor="middle" fill="#e0d6f0">Envelope</text>
+  <!-- ============ Channel Layer (3 shown + dots) ============ -->
+  <!-- Channel 1 -->
+  <rect x="60" y="160" width="150" height="260" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
+  <text x="135" y="180" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="13">Channel 1</text>
+  <text x="135" y="194" text-anchor="middle" fill="#7a6d90" font-size="10">audio-channel.js</text>
+  <rect x="80" y="205" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="135" y="220" text-anchor="middle" fill="#e0d6f0" font-size="11">ChGain</text>
+  <line x1="135" y1="227" x2="135" y2="237" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="80" y="237" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="135" y="252" text-anchor="middle" fill="#e0d6f0" font-size="11">Distortion</text>
+  <line x1="135" y1="259" x2="135" y2="269" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="80" y="269" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="135" y="284" text-anchor="middle" fill="#e0d6f0" font-size="11">Delay</text>
+  <line x1="135" y1="291" x2="135" y2="301" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="80" y="301" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="135" y="316" text-anchor="middle" fill="#e0d6f0" font-size="11">Reverb</text>
+  <line x1="135" y1="323" x2="135" y2="333" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="80" y="333" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="135" y="348" text-anchor="middle" fill="#e0d6f0" font-size="11">ChAnalyser</text>
 
-  <!-- Metronome inside Source -->
-  <rect x="35" y="370" width="130" height="30" rx="6" fill="#2e2440" stroke="#81c784"/>
-  <text x="100" y="390" text-anchor="middle" fill="#81c784">Metronome</text>
+  <!-- Channel 2 -->
+  <rect x="230" y="160" width="150" height="260" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
+  <text x="305" y="180" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="13">Channel 2</text>
+  <text x="305" y="194" text-anchor="middle" fill="#7a6d90" font-size="10">audio-channel.js</text>
+  <rect x="250" y="205" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="305" y="220" text-anchor="middle" fill="#e0d6f0" font-size="11">ChGain</text>
+  <line x1="305" y1="227" x2="305" y2="237" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="250" y="237" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="305" y="252" text-anchor="middle" fill="#e0d6f0" font-size="11">Distortion</text>
+  <line x1="305" y1="259" x2="305" y2="269" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="250" y="269" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="305" y="284" text-anchor="middle" fill="#e0d6f0" font-size="11">Delay</text>
+  <line x1="305" y1="291" x2="305" y2="301" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="250" y="301" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="305" y="316" text-anchor="middle" fill="#e0d6f0" font-size="11">Reverb</text>
+  <line x1="305" y1="323" x2="305" y2="333" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="250" y="333" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="305" y="348" text-anchor="middle" fill="#e0d6f0" font-size="11">ChAnalyser</text>
 
-  <!-- Channel Layer -->
-  <rect x="195" y="20" width="160" height="400" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
-  <text x="275" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Channel x16</text>
-  <text x="275" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-channel.js</text>
+  <!-- ... dots -->
+  <text x="440" y="300" text-anchor="middle" fill="#7a6d90" font-size="24">...</text>
 
-  <rect x="210" y="80" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="275" y="100" text-anchor="middle" fill="#e0d6f0">ChGain</text>
-  <text x="275" y="120" text-anchor="middle" fill="#7a6d90" font-size="10">waveVol x playGate</text>
-  <line x1="275" y1="110" x2="275" y2="135" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="210" y="135" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="275" y="155" text-anchor="middle" fill="#e0d6f0">Distortion</text>
-  <line x1="275" y1="165" x2="275" y2="185" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="210" y="185" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="275" y="205" text-anchor="middle" fill="#e0d6f0">Delay</text>
-  <line x1="275" y1="215" x2="275" y2="235" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="210" y="235" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="275" y="255" text-anchor="middle" fill="#e0d6f0">Reverb</text>
-  <line x1="275" y1="265" x2="275" y2="285" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="210" y="285" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="275" y="305" text-anchor="middle" fill="#e0d6f0">ChAnalyser</text>
+  <!-- Channel 16 -->
+  <rect x="500" y="160" width="150" height="260" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
+  <text x="575" y="180" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="13">Channel 16</text>
+  <text x="575" y="194" text-anchor="middle" fill="#7a6d90" font-size="10">audio-channel.js</text>
+  <rect x="520" y="205" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="575" y="220" text-anchor="middle" fill="#e0d6f0" font-size="11">ChGain</text>
+  <line x1="575" y1="227" x2="575" y2="237" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="520" y="237" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="575" y="252" text-anchor="middle" fill="#e0d6f0" font-size="11">Distortion</text>
+  <line x1="575" y1="259" x2="575" y2="269" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="520" y="269" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="575" y="284" text-anchor="middle" fill="#e0d6f0" font-size="11">Delay</text>
+  <line x1="575" y1="291" x2="575" y2="301" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="520" y="301" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="575" y="316" text-anchor="middle" fill="#e0d6f0" font-size="11">Reverb</text>
+  <line x1="575" y1="323" x2="575" y2="333" stroke="#b39ddb" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="520" y="333" width="110" height="22" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="575" y="348" text-anchor="middle" fill="#e0d6f0" font-size="11">ChAnalyser</text>
 
-  <!-- Master Layer -->
-  <rect x="370" y="20" width="310" height="400" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
-  <text x="525" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Master</text>
-  <text x="525" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-master.js</text>
+  <!-- ============ Master Layer (left below channels) ============ -->
+  <rect x="60" y="465" width="300" height="250" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
+  <text x="210" y="488" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Master</text>
+  <text x="210" y="503" text-anchor="middle" fill="#7a6d90" font-size="10">audio-master.js</text>
+  <rect x="145" y="515" width="130" height="24" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="210" y="531" text-anchor="middle" fill="#e0d6f0">MasterGain</text>
+  <line x1="210" y1="539" x2="210" y2="549" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="145" y="549" width="130" height="24" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="210" y="565" text-anchor="middle" fill="#e0d6f0">GlobalFilter</text>
+  <line x1="210" y1="573" x2="210" y2="583" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="145" y="583" width="130" height="24" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="210" y="599" text-anchor="middle" fill="#e0d6f0">EQ 5-band</text>
+  <line x1="210" y1="607" x2="210" y2="617" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="145" y="617" width="130" height="24" rx="5" fill="#2e2440" stroke="#b39ddb" stroke-width="2"/>
+  <text x="210" y="633" text-anchor="middle" fill="#b39ddb" font-weight="bold">FX Trim</text>
 
-  <rect x="460" y="80" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="525" y="100" text-anchor="middle" fill="#e0d6f0">MasterGain</text>
-  <line x1="525" y1="110" x2="525" y2="130" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="460" y="130" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="525" y="150" text-anchor="middle" fill="#e0d6f0">GlobalFilter</text>
-  <line x1="525" y1="160" x2="525" y2="180" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="460" y="180" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="525" y="200" text-anchor="middle" fill="#e0d6f0">EQ 5-band</text>
-  <line x1="525" y1="210" x2="525" y2="230" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="460" y="230" width="130" height="30" rx="6" fill="#2e2440" stroke="#b39ddb" stroke-width="2"/>
-  <text x="525" y="250" text-anchor="middle" fill="#b39ddb" font-weight="bold">FX Trim</text>
+  <!-- FX Trim → Spectrum / MasterAnalyser -->
+  <line x1="180" y1="641" x2="130" y2="660" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="240" y1="641" x2="290" y2="660" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="75" y="660" width="110" height="24" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="130" y="676" text-anchor="middle" fill="#e0d6f0" font-size="11">Spectrum</text>
+  <rect x="235" y="660" width="110" height="24" rx="5" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="290" y="676" text-anchor="middle" fill="#e0d6f0" font-size="11">MasterAnalyser</text>
 
-  <!-- FX Trim splits to Spectrum and MasterAnalyser -->
-  <line x1="490" y1="260" x2="440" y2="290" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="560" y1="260" x2="610" y2="290" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- ============ Metronome (right, standalone) ============ -->
+  <rect x="600" y="520" width="140" height="40" rx="8" fill="#1a1525" stroke="#81c784" stroke-width="1.5"/>
+  <text x="670" y="545" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="13">Metronome</text>
 
-  <rect x="390" y="290" width="110" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="445" y="310" text-anchor="middle" fill="#e0d6f0" font-size="12">Spectrum</text>
+  <!-- ============ User Layer (bottom) ============ -->
+  <rect x="60" y="730" width="680" height="75" rx="8" fill="#1a1525" stroke="#81c784" stroke-width="1.5"/>
+  <text x="400" y="750" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="14">User</text>
+  <text x="400" y="764" text-anchor="middle" fill="#7a6d90" font-size="10">audio-output.js</text>
 
-  <rect x="560" y="290" width="110" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="615" y="310" text-anchor="middle" fill="#e0d6f0" font-size="12">MasterAnalyser</text>
+  <!-- Wave -->
+  <rect x="100" y="774" width="200" height="24" rx="5" fill="#1e2a30" stroke="#4dd0e1" stroke-width="1.5"/>
+  <text x="200" y="790" text-anchor="middle" fill="#4dd0e1" font-weight="bold" font-size="12">Wave</text>
+  <text x="200" y="804" text-anchor="middle" fill="#7a6d90" font-size="9">Canvas (60fps)</text>
 
-  <!-- User Layer -->
-  <rect x="700" y="20" width="240" height="400" rx="8" fill="#1a1525" stroke="#81c784" stroke-width="1.5"/>
-  <text x="820" y="45" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="14">User</text>
-  <text x="820" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-output.js</text>
+  <!-- Sound -->
+  <rect x="500" y="774" width="200" height="24" rx="5" fill="#1e2a30" stroke="#81c784" stroke-width="1.5"/>
+  <text x="600" y="790" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="12">Sound</text>
+  <text x="600" y="804" text-anchor="middle" fill="#7a6d90" font-size="9">Speaker output</text>
 
-  <!-- Waveform Renderer -->
-  <rect x="730" y="90" width="180" height="60" rx="8" fill="#1e2a30" stroke="#4dd0e1" stroke-width="1.5"/>
-  <text x="820" y="115" text-anchor="middle" fill="#4dd0e1" font-weight="bold" font-size="13">Waveform Renderer</text>
-  <text x="820" y="135" text-anchor="middle" fill="#7a6d90" font-size="11">Canvas (60fps)</text>
+  <!-- ============ CONNECTIONS ============ -->
 
-  <!-- destination -->
-  <rect x="730" y="340" width="180" height="50" rx="8" fill="#1e2a30" stroke="#81c784" stroke-width="2"/>
-  <text x="820" y="365" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="14">destination</text>
-  <text x="820" y="382" text-anchor="middle" fill="#7a6d90" font-size="10">Speaker output</text>
+  <!-- Source → Channels (purple, fan out) -->
+  <line x1="340" y1="117" x2="135" y2="160" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="400" y1="117" x2="305" y2="160" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="460" y1="117" x2="575" y2="160" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- === Audio connections (purple solid) === -->
-  <!-- Source Envelope → Channel ChGain -->
-  <line x1="165" y1="145" x2="210" y2="95" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- Channel ChAnalyser → Master MasterGain -->
-  <line x1="340" y1="295" x2="460" y2="95" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- MasterAnalyser → User destination -->
-  <line x1="670" y1="305" x2="730" y2="355" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- ChAnalysers → MasterGain (purple, converge) -->
+  <line x1="135" y1="355" x2="175" y2="465" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="305" y1="355" x2="210" y2="465" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="575" y1="355" x2="245" y2="465" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- === Metronome path (green dashed) === -->
-  <path d="M165,385 L700,385 L730,365" fill="none" stroke="#81c784" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrow-green)"/>
+  <!-- MasterAnalyser → Sound (purple) -->
+  <path d="M345,672 C450,672 550,730 600,774" fill="none" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- === Visual data (cyan dashed) === -->
-  <!-- ChAnalyser → Renderer (curve above to avoid crossing audio lines) -->
-  <path d="M340,290 C450,250 650,70 730,110" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
-  <!-- Spectrum → Renderer (straight, below ChAnalyser line) -->
-  <path d="M500,300 C550,270 680,160 730,125" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
-  <!-- MasterAnalyser → Renderer (curve below) -->
-  <path d="M670,300 C700,250 720,180 730,140" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <!-- Metronome → Sound (green dashed) -->
+  <path d="M670,560 C670,670 620,740 600,774" fill="none" stroke="#81c784" stroke-width="1.5" stroke-dasharray="8,4" marker-end="url(#arrow-green)"/>
 
-  <!-- Legend -->
-  <rect x="230" y="445" width="500" height="40" rx="6" fill="#1a1525" stroke="#5a4d70" stroke-width="0.5"/>
-  <line x1="250" y1="465" x2="290" y2="465" stroke="#b39ddb" stroke-width="2"/>
-  <text x="300" y="469" fill="#7a6d90" font-size="11">Audio</text>
-  <line x1="350" y1="465" x2="390" y2="465" stroke="#81c784" stroke-width="2" stroke-dasharray="8,4"/>
-  <text x="400" y="469" fill="#7a6d90" font-size="11">Metronome</text>
-  <line x1="480" y1="465" x2="520" y2="465" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3"/>
-  <text x="530" y="469" fill="#7a6d90" font-size="11">Visual data</text>
-  <text x="480" y="480" text-anchor="middle" fill="#5a4d70" font-size="9">Orchestrator: audio-engine.js</text>
+  <!-- ChAnalysers → Wave (red, visual data) -->
+  <path d="M110,355 C70,450 70,700 130,774" fill="none" stroke="#ef5350" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-red)"/>
+  <path d="M280,355 C260,500 220,700 180,774" fill="none" stroke="#ef5350" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-red)"/>
+  <path d="M550,355 C500,500 280,700 230,774" fill="none" stroke="#ef5350" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-red)"/>
+
+  <!-- Spectrum → Wave (red, visual data) -->
+  <path d="M130,684 C100,720 140,750 170,774" fill="none" stroke="#ef5350" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-red)"/>
+  <!-- MasterAnalyser → Wave (red, visual data) -->
+  <path d="M290,684 C270,720 240,750 220,774" fill="none" stroke="#ef5350" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-red)"/>
+
+  <!-- ============ Legend ============ -->
+  <rect x="420" y="465" width="160" height="50" rx="6" fill="#1a1525" stroke="#5a4d70" stroke-width="0.5"/>
+  <line x1="435" y1="480" x2="465" y2="480" stroke="#b39ddb" stroke-width="2"/>
+  <text x="475" y="484" fill="#7a6d90" font-size="10">Audio signal</text>
+  <line x1="435" y1="495" x2="465" y2="495" stroke="#81c784" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="475" y="499" fill="#7a6d90" font-size="10">Metronome</text>
+  <line x1="435" y1="510" x2="465" y2="510" stroke="#ef5350" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="475" y="514" fill="#7a6d90" font-size="10">Visual data</text>
 </svg>
