@@ -2,6 +2,8 @@
 // ピアノロール描画
 // ============================================================
 
+const PIANO_PADDING_LEFT = 0;
+
 function drawPianoRoll() {
   const canvas = document.getElementById('piano-roll-canvas');
   const ctx = canvas.getContext('2d');
@@ -49,6 +51,11 @@ function drawPianoRoll() {
   }
   ctx.globalAlpha = 1;
 
+  // DJ markers (hot cues, A-B loop)
+  if (typeof drawDJMarkers === 'function') {
+    drawDJMarkers(ctx, W, H, PIANO_PADDING_LEFT);
+  }
+
   // Y軸ラベル（C音のみ）
   ctx.fillStyle = getThemeColor('--text-muted', '#6b5f7a');
   ctx.font = '9px monospace';
@@ -66,7 +73,7 @@ document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
   const canvas = e.target;
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
-  const PADDING_LEFT = 0;
+  const PADDING_LEFT = PIANO_PADDING_LEFT;
   const plotW = canvas.clientWidth - PADDING_LEFT;
   const ratio = (x - PADDING_LEFT) / plotW;
   if (ratio < 0 || ratio > 1) return;
@@ -89,10 +96,16 @@ function updatePlayhead(elapsed) {
     const ctx = prCanvas.getContext('2d');
     const W = prCanvas.clientWidth;
     const H = prCanvas.clientHeight;
-    const PADDING_LEFT = 0;
+    const PADDING_LEFT = PIANO_PADDING_LEFT;
     const plotW = W - PADDING_LEFT;
     const dur = currentTotalDuration || 1;
     const x = PADDING_LEFT + (elapsed / dur) * plotW;
+    // DJ markers (hot cues, A-B loop)
+    if (typeof drawDJMarkers === 'function') {
+      drawDJMarkers(ctx, W, H, PADDING_LEFT);
+    }
+
+    // Playhead
     ctx.save();
     ctx.strokeStyle = getThemeColor('--accent-green', '#81c784');
     ctx.lineWidth = 2;
