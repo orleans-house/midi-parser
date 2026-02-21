@@ -712,7 +712,7 @@ select {
 
 #hot-cue-pads {
   display: grid;
-  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   margin-bottom: 10px;
 }
