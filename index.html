@@ -83,6 +83,28 @@
       </div>
 
       <div class="panel-section">
+        <h3><i data-lucide="timer"></i> メトロノーム</h3>
+        <div class="fx-row">
+          <label class="fx-toggle">
+            <input type="checkbox" id="metronome-on">
+            <span>ON</span>
+          </label>
+          <select id="metronome-type" style="font-size:0.7rem;" disabled>
+            <option value="click">Click</option>
+            <option value="wood">Wood</option>
+            <option value="hihat">HiHat</option>
+            <option value="rim">Rim</option>
+            <option value="beep">Beep</option>
+          </select>
+        </div>
+        <div class="fx-row">
+          <span class="fx-val" style="min-width:28px">Vol</span>
+          <input type="range" id="metronome-vol" class="fx-slider" min="0" max="100" value="50" disabled>
+          <span class="fx-val" id="metronome-vol-val">50%</span>
+        </div>
+      </div>
+
+      <div class="panel-section">
         <h3><i data-lucide="sliders-vertical"></i> イコライザー</h3>
         <div id="eq-mixer">
           <div class="eq-band" data-freq="60">
@@ -114,6 +136,52 @@
       </div>
 
       <div class="panel-section">
+        <h3><i data-lucide="waves"></i> マスターFX</h3>
+        <div class="master-fx-module">
+          <div class="fx-row">
+            <label class="fx-toggle">
+              <input type="checkbox" id="master-reverb-on">
+              <span>Reverb</span>
+            </label>
+          </div>
+          <div class="fx-row">
+            <label>Mix</label>
+            <input type="range" id="master-reverb-mix" min="0" max="100" value="30" style="flex:1;" disabled>
+            <span id="master-reverb-mix-val">30%</span>
+          </div>
+          <div class="fx-row">
+            <label>Decay</label>
+            <input type="range" id="master-reverb-decay" min="1" max="50" value="20" style="flex:1;" disabled>
+            <span id="master-reverb-decay-val">2.0s</span>
+          </div>
+        </div>
+        <div class="master-fx-divider"></div>
+        <div class="master-fx-module">
+          <div class="fx-row">
+            <label class="fx-toggle">
+              <input type="checkbox" id="master-chorus-on">
+              <span>Chorus</span>
+            </label>
+          </div>
+          <div class="fx-row">
+            <label>Rate</label>
+            <input type="range" id="master-chorus-rate" min="1" max="80" value="15" style="flex:1;" disabled>
+            <span id="master-chorus-rate-val">1.5 Hz</span>
+          </div>
+          <div class="fx-row">
+            <label>Depth</label>
+            <input type="range" id="master-chorus-depth" min="0" max="30" value="5" style="flex:1;" disabled>
+            <span id="master-chorus-depth-val">5 ms</span>
+          </div>
+          <div class="fx-row">
+            <label>Mix</label>
+            <input type="range" id="master-chorus-mix" min="0" max="100" value="50" style="flex:1;" disabled>
+            <span id="master-chorus-mix-val">50%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-section">
         <h3><i data-lucide="shield"></i> リミッター</h3>
         <div class="fx-row">
           <label class="fx-toggle">
@@ -133,28 +201,6 @@
         </div>
         <div class="fx-row">
           <span id="limiter-reduction" style="color: var(--accent-purple); font-size: 0.85rem;">Reduction: 0 dB</span>
-        </div>
-      </div>
-
-      <div class="panel-section">
-        <h3><i data-lucide="timer"></i> メトロノーム</h3>
-        <div class="fx-row">
-          <label class="fx-toggle">
-            <input type="checkbox" id="metronome-on">
-            <span>ON</span>
-          </label>
-          <select id="metronome-type" style="font-size:0.7rem;" disabled>
-            <option value="click">Click</option>
-            <option value="wood">Wood</option>
-            <option value="hihat">HiHat</option>
-            <option value="rim">Rim</option>
-            <option value="beep">Beep</option>
-          </select>
-        </div>
-        <div class="fx-row">
-          <span class="fx-val" style="min-width:28px">Vol</span>
-          <input type="range" id="metronome-vol" class="fx-slider" min="0" max="100" value="50" disabled>
-          <span class="fx-val" id="metronome-vol-val">50%</span>
         </div>
       </div>
 

@@ -851,3 +851,9 @@ select {
   font-size: 0.85rem;
   opacity: 0.7;
 }
+
+/* マスターFX */
+.master-fx-divider {
+  border-top: 1px solid var(--border, #2a2440);
+  margin: 8px 0;
+}
