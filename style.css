@@ -352,6 +352,8 @@ h3 svg,
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #a89cc0);
 }
 
 .fx-toggle {
