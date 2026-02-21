@@ -630,20 +630,18 @@ const limiterKnee = document.getElementById('limiter-knee');
 const limiterKneeVal = document.getElementById('limiter-knee-val');
 const limiterReduction = document.getElementById('limiter-reduction');
 
+limiterOn.addEventListener('change', () => {
+  applyLimiterParams(window._limiter);
+});
+
 limiterThreshold.addEventListener('input', () => {
-  const val = Number(limiterThreshold.value);
-  limiterThresholdVal.textContent = `${val} dB`;
-  if (window._limiter && !window._limiterBypassed) {
-    window._limiter.threshold.value = val;
-  }
+  limiterThresholdVal.textContent = `${limiterThreshold.value} dB`;
+  applyLimiterParams(window._limiter);
 });
 
 limiterKnee.addEventListener('input', () => {
-  const val = Number(limiterKnee.value);
-  limiterKneeVal.textContent = `${val} dB`;
-  if (window._limiter && !window._limiterBypassed) {
-    window._limiter.knee.value = val;
-  }
+  limiterKneeVal.textContent = `${limiterKnee.value} dB`;
+  applyLimiterParams(window._limiter);
 });
 
 // リミッターのゲインリダクション表示
