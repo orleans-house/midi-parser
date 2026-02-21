@@ -357,7 +357,7 @@ h3 svg,
 }
 
 .fx-row > label {
-  min-width: 60px;
+  min-width: 70px;
   flex-shrink: 0;
 }
 
@@ -634,6 +634,11 @@ select {
   cursor: pointer;
 }
 
+.fx-mod-row > span:first-of-type {
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
 .fx-mod-row input[type="checkbox"] {
   accent-color: var(--accent-green);
 }
@@ -650,8 +655,9 @@ select {
 .ch-fx-val {
   color: var(--text-muted);
   font-size: 0.65rem;
-  min-width: 24px;
+  min-width: 30px;
   text-align: right;
+  flex-shrink: 0;
 }
 
 /* ===== 全画面ドラッグオーバーレイ ===== */
