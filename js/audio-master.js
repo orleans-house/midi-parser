@@ -75,58 +75,13 @@ function buildMasterChain(audioCtx) {
     prevNode = filter;
   }
 
-  // Distortion
-  const distortion = audioCtx.createWaveShaper();
-  distortion.oversample = '4x';
-  window._fxDistortion = distortion;
-  window._fxDistortionEnabled = document.getElementById('fx-distortion-on').checked;
-  if (window._fxDistortionEnabled) {
-    updateDistortionCurve(distortion, Number(document.getElementById('fx-distortion').value));
-  }
-
-  // Delay
-  const delay = audioCtx.createDelay(1.0);
-  delay.delayTime.value = Number(document.getElementById('fx-delay-time').value) / 1000;
-  const delayFeedback = audioCtx.createGain();
-  delayFeedback.gain.value = 0.3;
-  const delayWet = audioCtx.createGain();
-  delayWet.gain.value = 0;
-  delay.connect(delayFeedback);
-  delayFeedback.connect(delay);
-  delay.connect(delayWet);
-  window._fxDelay = delay;
-  window._fxDelayFeedback = delayFeedback;
-  window._fxDelayWet = delayWet;
-  window._fxDelayEnabled = document.getElementById('fx-delay-on').checked;
-  if (window._fxDelayEnabled) delayWet.gain.value = 0.5;
-
-  // Reverb
-  const reverbWet = audioCtx.createGain();
-  reverbWet.gain.value = 0;
-  const convolver = audioCtx.createConvolver();
-  convolver.buffer = createReverbIR(audioCtx, 2, 2);
-  convolver.connect(reverbWet);
-  window._fxConvolver = convolver;
-  window._fxReverbWet = reverbWet;
-  window._fxReverbEnabled = document.getElementById('fx-reverb-on').checked;
-  if (window._fxReverbEnabled) {
-    reverbWet.gain.value = Number(document.getElementById('fx-reverb').value) / 100;
-  }
-
-  // EQ → Distortion → Delay, EQ → Convolver
-  prevNode.connect(distortion);
-  distortion.connect(delay);
-  prevNode.connect(convolver);
-
-  // FX Master Trim
+  // EQ → FX Trim
   const fxTrim = audioCtx.createGain();
   const fxTrimSlider = document.getElementById('fx-trim');
   fxTrim.gain.value = fxTrimSlider ? Number(fxTrimSlider.value) / 100 : 1;
   window._fxTrim = fxTrim;
 
-  distortion.connect(fxTrim);
-  delayWet.connect(fxTrim);
-  reverbWet.connect(fxTrim);
+  prevNode.connect(fxTrim);
 
   return { masterGain, fxTrim };
 }
