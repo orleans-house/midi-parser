@@ -129,6 +129,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
   if (typeof startSpectrumDraw === 'function') startSpectrumDraw();
+  if (typeof startLimiterMeter === 'function') startLimiterMeter();
   btnStop.disabled = false;
 
   // シークバー表示・設定
@@ -209,6 +210,7 @@ function resumePlayback() {
 
 function stopPlayback() {
   if (typeof stopSpectrumDraw === 'function') stopSpectrumDraw();
+  if (typeof stopLimiterMeter === 'function') stopLimiterMeter();
   isPaused = false;
   pauseDuration = 0;
   pauseStartTime = 0;

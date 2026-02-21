@@ -78,5 +78,26 @@ function buildMasterChain(audioCtx) {
     prevNode = filter;
   }
 
+  // リミッター (DynamicsCompressorNode)
+  const limiter = audioCtx.createDynamicsCompressor();
+  const limiterOn = document.getElementById('limiter-on');
+  const limiterThreshold = document.getElementById('limiter-threshold');
+  const limiterKnee = document.getElementById('limiter-knee');
+
+  if (limiterOn && limiterOn.checked) {
+    limiter.threshold.value = limiterThreshold ? Number(limiterThreshold.value) : -6;
+    limiter.knee.value = limiterKnee ? Number(limiterKnee.value) : 3;
+    limiter.ratio.value = 20; // ほぼブリックウォール
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.05;
+    prevNode.connect(limiter);
+    window._limiter = limiter;
+    window._limiterBypassed = false;
+    return { masterGain, eqOut: limiter };
+  }
+
+  // リミッターOFF時はバイパス
+  window._limiter = limiter;
+  window._limiterBypassed = true;
   return { masterGain, eqOut: prevNode };
 }
