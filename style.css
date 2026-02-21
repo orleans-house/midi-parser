@@ -509,6 +509,11 @@ select {
   padding: 10px;
   border: 1px solid var(--border);
 }
+#piano-roll-canvas {
+  width: 100%;
+  height: 200px;
+  display: block;
+}
 
 /* ===== エフェクターモジュールグリッド ===== */
 .cable-section {
