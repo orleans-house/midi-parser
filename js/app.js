@@ -137,21 +137,73 @@ fileInput.addEventListener('change', () => {
   if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
 });
 
+const AUDIO_EXTENSIONS = ['.wav', '.mp3', '.ogg', '.flac', '.aac', '.m4a', '.webm'];
+
+function isAudioFile(fileName) {
+  const ext = fileName.toLowerCase().replace(/^.*(\.[^.]+)$/, '$1');
+  return AUDIO_EXTENSIONS.includes(ext);
+}
+
 function loadFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      processMidi(e.target.result, file.name);
+      if (isAudioFile(file.name)) {
+        processAudioFile(e.target.result, file.name);
+      } else {
+        processMidi(e.target.result, file.name);
+      }
     } catch (err) {
-      alert(`MIDIパースエラー: ${err.message}`);
+      alert(`ファイル読み込みエラー: ${err.message}`);
       console.error(err);
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
+function processAudioFile(buffer, fileName) {
+  stopPlayback();
+  audioFileMode = true;
+  audioFileBuffer = null;
+  if (typeof resetDJControls === 'function') resetDJControls();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
+
+  // 生バッファを保持（シーク用）
+  window._audioFileRawBuffer = buffer;
+
+  // MIDIモードのデータをクリア
+  currentNotes = [];
+  currentChannels = [];
+  currentBpm = 0;
+
+  // ファイル情報表示
+  document.getElementById('info-filename').textContent = fileName;
+  document.getElementById('info-format').textContent = 'Audio';
+  document.getElementById('info-tracks').textContent = '-';
+  document.getElementById('info-division').textContent = '-';
+  document.getElementById('info-tempo').textContent = '-';
+  document.getElementById('info-notes').textContent = '-';
+
+  // チャンネルUIクリア
+  buildChannelUI([]);
+
+  // 再生コントロール有効化
+  btnPlay.disabled = false;
+  btnStop.disabled = true;
+
+  // ピアノロールクリア
+  const prCanvas = document.getElementById('piano-roll-canvas');
+  if (prCanvas) {
+    const ctx = prCanvas.getContext('2d');
+    ctx.clearRect(0, 0, prCanvas.width, prCanvas.height);
+  }
+}
+
 function processMidi(buffer, fileName) {
   stopPlayback();
+  audioFileMode = false;
+  audioFileBuffer = null;
+  window._audioFileRawBuffer = null;
   if (typeof resetDJControls === 'function') resetDJControls();
   if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 
@@ -195,12 +247,22 @@ function processMidi(buffer, fileName) {
 
 // 再生コントロール
 btnPlay.addEventListener('click', () => {
-  if (isPlaying && !isPaused) {
-    pausePlayback();
-  } else if (isPlaying && isPaused) {
-    resumePlayback();
+  if (audioFileMode) {
+    if (isPlaying && !isPaused) {
+      pauseAudioFile();
+    } else if (isPlaying && isPaused) {
+      resumeAudioFile();
+    } else {
+      playAudioFile(window._audioFileRawBuffer);
+    }
   } else {
-    playNotes(currentNotes, currentBpm);
+    if (isPlaying && !isPaused) {
+      pausePlayback();
+    } else if (isPlaying && isPaused) {
+      resumePlayback();
+    } else {
+      playNotes(currentNotes, currentBpm);
+    }
   }
 });
 btnStop.addEventListener('click', () => stopPlayback());
