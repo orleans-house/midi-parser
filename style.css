@@ -374,7 +374,7 @@ input[type="range"].slider-h {
   appearance: none;
   flex: 1;
   height: 6px;
-  background: var(--bg-input, #1a1730);
+  background: var(--border, #2a2440);
   border-radius: 3px;
   outline: none;
   cursor: pointer;
@@ -383,45 +383,56 @@ input[type="range"].slider-h {
 input[type="range"].slider-h::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--accent-purple, #b39ddb);
   border: 2px solid var(--bg-card, #1e1a2e);
   cursor: pointer;
+  box-shadow: 0 0 4px rgba(179, 157, 219, 0.4);
 }
 
 input[type="range"].slider-h::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--accent-purple, #b39ddb);
   border: 2px solid var(--bg-card, #1e1a2e);
   cursor: pointer;
+  box-shadow: 0 0 4px rgba(179, 157, 219, 0.4);
 }
 
 input[type="range"].slider-h::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 3px;
+  background: var(--border, #2a2440);
 }
 
 input[type="range"].slider-h::-moz-range-track {
   height: 6px;
   border-radius: 3px;
-  background: var(--bg-input, #1a1730);
+  background: var(--border, #2a2440);
+}
+
+input[type="range"].slider-h::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--accent-purple, #b39ddb);
 }
 
 input[type="range"].slider-h:disabled {
-  opacity: 0.3;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 input[type="range"].slider-h:disabled::-webkit-slider-thumb {
   background: var(--text-muted, #5a4d70);
+  box-shadow: none;
 }
 
 input[type="range"].slider-h:disabled::-moz-range-thumb {
   background: var(--text-muted, #5a4d70);
+  box-shadow: none;
 }
 
 /* 後方互換: 既存クラス */
