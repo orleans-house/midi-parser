@@ -29,6 +29,7 @@
           <tr><td>Div</td><td id="info-division">-</td></tr>
           <tr><td>Tempo</td><td id="info-tempo">-</td></tr>
           <tr><td>Notes</td><td id="info-notes">-</td></tr>
+          <tr><td>Position</td><td id="position-display">-</td></tr>
         </table>
       </div>
 
@@ -127,6 +128,39 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- 中央カラム: チャンネル波形 -->
+    <div id="visualizer-section">
+      <div id="visualizer-container"></div>
+    </div>
+
+    <!-- 右カラム -->
+    <div id="right-panel">
+      <div class="panel-section">
+        <h3><i data-lucide="activity"></i> スペクトラム</h3>
+        <canvas id="spectrum-canvas" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
+      </div>
+      <div class="panel-section">
+        <h3><i data-lucide="move"></i> Filter XY</h3>
+        <div id="xy-pad-wrapper" style="position:relative;">
+          <canvas id="xy-pad" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
+          <span id="xy-hpf-label" style="position:absolute; bottom:4px; left:4px; font-size:10px; color:var(--text-muted);">HPF: 20Hz</span>
+          <span id="xy-lpf-label" style="position:absolute; top:4px; right:4px; font-size:10px; color:var(--text-muted);">LPF: 20kHz</span>
+        </div>
+        <div class="q-sliders">
+          <div class="q-slider-row">
+            <label style="color:var(--accent-red, #ef5350);">HPF Q</label>
+            <input type="range" id="hpf-q" min="0.1" max="20" step="0.1" value="10">
+            <span id="hpf-q-value">10.0</span>
+          </div>
+          <div class="q-slider-row">
+            <label style="color:var(--accent-cyan, #4dd0e1);">LPF Q</label>
+            <input type="range" id="lpf-q" min="0.1" max="20" step="0.1" value="10">
+            <span id="lpf-q-value">10.0</span>
+          </div>
+        </div>
+      </div>
       <div class="panel-section">
         <h3><i data-lucide="disc"></i> DJ Controls</h3>
         <div id="hot-cue-section">
@@ -158,43 +192,6 @@
             <button type="button" class="beat-jump-btn" data-beats="-1">&lsaquo;1</button>
             <button type="button" class="beat-jump-btn" data-beats="1">1&rsaquo;</button>
             <button type="button" class="beat-jump-btn" data-beats="4">4&raquo;</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="position-info" class="panel-section">
-        <span id="position-display"></span>
-      </div>
-    </div>
-
-    <!-- 中央カラム: チャンネル波形 -->
-    <div id="visualizer-section">
-      <div id="visualizer-container"></div>
-    </div>
-
-    <!-- 右カラム -->
-    <div id="right-panel">
-      <div class="panel-section">
-        <h3><i data-lucide="activity"></i> スペクトラム</h3>
-        <canvas id="spectrum-canvas" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
-      </div>
-      <div class="panel-section">
-        <h3><i data-lucide="move"></i> Filter XY</h3>
-        <div id="xy-pad-wrapper" style="position:relative;">
-          <canvas id="xy-pad" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
-          <span id="xy-hpf-label" style="position:absolute; bottom:4px; left:4px; font-size:10px; color:var(--text-muted);">HPF: 20Hz</span>
-          <span id="xy-lpf-label" style="position:absolute; top:4px; right:4px; font-size:10px; color:var(--text-muted);">LPF: 20kHz</span>
-        </div>
-        <div class="q-sliders">
-          <div class="q-slider-row">
-            <label style="color:var(--accent-red, #ef5350);">HPF Q</label>
-            <input type="range" id="hpf-q" min="0.1" max="20" step="0.1" value="10">
-            <span id="hpf-q-value">10.0</span>
-          </div>
-          <div class="q-slider-row">
-            <label style="color:var(--accent-cyan, #4dd0e1);">LPF Q</label>
-            <input type="range" id="lpf-q" min="0.1" max="20" step="0.1" value="10">
-            <span id="lpf-q-value">10.0</span>
           </div>
         </div>
       </div>

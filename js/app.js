@@ -153,6 +153,7 @@ function loadFile(file) {
 function processMidi(buffer, fileName) {
   stopPlayback();
   if (typeof resetDJControls === 'function') resetDJControls();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 
   const parser = new MidiParser(buffer);
   const parsed = parser.parse();
@@ -179,17 +180,12 @@ function processMidi(buffer, fileName) {
 
   // チャンネルUI構築
   buildChannelUI(currentChannels);
-  document.getElementById('visualizer-section').style.display = 'block';
-
   // 再生コントロール有効化
   btnPlay.disabled = false;
   btnStop.disabled = true;
 
   // 全体の長さを事前計算
   currentTotalDuration = notes.length > 0 ? Math.max(...notes.map((n) => n.startTime + n.duration)) : 0;
-
-  // ピアノロール表示
-  document.getElementById('piano-roll-section').style.display = 'block';
 
   // 描画（表示後に実行）
   requestAnimationFrame(() => {
@@ -322,37 +318,52 @@ document.addEventListener('input', (e) => {
 const spectrumCanvas = document.getElementById('spectrum-canvas');
 const specCtx = spectrumCanvas.getContext('2d');
 let spectrumTimer = null;
+let spectrumData = null;
+let spectrumInitialized = false;
 
 function startSpectrumDraw() {
   if (spectrumTimer) return;
+
+  // Canvasサイズは開始時に1回だけ設定
+  if (!spectrumInitialized) {
+    spectrumCanvas.width = spectrumCanvas.offsetWidth;
+    spectrumInitialized = true;
+  }
+
   spectrumTimer = setInterval(() => {
     const analyser = window._spectrumAnalyser;
     if (!analyser) return;
 
-    spectrumCanvas.width = spectrumCanvas.offsetWidth;
     const w = spectrumCanvas.width;
     const h = spectrumCanvas.height;
     const bufLen = analyser.frequencyBinCount;
-    const data = new Uint8Array(bufLen);
-    analyser.getByteFrequencyData(data);
+
+    // バッファを使い回す
+    if (!spectrumData || spectrumData.length !== bufLen) {
+      spectrumData = new Uint8Array(bufLen);
+    }
+    analyser.getByteFrequencyData(spectrumData);
 
     specCtx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
     specCtx.fillRect(0, 0, w, h);
 
-    // スペクトラムバー (対数スケール)
+    // スペクトラムバー (対数スケール、4px幅で間引き)
     const nyquist = (window._audioCtxSampleRate || 48000) / 2;
     const minFreq = FREQ_MIN;
     const maxFreq = FREQ_MAX;
+    const barWidth = 4;
+    const logMin = Math.log(minFreq);
+    const logRange = Math.log(maxFreq) - logMin;
 
     specCtx.fillStyle = getThemeColor('--accent-purple', '#b39ddb');
     specCtx.globalAlpha = 0.6;
-    for (let i = 0; i < w; i++) {
-      const freq = minFreq * (maxFreq / minFreq) ** (i / w);
+    for (let i = 0; i < w; i += barWidth) {
+      const freq = Math.exp(logMin + (i / w) * logRange);
       const bin = Math.round((freq / nyquist) * bufLen);
       if (bin >= bufLen) break;
-      const val = data[bin] / 255;
+      const val = spectrumData[bin] / 255;
       const barH = val * h;
-      specCtx.fillRect(i, h - barH, 1, barH);
+      specCtx.fillRect(i, h - barH, barWidth - 1, barH);
     }
     specCtx.globalAlpha = 1;
 
@@ -362,7 +373,7 @@ function startSpectrumDraw() {
     specCtx.lineWidth = 2;
     specCtx.setLineDash([4, 4]);
     if (hpfF > 25) {
-      const xH = w * (Math.log(hpfF / minFreq) / Math.log(maxFreq / minFreq));
+      const xH = w * ((Math.log(hpfF) - logMin) / logRange);
       specCtx.strokeStyle = '#ef5350';
       specCtx.beginPath();
       specCtx.moveTo(xH, 0);
@@ -373,7 +384,7 @@ function startSpectrumDraw() {
       specCtx.fillText(`HP ${formatFreq(hpfF)}`, xH + 4, 12);
     }
     if (lpfF < 19000) {
-      const xL = w * (Math.log(lpfF / minFreq) / Math.log(maxFreq / minFreq));
+      const xL = w * ((Math.log(lpfF) - logMin) / logRange);
       specCtx.strokeStyle = '#4dd0e1';
       specCtx.beginPath();
       specCtx.moveTo(xL, 0);
@@ -384,7 +395,7 @@ function startSpectrumDraw() {
       specCtx.fillText(`LP ${formatFreq(lpfF)}`, xL + 4, 24);
     }
     specCtx.setLineDash([]);
-  }, 50);
+  }, 80);
 }
 
 function stopSpectrumDraw() {

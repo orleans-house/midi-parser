@@ -23,7 +23,12 @@ function buildOutputChain(audioCtx, eqOut) {
   return { spectrumAnalyser, masterAnalyser };
 }
 
-// 波形描画ループ
+// 波形描画用バッファ（使い回し）
+let waveformMasterBuf = null;
+const waveformChBufs = {};
+let waveFrameCount = 0;
+
+// 波形描画ループ（30fpsに間引き）
 function drawWaveforms() {
   if (!isPlaying) {
     // マスタークリア
@@ -43,16 +48,21 @@ function drawWaveforms() {
   }
   requestAnimationFrame(drawWaveforms);
 
+  // 30fps間引き（偶数フレームのみ描画）
+  waveFrameCount++;
+  if (waveFrameCount % 2 !== 0) return;
+
   // マスター合成波描画
   if (window._masterAnalyser) {
     const mc = document.getElementById('waveform-master');
     if (mc) {
-      mc.width = mc.offsetWidth;
       const mctx = mc.getContext('2d');
       const ma = window._masterAnalyser;
       const bufLen = ma.frequencyBinCount;
-      const data = new Uint8Array(bufLen);
-      ma.getByteTimeDomainData(data);
+      if (!waveformMasterBuf || waveformMasterBuf.length !== bufLen) {
+        waveformMasterBuf = new Uint8Array(bufLen);
+      }
+      ma.getByteTimeDomainData(waveformMasterBuf);
       mctx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
       mctx.fillRect(0, 0, mc.width, mc.height);
       mctx.lineWidth = 2;
@@ -61,7 +71,7 @@ function drawWaveforms() {
       const sw = mc.width / bufLen;
       let mx = 0;
       for (let i = 0; i < bufLen; i++) {
-        const v = data[i] / 128.0;
+        const v = waveformMasterBuf[i] / 128.0;
         const y = (v * mc.height) / 2;
         if (i === 0) mctx.moveTo(mx, y);
         else mctx.lineTo(mx, y);
@@ -76,14 +86,20 @@ function drawWaveforms() {
     const state = channelStates[ch];
     if (!state.analyser) continue;
 
+    // ミュート中 or ソロ外のチャンネルはスキップ
+    if (state.playGate === 0) continue;
+
     const canvas = document.getElementById(`waveform-${ch}`);
     if (!canvas) continue;
 
     const ctx = canvas.getContext('2d');
     const analyser = state.analyser;
     const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyser.getByteTimeDomainData(dataArray);
+
+    if (!waveformChBufs[ch] || waveformChBufs[ch].length !== bufferLength) {
+      waveformChBufs[ch] = new Uint8Array(bufferLength);
+    }
+    analyser.getByteTimeDomainData(waveformChBufs[ch]);
 
     ctx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -95,7 +111,7 @@ function drawWaveforms() {
     const sliceWidth = canvas.width / bufferLength;
     let x = 0;
     for (let i = 0; i < bufferLength; i++) {
-      const v = dataArray[i] / 128.0;
+      const v = waveformChBufs[ch][i] / 128.0;
       const y = (v * canvas.height) / 2;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
