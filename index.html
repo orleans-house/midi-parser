@@ -83,6 +83,28 @@
       </div>
 
       <div class="panel-section">
+        <h3><i data-lucide="timer"></i> メトロノーム</h3>
+        <div class="fx-row">
+          <label class="fx-toggle">
+            <input type="checkbox" id="metronome-on">
+            <span>ON</span>
+          </label>
+          <select id="metronome-type" style="font-size:0.7rem;" disabled>
+            <option value="click">Click</option>
+            <option value="wood">Wood</option>
+            <option value="hihat">HiHat</option>
+            <option value="rim">Rim</option>
+            <option value="beep">Beep</option>
+          </select>
+        </div>
+        <div class="fx-row">
+          <span class="fx-val" style="min-width:28px">Vol</span>
+          <input type="range" id="metronome-vol" class="fx-slider" min="0" max="100" value="50" disabled>
+          <span class="fx-val" id="metronome-vol-val">50%</span>
+        </div>
+      </div>
+
+      <div class="panel-section">
         <h3><i data-lucide="sliders-vertical"></i> イコライザー</h3>
         <div id="eq-mixer">
           <div class="eq-band" data-freq="60">
@@ -113,84 +135,6 @@
         </div>
       </div>
 
-      <div class="panel-section">
-        <h3><i data-lucide="shield"></i> リミッター</h3>
-        <div class="fx-row">
-          <label class="fx-toggle">
-            <input type="checkbox" id="limiter-on" checked>
-            <span>ON</span>
-          </label>
-        </div>
-        <div class="fx-row">
-          <label>Threshold</label>
-          <input type="range" id="limiter-threshold" min="-30" max="0" value="-6" style="flex:1;">
-          <span id="limiter-threshold-val">-6 dB</span>
-        </div>
-        <div class="fx-row">
-          <label>Knee</label>
-          <input type="range" id="limiter-knee" min="0" max="20" value="3" style="flex:1;">
-          <span id="limiter-knee-val">3 dB</span>
-        </div>
-        <div class="fx-row">
-          <span id="limiter-reduction" style="color: var(--accent-purple); font-size: 0.85rem;">Reduction: 0 dB</span>
-        </div>
-      </div>
-
-      <div class="panel-section">
-        <h3><i data-lucide="timer"></i> メトロノーム</h3>
-        <div class="fx-row">
-          <label class="fx-toggle">
-            <input type="checkbox" id="metronome-on">
-            <span>ON</span>
-          </label>
-          <select id="metronome-type" style="font-size:0.7rem;" disabled>
-            <option value="click">Click</option>
-            <option value="wood">Wood</option>
-            <option value="hihat">HiHat</option>
-            <option value="rim">Rim</option>
-            <option value="beep">Beep</option>
-          </select>
-        </div>
-        <div class="fx-row">
-          <span class="fx-val" style="min-width:28px">Vol</span>
-          <input type="range" id="metronome-vol" class="fx-slider" min="0" max="100" value="50" disabled>
-          <span class="fx-val" id="metronome-vol-val">50%</span>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- 中央カラム: チャンネル波形 -->
-    <div id="visualizer-section">
-      <div id="visualizer-container"></div>
-    </div>
-
-    <!-- 右カラム -->
-    <div id="right-panel">
-      <div class="panel-section">
-        <h3><i data-lucide="activity"></i> スペクトラム</h3>
-        <canvas id="spectrum-canvas" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
-      </div>
-      <div class="panel-section">
-        <h3><i data-lucide="move"></i> Filter XY</h3>
-        <div id="xy-pad-wrapper" style="position:relative;">
-          <canvas id="xy-pad" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
-          <span id="xy-hpf-label" style="position:absolute; bottom:4px; left:4px; font-size:10px; color:var(--text-muted);">HPF: 20Hz</span>
-          <span id="xy-lpf-label" style="position:absolute; top:4px; right:4px; font-size:10px; color:var(--text-muted);">LPF: 20kHz</span>
-        </div>
-        <div class="q-sliders">
-          <div class="q-slider-row">
-            <label style="color:var(--accent-red, #ef5350);">HPF Q</label>
-            <input type="range" id="hpf-q" min="0.1" max="20" step="0.1" value="10">
-            <span id="hpf-q-value">10.0</span>
-          </div>
-          <div class="q-slider-row">
-            <label style="color:var(--accent-cyan, #4dd0e1);">LPF Q</label>
-            <input type="range" id="lpf-q" min="0.1" max="20" step="0.1" value="10">
-            <span id="lpf-q-value">10.0</span>
-          </div>
-        </div>
-      </div>
       <div class="panel-section">
         <h3><i data-lucide="waves"></i> マスターFX</h3>
         <div class="master-fx-module">
@@ -237,6 +181,62 @@
         </div>
       </div>
 
+      <div class="panel-section">
+        <h3><i data-lucide="shield"></i> リミッター</h3>
+        <div class="fx-row">
+          <label class="fx-toggle">
+            <input type="checkbox" id="limiter-on" checked>
+            <span>ON</span>
+          </label>
+        </div>
+        <div class="fx-row">
+          <label>Threshold</label>
+          <input type="range" id="limiter-threshold" min="-30" max="0" value="-6" style="flex:1;">
+          <span id="limiter-threshold-val">-6 dB</span>
+        </div>
+        <div class="fx-row">
+          <label>Knee</label>
+          <input type="range" id="limiter-knee" min="0" max="20" value="3" style="flex:1;">
+          <span id="limiter-knee-val">3 dB</span>
+        </div>
+        <div class="fx-row">
+          <span id="limiter-reduction" style="color: var(--accent-purple); font-size: 0.85rem;">Reduction: 0 dB</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 中央カラム: チャンネル波形 -->
+    <div id="visualizer-section">
+      <div id="visualizer-container"></div>
+    </div>
+
+    <!-- 右カラム -->
+    <div id="right-panel">
+      <div class="panel-section">
+        <h3><i data-lucide="activity"></i> スペクトラム</h3>
+        <canvas id="spectrum-canvas" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
+      </div>
+      <div class="panel-section">
+        <h3><i data-lucide="move"></i> Filter XY</h3>
+        <div id="xy-pad-wrapper" style="position:relative;">
+          <canvas id="xy-pad" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
+          <span id="xy-hpf-label" style="position:absolute; bottom:4px; left:4px; font-size:10px; color:var(--text-muted);">HPF: 20Hz</span>
+          <span id="xy-lpf-label" style="position:absolute; top:4px; right:4px; font-size:10px; color:var(--text-muted);">LPF: 20kHz</span>
+        </div>
+        <div class="q-sliders">
+          <div class="q-slider-row">
+            <label style="color:var(--accent-red, #ef5350);">HPF Q</label>
+            <input type="range" id="hpf-q" min="0.1" max="20" step="0.1" value="10">
+            <span id="hpf-q-value">10.0</span>
+          </div>
+          <div class="q-slider-row">
+            <label style="color:var(--accent-cyan, #4dd0e1);">LPF Q</label>
+            <input type="range" id="lpf-q" min="0.1" max="20" step="0.1" value="10">
+            <span id="lpf-q-value">10.0</span>
+          </div>
+        </div>
+      </div>
       <div class="panel-section">
         <h3><i data-lucide="disc"></i> DJ Controls</h3>
         <div id="hot-cue-section">
