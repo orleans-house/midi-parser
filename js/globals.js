@@ -17,7 +17,6 @@ const channelFxState = {};
 function getChannelFx(ch) {
   if (!channelFxState[ch]) {
     channelFxState[ch] = {
-      customWave: false,
       waveType: 'triangle',
       distortion: { enabled: false, amount: 50 },
       delay: { enabled: false, time: 300 },

@@ -223,10 +223,8 @@ function restoreFxUI(channels) {
     if (!mod) continue;
 
     // 波形ボタン
-    if (chFx.customWave) {
-      for (const btn of mod.querySelectorAll('.fx-wave-btn')) {
-        btn.classList.toggle('active', btn.dataset.wave === chFx.waveType);
-      }
+    for (const btn of mod.querySelectorAll('.fx-wave-btn')) {
+      btn.classList.toggle('active', btn.dataset.wave === chFx.waveType);
     }
 
     // エフェクトトグル＋スライダー
