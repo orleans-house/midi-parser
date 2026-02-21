@@ -143,6 +143,25 @@ h3 {
   min-height: 38px;
 }
 
+#btn-repeat {
+  flex: 0 0 auto;
+  width: 38px;
+  padding: 8px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+#btn-repeat:hover {
+  background: var(--bg-hover);
+}
+
+#btn-repeat.active {
+  background: var(--accent-green);
+  color: var(--bg-deep);
+  border-color: var(--accent-green);
+}
+
 #playback-controls select {
   flex: 1;
 }
