@@ -53,7 +53,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   window._masterGain = masterGain;
   window._audioCtxSampleRate = audioCtx.sampleRate;
 
-  // スペクトラム表示用Analyser (masterGain前に配置)
+  // スペクトラム表示用Analyser (fxTrim後に配置、EQ/FXの結果を反映)
   const spectrumAnalyser = audioCtx.createAnalyser();
   spectrumAnalyser.fftSize = 4096;
   spectrumAnalyser.smoothingTimeConstant = 0.8;
@@ -81,10 +81,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
     eqFilters.push(filter);
   });
 
-  // masterGain → EQ chain → analyser → destination
-  // masterGain → spectrumAnalyser (表示用、音声経路外)
-  // masterGain → globalFilter → EQ (フィルターは常に接続、OFF時はallpass的に動作)
-  masterGain.connect(spectrumAnalyser);
+  // masterGain → globalFilter → EQ → FX → fxTrim → spectrumAnalyser (表示用分岐)
+  //                                               → masterAnalyser → destination
   if (!window._globalFilterEnabled) {
     // OFF時: 高周波数のlowpassで実質素通し
     globalFilter.type = 'lowpass';
@@ -154,6 +152,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   delayWet.connect(fxTrim);
   prevNode.connect(convolver);
   reverbWet.connect(fxTrim);
+  fxTrim.connect(spectrumAnalyser);
   fxTrim.connect(masterAnalyser);
   masterAnalyser.connect(audioCtx.destination);
   window._eqFilters = eqFilters;

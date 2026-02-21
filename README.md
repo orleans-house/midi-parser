@@ -23,6 +23,28 @@ https://orleans-house.github.io/midi-parser/
 2. 「再生」で再生開始
 3. 必要に応じて波形・音量を調整
 
+## Audio Signal Chain
+
+```
+[Per-Channel]
+  Osc → Envelope → ChGain(waveVol×playGate)
+    → ChDistortion(dry/wet)
+    → ChDelay(dry/wet)
+    → ChReverb(dry/wet)
+    → ChAnalyser
+
+[Master]
+  ChAnalyser(×16) → MasterGain(master vol)
+    → GlobalFilter → EQ(5-band)
+    → Distortion ─→ FX Trim ─→ SpectrumAnalyser(display)
+    → Delay → DelayWet ─┘         │
+    → Convolver → ReverbWet ─┘    ↓
+                                MasterAnalyser → destination
+
+[Metronome]
+  MetronomeOsc → Envelope → MetronomeGain → destination
+```
+
 ## Privacy / Security
 
 - このアプリは基本的にクライアントサイドで動作します
