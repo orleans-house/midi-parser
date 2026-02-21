@@ -81,6 +81,9 @@ function setActiveWave(newWave) {
     btn.classList.toggle('active', btn.dataset.wave === newWave);
   }
 
+  // 切替先の波形の音量を全チャンネルに反映
+  applyChannelWaveVolumes();
+
   // 再生中のオシレーターの波形を変更
   if (typeof scheduledNodes !== 'undefined') {
     for (const osc of scheduledNodes) {
