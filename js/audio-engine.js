@@ -147,7 +147,13 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
   stopTimerId = setTimeout(
     () => {
-      if (isPlaying) stopPlayback();
+      if (isPlaying) {
+        if (repeatEnabled && currentNotes.length > 0) {
+          playNotes(currentNotes, currentBpm);
+        } else {
+          stopPlayback();
+        }
+      }
     },
     (totalDuration + 1.0) * 1000,
   );

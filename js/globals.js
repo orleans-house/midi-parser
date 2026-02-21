@@ -10,6 +10,7 @@ let playbackStartOffset = 0;
 let channelStates = {};
 let channelPrograms = {};
 let currentChannels = [];
+let repeatEnabled = false;
 // チャンネル別エフェクト状態
 const channelFxState = {};
 

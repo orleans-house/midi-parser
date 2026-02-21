@@ -196,6 +196,13 @@ btnPlay.addEventListener('click', () => {
 });
 btnStop.addEventListener('click', () => stopPlayback());
 
+// リピート
+const btnRepeat = document.getElementById('btn-repeat');
+btnRepeat.addEventListener('click', () => {
+  repeatEnabled = !repeatEnabled;
+  btnRepeat.classList.toggle('active', repeatEnabled);
+});
+
 // FX コントロール
 // FX Trim
 const fxTrimSlider = document.getElementById('fx-trim');

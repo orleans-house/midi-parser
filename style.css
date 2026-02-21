@@ -143,6 +143,11 @@ h3 {
   min-height: 38px;
 }
 
+#btn-repeat.active {
+  background: var(--accent-purple);
+  color: var(--bg-deep);
+}
+
 #playback-controls select {
   flex: 1;
 }
