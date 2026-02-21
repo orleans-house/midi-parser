@@ -26,49 +26,31 @@ https://orleans-house.github.io/midi-parser/
 ## Audio Signal Chain
 
 ```mermaid
-graph LR
-  subgraph SRC["🎵 Source"]
-    direction TB
-    Osc[Oscillator]
-    Env[Envelope]
-    Metro[Metronome]
-    Osc --> Env
+graph TD
+  subgraph Source層
+    Osc[Oscillator] --> Env[Envelope]
   end
 
-  subgraph CH["🔀 Channel ×16"]
-    direction TB
-    ChGain[ChGain]
-    ChDist[Distortion]
-    ChDelay[Delay]
-    ChReverb[Reverb]
-    ChGain --> ChDist --> ChDelay --> ChReverb
+  subgraph Channel層 ×16ch
+    ChGain[ChGain] --> ChDist[Dist] --> ChDelay[Delay] --> ChReverb[Reverb]
   end
 
-  subgraph MAS["🎛️ Master"]
-    direction TB
-    MGain[MasterGain]
-    GF[GlobalFilter]
-    EQ[EQ 5-band]
-    Dist[Distortion]
-    Dly[Delay]
-    Conv[Reverb]
-    Trim[FX Trim]
-    MGain --> GF --> EQ
-    EQ --> Dist --> Trim
-    EQ --> Dly --> Trim
-    EQ --> Conv --> Trim
+  subgraph Master層
+    MGain[MasterGain] --> GF[GlobalFilter] --> EQ[EQ 5-band]
+    EQ --> Dist[Distortion] --> Trim[FX Trim]
+    EQ --> Dly[Delay] --> Trim
+    EQ --> Conv[Reverb] --> Trim
   end
 
-  subgraph OUT["🔊 Output"]
-    direction TB
-    Spec[Spectrum]
-    MAna[MasterAnalyser]
-    Dest[destination]
-    MAna --> Dest
+  subgraph Output層
+    Trim --> Spec[SpectrumAnalyser]
+    Trim --> MAna[MasterAnalyser] --> Dest[🔊 destination]
   end
 
-  SRC ==> CH ==> MAS ==> OUT
-  Metro --> Dest
+  Env --> ChGain
+  ChReverb --> MGain
+
+  Metro[🥁 Metronome] --> Dest
 ```
 
 ## Privacy / Security
