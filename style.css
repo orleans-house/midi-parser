@@ -664,3 +664,29 @@ select {
   color: var(--text-secondary);
   font-size: 0.8rem;
 }
+
+/* ===== Q Sliders ===== */
+.q-sliders {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.q-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.q-slider-row label {
+  font-size: 11px;
+  min-width: 42px;
+}
+.q-slider-row input[type="range"] {
+  flex: 1;
+  height: 4px;
+}
+.q-slider-row span {
+  font-size: 11px;
+  min-width: 28px;
+  color: var(--text-muted);
+}

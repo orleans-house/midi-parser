@@ -509,6 +509,23 @@ document.addEventListener('touchend', () => {
   xyDragging = false;
 });
 
+// Q Sliders
+const hpfQSlider = document.getElementById('hpf-q');
+const hpfQValue = document.getElementById('hpf-q-value');
+const lpfQSlider = document.getElementById('lpf-q');
+const lpfQValue = document.getElementById('lpf-q-value');
+
+hpfQSlider.addEventListener('input', () => {
+  const q = Number(hpfQSlider.value);
+  hpfQValue.textContent = q.toFixed(1);
+  if (window._hpf) window._hpf.Q.value = q;
+});
+lpfQSlider.addEventListener('input', () => {
+  const q = Number(lpfQSlider.value);
+  lpfQValue.textContent = q.toFixed(1);
+  if (window._lpf) window._lpf.Q.value = q;
+});
+
 // メトロノーム
 const metronomeOn = document.getElementById('metronome-on');
 const metronomeVol = document.getElementById('metronome-vol');
