@@ -127,7 +127,8 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
   if (seekOffset === 0) currentTotalDuration = totalDuration;
 
-  btnPlay.innerHTML = '<i data-lucide="pause"></i> 一時停止';
+  btnPlay.innerHTML = '<i data-lucide="pause"></i>';
+  btnPlay.title = '一時停止';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
   if (typeof startSpectrumDraw === 'function') startSpectrumDraw();
@@ -177,7 +178,8 @@ function pausePlayback() {
     clearTimeout(stopTimerId);
     stopTimerId = null;
   }
-  btnPlay.innerHTML = '<i data-lucide="play"></i> 再生';
+  btnPlay.innerHTML = '<i data-lucide="play"></i>';
+  btnPlay.title = '再生';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
 }
@@ -203,7 +205,8 @@ function resumePlayback() {
       (remaining + 1.0) * 1000,
     );
   }
-  btnPlay.innerHTML = '<i data-lucide="pause"></i> 一時停止';
+  btnPlay.innerHTML = '<i data-lucide="pause"></i>';
+  btnPlay.title = '一時停止';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
 }
 
@@ -240,7 +243,8 @@ function stopPlayback() {
     audioCtx.close().catch(() => {});
     audioCtx = null;
   }
-  btnPlay.innerHTML = '<i data-lucide="play"></i> 再生';
+  btnPlay.innerHTML = '<i data-lucide="play"></i>';
+  btnPlay.title = '再生';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
   btnStop.disabled = true;
