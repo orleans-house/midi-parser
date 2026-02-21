@@ -399,7 +399,7 @@ const xyHpfLabel = document.getElementById('xy-hpf-label');
 const xyLpfLabel = document.getElementById('xy-lpf-label');
 let xyDragging = false;
 
-// 初期値: HPF=20Hz(左端), LPF=20kHz(上端) → 右下がデフォルト位置
+// 初期値: HPF=20Hz(左端), LPF=20kHz(上端) → 左上がデフォルト位置(フィルターOFF相当)
 window._hpfFreq = 20;
 window._lpfFreq = 20000;
 
