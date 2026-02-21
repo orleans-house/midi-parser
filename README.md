@@ -26,23 +26,31 @@ https://orleans-house.github.io/midi-parser/
 ## Audio Signal Chain
 
 ```
-[Per-Channel]
-  Osc → Envelope → ChGain(waveVol×playGate)
-    → ChDistortion(dry/wet)
-    → ChDelay(dry/wet)
-    → ChReverb(dry/wet)
-    → ChAnalyser
-
-[Master]
-  ChAnalyser(×16) → MasterGain(master vol)
-    → GlobalFilter → EQ(5-band)
-    → Distortion ─→ FX Trim ─→ SpectrumAnalyser(display)
-    → Delay → DelayWet ─┘         │
-    → Convolver → ReverbWet ─┘    ↓
-                                MasterAnalyser → destination
-
-[Metronome]
-  MetronomeOsc → Envelope → MetronomeGain → destination
+┌─ Source層 (audio-source.js / audio-engine.js) ──────────────┐
+│  Osc → Envelope ─────────────────────────────────────────────┤
+│  MetronomeOsc → Envelope → MetronomeGain → destination       │
+└──────────────────────────────────────────────────────────────┘
+                       │
+┌─ Channel層 (audio-channel.js) ──────────────────────────────┐
+│  ChGain(waveVol × playGate)                                  │
+│    → ChDistortion(dry/wet)                                   │
+│    → ChDelay(dry/wet)                                        │
+│    → ChReverb(dry/wet)                                       │
+│    → ChAnalyser ─────────────────────────────────────────────┤
+└──────────────────────────────────────────────────────────────┘
+                       │ ×16ch
+┌─ Master層 (audio-master.js) ────────────────────────────────┐
+│  MasterGain(master vol)                                      │
+│    → GlobalFilter → EQ(5-band)                               │
+│      → Distortion ──→ FX Trim                                │
+│      → Delay → DelayWet ─┘                                   │
+│      → Convolver → ReverbWet ─┘                              │
+└──────────────────────────────────────────────────────────────┘
+                       │
+┌─ Output層 (audio-output.js) ────────────────────────────────┐
+│  FX Trim → SpectrumAnalyser (visual display)                 │
+│  FX Trim → MasterAnalyser → destination (audio out)          │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Privacy / Security
