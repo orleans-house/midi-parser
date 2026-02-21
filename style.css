@@ -143,9 +143,20 @@ h3 {
   min-height: 38px;
 }
 
+#btn-repeat {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+#btn-repeat:hover {
+  background: var(--bg-section);
+}
+
 #btn-repeat.active {
-  background: var(--accent-purple);
+  background: var(--accent-green);
   color: var(--bg-deep);
+  border-color: var(--accent-green);
 }
 
 #playback-controls select {
