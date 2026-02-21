@@ -186,21 +186,21 @@ function buildFxModules(allChannels, activeChannels) {
     const distSection = document.createElement('div');
     distSection.className = 'fx-mod-section';
     distSection.innerHTML = `<label class="fx-mod-row"><input type="checkbox" class="ch-fx-toggle" data-ch="${ch}" data-fx="distortion"> <span>Dist</span>
-      <input type="range" class="ch-fx-slider" data-ch="${ch}" data-fx="distortion" min="0" max="100" value="50" disabled>
+      <input type="range" class="ch-fx-slider slider-h" data-ch="${ch}" data-fx="distortion" min="0" max="100" value="50" disabled>
       <span class="ch-fx-val">50</span></label>`;
 
     // ディレイ
     const delaySection = document.createElement('div');
     delaySection.className = 'fx-mod-section';
     delaySection.innerHTML = `<label class="fx-mod-row"><input type="checkbox" class="ch-fx-toggle" data-ch="${ch}" data-fx="delay"> <span>Delay</span>
-      <input type="range" class="ch-fx-slider" data-ch="${ch}" data-fx="delay" min="50" max="800" value="300" disabled>
+      <input type="range" class="ch-fx-slider slider-h" data-ch="${ch}" data-fx="delay" min="50" max="800" value="300" disabled>
       <span class="ch-fx-val">300</span></label>`;
 
     // リバーブ
     const reverbSection = document.createElement('div');
     reverbSection.className = 'fx-mod-section';
     reverbSection.innerHTML = `<label class="fx-mod-row"><input type="checkbox" class="ch-fx-toggle" data-ch="${ch}" data-fx="reverb"> <span>Reverb</span>
-      <input type="range" class="ch-fx-slider" data-ch="${ch}" data-fx="reverb" min="0" max="100" value="40" disabled>
+      <input type="range" class="ch-fx-slider slider-h" data-ch="${ch}" data-fx="reverb" min="0" max="100" value="40" disabled>
       <span class="ch-fx-val">40</span></label>`;
 
     body.append(waveSection, distSection, delaySection, reverbSection);

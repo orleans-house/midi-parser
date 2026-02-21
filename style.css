@@ -352,6 +352,19 @@ h3 svg,
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #a89cc0);
+}
+
+.fx-row > label {
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.fx-row > span:last-child {
+  min-width: 48px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .fx-toggle {
@@ -368,11 +381,21 @@ h3 svg,
   accent-color: var(--accent-green);
 }
 
+/* ===== 共通横スライダー ===== */
+input[type="range"].slider-h {
+  flex: 1;
+  accent-color: var(--accent-purple, #b39ddb);
+  cursor: pointer;
+}
+
+input[type="range"].slider-h:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 後方互換: 既存クラス */
 .fx-slider {
   flex: 1;
-  height: 4px;
-  accent-color: var(--accent-purple);
-  cursor: pointer;
 }
 
 .fx-slider:disabled {
@@ -611,15 +634,17 @@ select {
   cursor: pointer;
 }
 
+.fx-mod-row > span:first-of-type {
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
 .fx-mod-row input[type="checkbox"] {
   accent-color: var(--accent-green);
 }
 
 .ch-fx-slider {
   flex: 1;
-  height: 3px;
-  accent-color: var(--accent-purple);
-  cursor: pointer;
 }
 
 .ch-fx-slider:disabled {
@@ -630,8 +655,9 @@ select {
 .ch-fx-val {
   color: var(--text-muted);
   font-size: 0.65rem;
-  min-width: 24px;
+  min-width: 30px;
   text-align: right;
+  flex-shrink: 0;
 }
 
 /* ===== 全画面ドラッグオーバーレイ ===== */
@@ -693,7 +719,6 @@ select {
 }
 .q-slider-row input[type="range"] {
   flex: 1;
-  height: 4px;
 }
 .q-slider-row span {
   font-size: 11px;
