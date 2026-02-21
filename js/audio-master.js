@@ -197,6 +197,9 @@ function buildMasterChain(audioCtx) {
   prevNode.connect(limiter);
   window._limiter = limiter;
 
+  // 現在のフィルターモードを適用（再生開始時にチェーンが再構築されるため）
+  window._switchFilterChain(window._filterMode || 'hpf-lpf');
+
   return { masterGain, eqOut: limiter };
 }
 

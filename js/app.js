@@ -493,6 +493,7 @@ const xyHpfLabel = document.getElementById('xy-hpf-label');
 const xyLpfLabel = document.getElementById('xy-lpf-label');
 let xyDragging = false;
 let filterMode = 'hpf-lpf';
+window._filterMode = filterMode;
 
 // 初期値
 window._hpfFreq = 20;
@@ -511,6 +512,7 @@ const filterModeBtns = document.querySelectorAll('.filter-mode-btn');
 for (const btn of filterModeBtns) {
   btn.addEventListener('click', () => {
     filterMode = btn.dataset.mode;
+    window._filterMode = filterMode;
     for (const b of filterModeBtns) {
       b.classList.toggle('active', b === btn);
     }
