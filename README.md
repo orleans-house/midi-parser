@@ -26,36 +26,40 @@ https://orleans-house.github.io/midi-parser/
 ## Audio Signal Chain
 
 ```mermaid
-graph TD
-  subgraph Source層["Source層 (audio-source.js / audio-engine.js)"]
-    Osc[Osc] --> Env[Envelope]
-    MetroOsc[MetronomeOsc] --> MetroEnv[Envelope] --> MetroGain[MetronomeGain] --> Dest2[destination]
+graph LR
+  subgraph SRC["Source層"]
+    direction LR
+    Osc --> Env[Envelope]
   end
 
-  subgraph Channel層["Channel層 ×16ch (audio-channel.js)"]
-    Env --> ChGain["ChGain\n(waveVol × playGate)"]
-    ChGain --> ChDist["ChDistortion\n(dry/wet)"]
-    ChDist --> ChDelay["ChDelay\n(dry/wet)"]
-    ChDelay --> ChReverb["ChReverb\n(dry/wet)"]
-    ChReverb --> ChAnalyser[ChAnalyser]
+  subgraph CH["Channel層 ×16ch"]
+    direction LR
+    ChGain[ChGain] --> ChDist[Dist] --> ChDelay[Delay] --> ChReverb[Reverb] --> ChAna[Analyser]
   end
 
-  subgraph Master層["Master層 (audio-master.js)"]
-    ChAnalyser --> MasterGain["MasterGain\n(master vol)"]
-    MasterGain --> GlobalFilter[GlobalFilter]
-    GlobalFilter --> EQ["EQ (5-band)"]
-    EQ --> Distortion[Distortion]
-    EQ --> Delay[Delay]
-    EQ --> Convolver[Convolver]
-    Distortion --> FxTrim[FX Trim]
-    Delay --> DelayWet[DelayWet] --> FxTrim
-    Convolver --> ReverbWet[ReverbWet] --> FxTrim
+  subgraph MAS["Master層"]
+    direction LR
+    MGain[MasterGain] --> GF[GlobalFilter] --> EQ[EQ 5-band]
+    EQ --> Dist[Distortion] --> Trim[FX Trim]
+    EQ --> Dly[Delay] --> DlyWet[DelayWet] --> Trim
+    EQ --> Conv[Convolver] --> RevWet[ReverbWet] --> Trim
   end
 
-  subgraph Output層["Output層 (audio-output.js)"]
-    FxTrim --> SpectrumAnalyser["SpectrumAnalyser\n(visual display)"]
-    FxTrim --> MasterAnalyser[MasterAnalyser] --> Dest[destination]
+  subgraph OUT["Output層"]
+    direction LR
+    Spec[SpectrumAnalyser]
+    MAna[MasterAnalyser] --> Dest[destination]
   end
+
+  subgraph METRO["Metronome"]
+    direction LR
+    MOsc[MetroOsc] --> MEnv[Envelope] --> MGn[MetroGain] --> MDest[destination]
+  end
+
+  Env --> ChGain
+  ChAna --> MGain
+  Trim --> Spec
+  Trim --> MAna
 ```
 
 ## Privacy / Security
