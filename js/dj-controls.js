@@ -115,13 +115,14 @@ document.getElementById('beat-jump-controls').addEventListener('click', (e) => {
 });
 
 // --- Piano Roll Markers ---
-function drawDJMarkers(ctx, W, H) {
+function drawDJMarkers(ctx, W, H, paddingLeft = 0) {
   const dur = currentTotalDuration || 1;
+  const plotW = W - paddingLeft;
 
   // Hot Cue markers
   for (let i = 0; i < hotCues.length; i++) {
     if (hotCues[i] === null) continue;
-    const x = (hotCues[i] / dur) * W;
+    const x = paddingLeft + (hotCues[i] / dur) * plotW;
     ctx.save();
     ctx.strokeStyle = '#b39ddb';
     ctx.lineWidth = 2;
@@ -140,7 +141,7 @@ function drawDJMarkers(ctx, W, H) {
 
   // A-B Loop region
   if (loopA !== null) {
-    const xA = (loopA / dur) * W;
+    const xA = paddingLeft + (loopA / dur) * plotW;
     ctx.save();
     ctx.strokeStyle = '#81c784';
     ctx.lineWidth = 2;
@@ -154,7 +155,7 @@ function drawDJMarkers(ctx, W, H) {
     ctx.restore();
 
     if (loopB !== null) {
-      const xB = (loopB / dur) * W;
+      const xB = paddingLeft + (loopB / dur) * plotW;
       // Shaded region
       ctx.save();
       ctx.fillStyle = 'rgba(129, 199, 132, 0.1)';

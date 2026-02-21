@@ -51,7 +51,7 @@ function drawPianoRoll() {
 
   // DJ markers (hot cues, A-B loop)
   if (typeof drawDJMarkers === 'function') {
-    drawDJMarkers(ctx, W, H);
+    drawDJMarkers(ctx, W, H, 0);
   }
 
   // Y軸ラベル（C音のみ）
@@ -100,7 +100,7 @@ function updatePlayhead(elapsed) {
     const x = PADDING_LEFT + (elapsed / dur) * plotW;
     // DJ markers (hot cues, A-B loop)
     if (typeof drawDJMarkers === 'function') {
-      drawDJMarkers(ctx, W, H);
+      drawDJMarkers(ctx, W, H, PADDING_LEFT);
     }
 
     // Playhead

@@ -216,6 +216,7 @@ function stopPlayback() {
   pauseDuration = 0;
   pauseStartTime = 0;
   isPlaying = false;
+  if (typeof clearLoopTimer === 'function') clearLoopTimer();
   if (stopTimerId) {
     clearTimeout(stopTimerId);
     stopTimerId = null;
