@@ -146,16 +146,6 @@ function buildFxModules(allChannels, activeChannels) {
   }
   fxContainer.innerHTML = '';
 
-  // ケーブル接続SVG（既存を再利用 or 新規作成）
-  let cableSection = document.getElementById('cable-section');
-  if (!cableSection) {
-    cableSection = document.createElement('div');
-    cableSection.id = 'cable-section';
-    cableSection.className = 'cable-section';
-    fxContainer.before(cableSection);
-  }
-  cableSection.innerHTML = '';
-
   for (const ch of allChannels) {
     const isActive = activeChannels.includes(ch);
     const mod = document.createElement('div');
@@ -210,9 +200,6 @@ function buildFxModules(allChannels, activeChannels) {
 
   // channelFxState からUI状態を復元
   restoreFxUI(allChannels);
-
-  // ケーブルSVG描画
-  requestAnimationFrame(() => drawCables(allChannels));
 }
 
 // channelFxState の値をFXモジュールUIに反映
@@ -249,37 +236,6 @@ function restoreFxUI(channels) {
       }
     }
   }
-}
-
-function drawCables(allChannels) {
-  const cableSection = document.getElementById('cable-section');
-  if (!cableSection) return;
-  cableSection.innerHTML = '';
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'cable-svg');
-  svg.style.width = '100%';
-  svg.style.height = '32px';
-  svg.style.overflow = 'visible';
-
-  // 16本の縦線ケーブル（各チャンネル、均等配置）
-  const svgRect = cableSection.getBoundingClientRect();
-  const totalWidth = svgRect.width;
-  for (let i = 0; i < allChannels.length; i++) {
-    const ch = allChannels[i];
-    const x = ((i + 0.5) / allChannels.length) * totalWidth;
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x);
-    line.setAttribute('y1', 0);
-    line.setAttribute('x2', x);
-    line.setAttribute('y2', 32);
-    line.setAttribute('stroke', getChannelColor(ch));
-    line.setAttribute('stroke-width', '2');
-    line.setAttribute('opacity', '0.4');
-    svg.appendChild(line);
-  }
-
-  cableSection.appendChild(svg);
 }
 
 function toggleMute(ch) {
