@@ -25,25 +25,7 @@ https://orleans-house.github.io/midi-parser/
 
 ## Audio Signal Chain
 
-```
-[Per-Channel]
-  Osc → Envelope → ChGain(waveVol×playGate)
-    → ChDistortion(dry/wet)
-    → ChDelay(dry/wet)
-    → ChReverb(dry/wet)
-    → ChAnalyser
-
-[Master]
-  ChAnalyser(×16) → MasterGain(master vol)
-    → GlobalFilter → EQ(5-band)
-    → Distortion ─→ FX Trim ─→ SpectrumAnalyser(display)
-    → Delay → DelayWet ─┘         │
-    → Convolver → ReverbWet ─┘    ↓
-                                MasterAnalyser → destination
-
-[Metronome]
-  MetronomeOsc → Envelope → MetronomeGain → destination
-```
+See [Audio Architecture](docs/audio-architecture.md) for the signal chain diagram and module details.
 
 ## Privacy / Security
 
