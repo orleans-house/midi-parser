@@ -208,8 +208,49 @@ function buildFxModules(allChannels, activeChannels) {
     fxContainer.appendChild(mod);
   }
 
+  // channelFxState からUI状態を復元
+  restoreFxUI(allChannels);
+
   // ケーブルSVG描画
   requestAnimationFrame(() => drawCables(allChannels));
+}
+
+// channelFxState の値をFXモジュールUIに反映
+function restoreFxUI(channels) {
+  for (const ch of channels) {
+    const chFx = getChannelFx(ch);
+    const mod = document.getElementById(`fx-module-${ch}`);
+    if (!mod) continue;
+
+    // 波形ボタン
+    if (chFx.customWave) {
+      for (const btn of mod.querySelectorAll('.fx-wave-btn')) {
+        btn.classList.toggle('active', btn.dataset.wave === chFx.waveType);
+      }
+    }
+
+    // エフェクトトグル＋スライダー
+    const fxMap = {
+      distortion: { val: chFx.distortion.amount, enabled: chFx.distortion.enabled },
+      delay: { val: chFx.delay.time, enabled: chFx.delay.enabled },
+      reverb: { val: chFx.reverb.mix, enabled: chFx.reverb.enabled },
+    };
+    for (const [fx, cfg] of Object.entries(fxMap)) {
+      const toggle = mod.querySelector(`.ch-fx-toggle[data-fx="${fx}"]`);
+      const slider = mod.querySelector(`.ch-fx-slider[data-fx="${fx}"]`);
+      const valDisplay = mod.querySelector(`.ch-fx-slider[data-fx="${fx}"] ~ .ch-fx-val`);
+      if (toggle) {
+        toggle.checked = cfg.enabled;
+      }
+      if (slider) {
+        slider.value = cfg.val;
+        slider.disabled = !cfg.enabled;
+      }
+      if (valDisplay) {
+        valDisplay.textContent = cfg.val;
+      }
+    }
+  }
 }
 
 function drawCables(allChannels) {
