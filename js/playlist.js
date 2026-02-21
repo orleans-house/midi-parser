@@ -107,7 +107,14 @@ function renderPlaylist() {
     if (i === playlist.currentIndex) {
       li.classList.add('active');
     }
-    li.addEventListener('click', () => selectTrack(i));
+    li.addEventListener('click', async () => {
+      await selectTrack(i);
+      if (audioFileMode) {
+        playAudioFile(window._audioFileRawBuffer);
+      } else if (currentNotes.length > 0) {
+        playNotes(currentNotes, currentBpm);
+      }
+    });
     ul.appendChild(li);
   }
 }
