@@ -52,6 +52,7 @@ async function playAudioFile(buffer, seekOffset = 0) {
         playAudioFile(buffer, 0);
       } else {
         stopPlayback();
+        if (typeof playNextTrack === 'function') playNextTrack();
       }
     }
   };

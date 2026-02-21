@@ -151,6 +151,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
           playNotes(currentNotes, currentBpm);
         } else {
           stopPlayback();
+          if (typeof playNextTrack === 'function') playNextTrack();
         }
       }
     },

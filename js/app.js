@@ -101,7 +101,15 @@ for (const [wave, btn] of Object.entries(mixerBtns)) {
 }
 
 // ファイル選択ボタン
+const btnOpenFolder = document.getElementById('btn-open-folder');
+const folderInput = document.getElementById('folder-input');
+
 btnOpen.addEventListener('click', () => fileInput.click());
+btnOpenFolder.addEventListener('click', () => folderInput.click());
+
+folderInput.addEventListener('change', () => {
+  if (folderInput.files.length > 0) loadFiles(folderInput.files);
+});
 
 // 全画面ドラッグ&ドロップ
 const dragOverlay = document.getElementById('drag-overlay');
@@ -131,10 +139,10 @@ document.addEventListener('drop', (e) => {
   e.preventDefault();
   dragCounter = 0;
   dragOverlay.classList.remove('active');
-  if (e.dataTransfer.files.length > 0) loadFile(e.dataTransfer.files[0]);
+  if (e.dataTransfer.files.length > 0) loadFiles(e.dataTransfer.files);
 });
 fileInput.addEventListener('change', () => {
-  if (fileInput.files.length > 0) loadFile(fileInput.files[0]);
+  if (fileInput.files.length > 0) loadFiles(fileInput.files);
 });
 
 const AUDIO_EXTENSIONS = ['.wav', '.mp3', '.ogg', '.flac', '.aac', '.m4a', '.webm'];
@@ -159,6 +167,18 @@ function loadFile(file) {
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+function loadFiles(fileList) {
+  if (fileList.length === 1) {
+    // 単一ファイル: 従来動作（プレイリストに追加しつつ即読み込み）
+    clearPlaylist();
+    addFilesToPlaylist(fileList);
+  } else if (fileList.length > 1) {
+    // 複数ファイル: プレイリストに追加
+    clearPlaylist();
+    addFilesToPlaylist(fileList);
+  }
 }
 
 function processAudioFile(buffer, fileName) {
