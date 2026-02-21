@@ -153,7 +153,7 @@ h3 {
 }
 
 #btn-repeat:hover {
-  background: var(--bg-section);
+  background: var(--bg-hover);
 }
 
 #btn-repeat.active {
