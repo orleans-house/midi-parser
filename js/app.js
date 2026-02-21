@@ -504,6 +504,7 @@ window._notchQ = 1;
 window._peakFreq = 1000;
 window._peakQ = 1;
 window._peakGain = 0;
+// 初期化後にチェーン構築を通知（audio-master.js側で_switchFilterChainが設定される）
 
 // フィルターモード切替
 const filterModeBtns = document.querySelectorAll('.filter-mode-btn');
@@ -513,8 +514,9 @@ for (const btn of filterModeBtns) {
     for (const b of filterModeBtns) {
       b.classList.toggle('active', b === btn);
     }
-    // モード変更時にバイパス状態をリセット
+    // モード変更時にフィルターチェーンを切替・リセット
     resetFilterBypass();
+    if (window._switchFilterChain) window._switchFilterChain(filterMode);
     const rect = xyPad.getBoundingClientRect();
     drawXYPad(rect.width / 2, rect.height / 2, rect.width, rect.height);
   });
@@ -526,21 +528,19 @@ function resetFilterBypass() {
   window._lpfFreq = 20000;
   if (window._hpf) window._hpf.frequency.value = 20;
   if (window._lpf) window._lpf.frequency.value = 20000;
-  // Bandpassをバイパス（Q=0.001で全通過に近い）
+  // 各フィルターのパラメータをデフォルトに戻す
   window._bpFreq = 1000;
-  window._bpQ = 0.001;
+  window._bpQ = 1;
   if (window._bandpass) {
     window._bandpass.frequency.value = 1000;
-    window._bandpass.Q.value = 0.001;
+    window._bandpass.Q.value = 1;
   }
-  // Notchをバイパス（Q=0.001で影響なし）
   window._notchFreq = 1000;
-  window._notchQ = 0.001;
+  window._notchQ = 1;
   if (window._notch) {
     window._notch.frequency.value = 1000;
-    window._notch.Q.value = 0.001;
+    window._notch.Q.value = 1;
   }
-  // Peakingをバイパス（gain=0）
   window._peakFreq = 1000;
   window._peakQ = 1;
   window._peakGain = 0;
