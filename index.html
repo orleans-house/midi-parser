@@ -106,35 +106,6 @@
       </div>
 
       <div class="panel-section">
-        <h3><i data-lucide="activity"></i> スペクトラム</h3>
-        <canvas id="spectrum-canvas" height="100" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
-        <div id="filter-controls" style="margin-top:6px;">
-          <div class="fx-row">
-            <label class="fx-toggle">
-              <input type="checkbox" id="filter-enabled">
-              <span>Filter</span>
-            </label>
-            <select id="filter-type" style="font-size:0.7rem;" disabled>
-              <option value="lowpass">Lowpass</option>
-              <option value="highpass">Highpass</option>
-              <option value="bandpass">Bandpass</option>
-              <option value="notch">Notch</option>
-            </select>
-          </div>
-          <div class="fx-row">
-            <span class="fx-val" style="min-width:28px">Freq</span>
-            <input type="range" id="filter-freq" class="fx-slider" min="0" max="100" value="57" disabled>
-            <span class="fx-val" id="filter-freq-val">1000</span>
-          </div>
-          <div class="fx-row">
-            <span class="fx-val" style="min-width:28px">Q</span>
-            <input type="range" id="filter-q" class="fx-slider" min="0.1" max="20" value="1" step="0.1" disabled>
-            <span class="fx-val" id="filter-q-val">1.0</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel-section">
         <h3><i data-lucide="gauge"></i> FX Trim</h3>
         <div id="fx-controls">
           <div class="fx-row fx-trim-row">
@@ -174,9 +145,41 @@
       </div>
     </div>
 
-    <!-- 右カラム: チャンネル波形 -->
+    <!-- 中央カラム: チャンネル波形 -->
     <div id="visualizer-section">
       <div id="visualizer-container"></div>
+    </div>
+
+    <!-- 右カラム -->
+    <div id="right-panel">
+      <div class="panel-section">
+        <h3><i data-lucide="activity"></i> スペクトラム</h3>
+        <canvas id="spectrum-canvas" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
+        <div id="filter-controls" style="margin-top:6px;">
+          <div class="fx-row">
+            <label class="fx-toggle">
+              <input type="checkbox" id="filter-enabled">
+              <span>Filter</span>
+            </label>
+            <select id="filter-type" style="font-size:0.7rem;" disabled>
+              <option value="lowpass">Lowpass</option>
+              <option value="highpass">Highpass</option>
+              <option value="bandpass">Bandpass</option>
+              <option value="notch">Notch</option>
+            </select>
+          </div>
+          <div class="fx-row">
+            <span class="fx-val" style="min-width:28px">Freq</span>
+            <input type="range" id="filter-freq" class="fx-slider" min="0" max="100" value="57" disabled>
+            <span class="fx-val" id="filter-freq-val">1000</span>
+          </div>
+          <div class="fx-row">
+            <span class="fx-val" style="min-width:28px">Q</span>
+            <input type="range" id="filter-q" class="fx-slider" min="0.1" max="20" value="1" step="0.1" disabled>
+            <span class="fx-val" id="filter-q-val">1.0</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -73,13 +73,19 @@ h3 {
 /* ===== メインコンテナ (2カラム) ===== */
 #main-container {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 280px 1fr 280px;
   gap: 16px;
   margin-bottom: 24px;
 }
 
 /* ===== 左カラム: コントロールパネル ===== */
 #control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#right-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
