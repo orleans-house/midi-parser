@@ -25,32 +25,37 @@ https://orleans-house.github.io/midi-parser/
 
 ## Audio Signal Chain
 
-```
-┌─ Source層 (audio-source.js / audio-engine.js) ──────────────┐
-│  Osc → Envelope ─────────────────────────────────────────────┤
-│  MetronomeOsc → Envelope → MetronomeGain → destination       │
-└──────────────────────────────────────────────────────────────┘
-                       │
-┌─ Channel層 (audio-channel.js) ──────────────────────────────┐
-│  ChGain(waveVol × playGate)                                  │
-│    → ChDistortion(dry/wet)                                   │
-│    → ChDelay(dry/wet)                                        │
-│    → ChReverb(dry/wet)                                       │
-│    → ChAnalyser ─────────────────────────────────────────────┤
-└──────────────────────────────────────────────────────────────┘
-                       │ ×16ch
-┌─ Master層 (audio-master.js) ────────────────────────────────┐
-│  MasterGain(master vol)                                      │
-│    → GlobalFilter → EQ(5-band)                               │
-│      → Distortion ──→ FX Trim                                │
-│      → Delay → DelayWet ─┘                                   │
-│      → Convolver → ReverbWet ─┘                              │
-└──────────────────────────────────────────────────────────────┘
-                       │
-┌─ Output層 (audio-output.js) ────────────────────────────────┐
-│  FX Trim → SpectrumAnalyser (visual display)                 │
-│  FX Trim → MasterAnalyser → destination (audio out)          │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+  subgraph Source層["Source層 (audio-source.js / audio-engine.js)"]
+    Osc[Osc] --> Env[Envelope]
+    MetroOsc[MetronomeOsc] --> MetroEnv[Envelope] --> MetroGain[MetronomeGain] --> Dest2[destination]
+  end
+
+  subgraph Channel層["Channel層 ×16ch (audio-channel.js)"]
+    Env --> ChGain["ChGain\n(waveVol × playGate)"]
+    ChGain --> ChDist["ChDistortion\n(dry/wet)"]
+    ChDist --> ChDelay["ChDelay\n(dry/wet)"]
+    ChDelay --> ChReverb["ChReverb\n(dry/wet)"]
+    ChReverb --> ChAnalyser[ChAnalyser]
+  end
+
+  subgraph Master層["Master層 (audio-master.js)"]
+    ChAnalyser --> MasterGain["MasterGain\n(master vol)"]
+    MasterGain --> GlobalFilter[GlobalFilter]
+    GlobalFilter --> EQ["EQ (5-band)"]
+    EQ --> Distortion[Distortion]
+    EQ --> Delay[Delay]
+    EQ --> Convolver[Convolver]
+    Distortion --> FxTrim[FX Trim]
+    Delay --> DelayWet[DelayWet] --> FxTrim
+    Convolver --> ReverbWet[ReverbWet] --> FxTrim
+  end
+
+  subgraph Output層["Output層 (audio-output.js)"]
+    FxTrim --> SpectrumAnalyser["SpectrumAnalyser\n(visual display)"]
+    FxTrim --> MasterAnalyser[MasterAnalyser] --> Dest[destination]
+  end
 ```
 
 ## Privacy / Security
