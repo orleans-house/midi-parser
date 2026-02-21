@@ -140,18 +140,88 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   // チャンネルごとのオーディオノード作成
   for (const ch of currentChannels) {
     const state = channelStates[ch];
+    const chFx = getChannelFx(ch);
 
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 1;
 
+    // --- チャンネル別FXノード (dry/wet方式) ---
+
+    // Distortion
+    const chDistDry = audioCtx.createGain();
+    const chDistWet = audioCtx.createGain();
+    const chDistNode = audioCtx.createWaveShaper();
+    chDistNode.oversample = '4x';
+    const chDistMerge = audioCtx.createGain();
+    chDistDry.gain.value = 1;
+    chDistWet.gain.value = 0;
+    if (chFx.distortion.enabled) {
+      chDistDry.gain.value = 0;
+      chDistWet.gain.value = 1;
+      updateDistortionCurve(chDistNode, chFx.distortion.amount);
+    }
+    gainNode.connect(chDistDry);
+    gainNode.connect(chDistNode);
+    chDistNode.connect(chDistWet);
+    chDistDry.connect(chDistMerge);
+    chDistWet.connect(chDistMerge);
+
+    // Delay
+    const chDelayDry = audioCtx.createGain();
+    const chDelayWet = audioCtx.createGain();
+    const chDelayNode = audioCtx.createDelay(1.0);
+    const chDelayFeedback = audioCtx.createGain();
+    const chDelayMerge = audioCtx.createGain();
+    chDelayNode.delayTime.value = chFx.delay.time / 1000;
+    chDelayFeedback.gain.value = 0.3;
+    chDelayDry.gain.value = 1;
+    chDelayWet.gain.value = 0;
+    if (chFx.delay.enabled) {
+      chDelayWet.gain.value = 0.5;
+    }
+    chDelayNode.connect(chDelayFeedback);
+    chDelayFeedback.connect(chDelayNode);
+    chDelayNode.connect(chDelayWet);
+    chDistMerge.connect(chDelayDry);
+    chDistMerge.connect(chDelayNode);
+    chDelayDry.connect(chDelayMerge);
+    chDelayWet.connect(chDelayMerge);
+
+    // Reverb
+    const chReverbDry = audioCtx.createGain();
+    const chReverbWet = audioCtx.createGain();
+    const chConvolver = audioCtx.createConvolver();
+    chConvolver.buffer = createReverbIR(audioCtx, 2, 2);
+    const chReverbMerge = audioCtx.createGain();
+    chReverbDry.gain.value = 1;
+    chReverbWet.gain.value = 0;
+    if (chFx.reverb.enabled) {
+      chReverbWet.gain.value = chFx.reverb.mix / 100;
+    }
+    chDelayMerge.connect(chReverbDry);
+    chDelayMerge.connect(chConvolver);
+    chConvolver.connect(chReverbWet);
+    chReverbDry.connect(chReverbMerge);
+    chReverbWet.connect(chReverbMerge);
+
+    // Analyser → Master
     const analyser = audioCtx.createAnalyser();
     analyser.fftSize = 2048;
-
-    gainNode.connect(analyser);
+    chReverbMerge.connect(analyser);
     analyser.connect(masterGain);
 
     state.gainNode = gainNode;
     state.analyser = analyser;
+    state.fxNodes = {
+      distortion: chDistNode,
+      distDry: chDistDry,
+      distWet: chDistWet,
+      delay: chDelayNode,
+      delayWet: chDelayWet,
+      delayFeedback: chDelayFeedback,
+      convolver: chConvolver,
+      reverbWet: chReverbWet,
+    };
 
     // Canvasサイズ設定
     const canvas = document.getElementById(`waveform-${ch}`);

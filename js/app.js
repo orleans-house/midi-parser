@@ -308,6 +308,21 @@ document.addEventListener('change', (e) => {
     const slider = e.target.closest('.fx-mod-row').querySelector('.ch-fx-slider');
     slider.disabled = !e.target.checked;
     chFx[fx].enabled = e.target.checked;
+
+    const state = channelStates[ch];
+    if (state?.fxNodes) {
+      if (fx === 'distortion') {
+        state.fxNodes.distDry.gain.value = e.target.checked ? 0 : 1;
+        state.fxNodes.distWet.gain.value = e.target.checked ? 1 : 0;
+        if (e.target.checked) {
+          updateDistortionCurve(state.fxNodes.distortion, chFx.distortion.amount);
+        }
+      } else if (fx === 'delay') {
+        state.fxNodes.delayWet.gain.value = e.target.checked ? 0.5 : 0;
+      } else if (fx === 'reverb') {
+        state.fxNodes.reverbWet.gain.value = e.target.checked ? chFx.reverb.mix / 100 : 0;
+      }
+    }
   }
 });
 
@@ -319,9 +334,24 @@ document.addEventListener('input', (e) => {
     const chFx = getChannelFx(ch);
     const valDisplay = e.target.closest('.fx-mod-row').querySelector('.ch-fx-val');
     valDisplay.textContent = e.target.value;
-    if (fx === 'distortion') chFx.distortion.amount = Number(e.target.value);
-    else if (fx === 'delay') chFx.delay.time = Number(e.target.value);
-    else if (fx === 'reverb') chFx.reverb.mix = Number(e.target.value);
+
+    const state = channelStates[ch];
+    if (fx === 'distortion') {
+      chFx.distortion.amount = Number(e.target.value);
+      if (state?.fxNodes && chFx.distortion.enabled) {
+        updateDistortionCurve(state.fxNodes.distortion, chFx.distortion.amount);
+      }
+    } else if (fx === 'delay') {
+      chFx.delay.time = Number(e.target.value);
+      if (state?.fxNodes) {
+        state.fxNodes.delay.delayTime.value = Number(e.target.value) / 1000;
+      }
+    } else if (fx === 'reverb') {
+      chFx.reverb.mix = Number(e.target.value);
+      if (state?.fxNodes && chFx.reverb.enabled) {
+        state.fxNodes.reverbWet.gain.value = Number(e.target.value) / 100;
+      }
+    }
   }
 });
 
