@@ -262,12 +262,19 @@ function drawCables(allChannels) {
   svg.style.height = '32px';
   svg.style.overflow = 'visible';
 
-  // 16本の縦線ケーブル（各チャンネル、均等配置）
-  const svgRect = cableSection.getBoundingClientRect();
-  const totalWidth = svgRect.width;
+  const sectionRect = cableSection.getBoundingClientRect();
+
   for (let i = 0; i < allChannels.length; i++) {
     const ch = allChannels[i];
-    const x = ((i + 0.5) / allChannels.length) * totalWidth;
+    // Use actual channel card center position
+    const card = document.getElementById(`channel-card-${ch}`);
+    let x;
+    if (card) {
+      const cardRect = card.getBoundingClientRect();
+      x = cardRect.left + cardRect.width / 2 - sectionRect.left;
+    } else {
+      x = ((i + 0.5) / allChannels.length) * sectionRect.width;
+    }
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', x);
     line.setAttribute('y1', 0);
