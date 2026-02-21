@@ -531,14 +531,14 @@ select {
 .fx-module-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(240px, 1fr));
-  gap: 8px;
+  gap: 12px;
   margin-top: 4px;
 }
 
 .fx-module {
   background: var(--bg-card);
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid var(--border);
 }
 
