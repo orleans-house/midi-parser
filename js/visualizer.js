@@ -264,6 +264,15 @@ function updateChannelGains() {
   for (const [ch, state] of Object.entries(channelStates)) {
     if (!state.gainNode) continue;
     const shouldPlay = anySolo ? state.soloed && !state.muted : !state.muted;
-    state.gainNode.gain.value = shouldPlay ? 1 : 0;
+    state.playGate = shouldPlay ? 1 : 0;
+    applyChannelGain(state);
   }
+}
+
+// waveGain × playGate を gainNode に適用
+function applyChannelGain(state) {
+  if (!state.gainNode) return;
+  const waveGain = state.waveGain ?? 1;
+  const playGate = state.playGate ?? 1;
+  state.gainNode.gain.value = waveGain * playGate;
 }

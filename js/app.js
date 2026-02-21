@@ -39,7 +39,7 @@ function applyCurrentWaveVolume() {
   applyChannelWaveVolumes();
 }
 
-// 各チャンネルの gainNode に波形別音量を適用
+// 各チャンネルの waveGain に波形別音量を適用
 function applyChannelWaveVolumes() {
   if (typeof channelStates === 'undefined') return;
   for (const [ch, state] of Object.entries(channelStates)) {
@@ -47,8 +47,8 @@ function applyChannelWaveVolumes() {
     const chFx = getChannelFx(Number(ch));
     const waveType = chFx.customWave ? chFx.waveType : waveTypeSelect.value;
     const slider = mixerSliders[waveType];
-    const waveVol = slider ? slider.value / 100 : 0.5;
-    state.gainNode.gain.value = waveVol;
+    state.waveGain = slider ? slider.value / 100 : 0.5;
+    applyChannelGain(state);
   }
 }
 

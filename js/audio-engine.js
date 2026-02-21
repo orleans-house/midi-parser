@@ -168,7 +168,10 @@ async function playNotes(notes, bpm, seekOffset = 0) {
     // 波形別音量を初期値に適用
     const chWaveType = chFx.customWave ? chFx.waveType : document.getElementById('wave-type').value;
     const chWaveSlider = document.querySelector(`.mixer-channel[data-wave="${chWaveType}"] .mixer-vol`);
-    gainNode.gain.value = chWaveSlider ? chWaveSlider.value / 100 : 0.5;
+    const initWaveGain = chWaveSlider ? chWaveSlider.value / 100 : 0.5;
+    state.waveGain = initWaveGain;
+    state.playGate = 1;
+    gainNode.gain.value = initWaveGain;
 
     // --- チャンネル別FXノード (dry/wet方式) ---
 
