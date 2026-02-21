@@ -23,7 +23,8 @@ document.getElementById('hot-cue-pads').addEventListener('click', (e) => {
     pad.classList.add('set');
     pad.title = `${time.toFixed(1)}s`;
   } else {
-    // Jump to cue
+    // Jump to cue（ABループは解除）
+    clearABLoop();
     stopPlayback();
     playNotesFrom(currentNotes, currentBpm, hotCues[slot]);
   }
