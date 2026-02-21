@@ -115,11 +115,5 @@ function resumeAudioFile() {
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
 }
 
-function seekAudioFile(time) {
-  if (!audioFileMode || !window._audioFileRawBuffer) return;
-  audioFileBuffer = null; // 再デコード不要、キャッシュクリアしてplayAudioFileで再利用
-  // バッファを保持して再生し直す
-  const buf = window._audioFileRawBuffer;
-  audioFileBuffer = window._audioFileDecodedBuffer;
-  playAudioFile(buf, time);
-}
+// シークは playAudioFile(buffer, seekOffset) を直接呼ぶことで実現。
+// デコード済みバッファ(audioFileBuffer)はキャッシュされるため再デコードは不要。

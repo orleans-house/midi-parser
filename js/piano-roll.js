@@ -110,7 +110,7 @@ function drawPianoRoll() {
 
 // ピアノロールクリックでシーク
 document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
-  if (!currentNotes.length) return;
+  if (!currentNotes.length && !audioFileMode) return;
   const canvas = e.target;
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
@@ -120,7 +120,11 @@ document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
   if (ratio < 0 || ratio > 1) return;
   const seekTime = ratio * (currentTotalDuration || 1);
   stopPlayback();
-  playNotesFrom(currentNotes, currentBpm, seekTime);
+  if (audioFileMode) {
+    playAudioFile(window._audioFileRawBuffer, seekTime);
+  } else {
+    playNotesFrom(currentNotes, currentBpm, seekTime);
+  }
 });
 
 // ============================================================
