@@ -49,6 +49,11 @@ function drawPianoRoll() {
   }
   ctx.globalAlpha = 1;
 
+  // DJ markers (hot cues, A-B loop)
+  if (typeof drawDJMarkers === 'function') {
+    drawDJMarkers(ctx, W, H);
+  }
+
   // Y軸ラベル（C音のみ）
   ctx.fillStyle = getThemeColor('--text-muted', '#6b5f7a');
   ctx.font = '9px monospace';
@@ -93,6 +98,12 @@ function updatePlayhead(elapsed) {
     const plotW = W - PADDING_LEFT;
     const dur = currentTotalDuration || 1;
     const x = PADDING_LEFT + (elapsed / dur) * plotW;
+    // DJ markers (hot cues, A-B loop)
+    if (typeof drawDJMarkers === 'function') {
+      drawDJMarkers(ctx, W, H);
+    }
+
+    // Playhead
     ctx.save();
     ctx.strokeStyle = getThemeColor('--accent-green', '#81c784');
     ctx.lineWidth = 2;

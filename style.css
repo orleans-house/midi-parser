@@ -690,3 +690,91 @@ select {
   min-width: 28px;
   color: var(--text-muted);
 }
+
+/* ===== DJ Controls ===== */
+.dj-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#hot-cue-pads {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.hot-cue-pad {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 8px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.hot-cue-pad.set {
+  background: var(--accent-purple, #b39ddb);
+  color: var(--bg-deep);
+  border-color: var(--accent-purple, #b39ddb);
+  font-weight: bold;
+}
+.hot-cue-pad:hover {
+  border-color: var(--accent-purple, #b39ddb);
+}
+
+#ab-loop-controls {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.ab-btn {
+  flex: 1;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: bold;
+  padding: 6px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ab-btn.active {
+  background: var(--accent-green, #81c784);
+  color: var(--bg-deep);
+  border-color: var(--accent-green, #81c784);
+}
+.ab-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+#ab-loop-info {
+  font-size: 10px;
+  color: var(--text-muted);
+  min-height: 14px;
+  margin-bottom: 10px;
+}
+
+#beat-jump-controls {
+  display: flex;
+  gap: 4px;
+}
+.beat-jump-btn {
+  flex: 1;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 6px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.beat-jump-btn:hover {
+  border-color: var(--accent-purple, #b39ddb);
+}

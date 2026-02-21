@@ -152,6 +152,7 @@ function loadFile(file) {
 
 function processMidi(buffer, fileName) {
   stopPlayback();
+  if (typeof resetDJControls === 'function') resetDJControls();
 
   const parser = new MidiParser(buffer);
   const parsed = parser.parse();
