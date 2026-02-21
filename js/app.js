@@ -355,24 +355,34 @@ function startSpectrumDraw() {
     }
     specCtx.globalAlpha = 1;
 
-    // フィルターカットオフ線
-    if (window._globalFilterEnabled) {
-      const filterFreq = window._globalFilter?.frequency.value || 1000;
-      const x = w * (Math.log(filterFreq / minFreq) / Math.log(maxFreq / minFreq));
-      specCtx.strokeStyle = getThemeColor('--accent-green', '#81c784');
-      specCtx.lineWidth = 2;
-      specCtx.setLineDash([4, 4]);
+    // HPF/LPFカットオフ線
+    const hpfF = window._hpfFreq || 20;
+    const lpfF = window._lpfFreq || 20000;
+    specCtx.lineWidth = 2;
+    specCtx.setLineDash([4, 4]);
+    if (hpfF > 25) {
+      const xH = w * (Math.log(hpfF / minFreq) / Math.log(maxFreq / minFreq));
+      specCtx.strokeStyle = '#ef5350';
       specCtx.beginPath();
-      specCtx.moveTo(x, 0);
-      specCtx.lineTo(x, h);
+      specCtx.moveTo(xH, 0);
+      specCtx.lineTo(xH, h);
       specCtx.stroke();
-      specCtx.setLineDash([]);
-
-      // 周波数ラベル
-      specCtx.fillStyle = getThemeColor('--accent-green', '#81c784');
+      specCtx.fillStyle = '#ef5350';
       specCtx.font = '10px monospace';
-      specCtx.fillText(`${Math.round(filterFreq)}Hz`, x + 4, 12);
+      specCtx.fillText(`HP ${formatFreq(hpfF)}`, xH + 4, 12);
     }
+    if (lpfF < 19000) {
+      const xL = w * (Math.log(lpfF / minFreq) / Math.log(maxFreq / minFreq));
+      specCtx.strokeStyle = '#4dd0e1';
+      specCtx.beginPath();
+      specCtx.moveTo(xL, 0);
+      specCtx.lineTo(xL, h);
+      specCtx.stroke();
+      specCtx.fillStyle = '#4dd0e1';
+      specCtx.font = '10px monospace';
+      specCtx.fillText(`LP ${formatFreq(lpfF)}`, xL + 4, 24);
+    }
+    specCtx.setLineDash([]);
   }, 50);
 }
 
@@ -383,57 +393,120 @@ function stopSpectrumDraw() {
   }
 }
 
-// フィルターコントロール
-const filterEnabled = document.getElementById('filter-enabled');
-const filterType = document.getElementById('filter-type');
-const filterFreq = document.getElementById('filter-freq');
-const filterQ = document.getElementById('filter-q');
-const filterFreqVal = document.getElementById('filter-freq-val');
-const filterQVal = document.getElementById('filter-q-val');
+// XY Filter Pad
+const xyPad = document.getElementById('xy-pad');
+const xyHpfLabel = document.getElementById('xy-hpf-label');
+const xyLpfLabel = document.getElementById('xy-lpf-label');
+let xyDragging = false;
 
-filterEnabled.addEventListener('change', () => {
-  filterType.disabled = !filterEnabled.checked;
-  filterFreq.disabled = !filterEnabled.checked;
-  filterQ.disabled = !filterEnabled.checked;
-  window._globalFilterEnabled = filterEnabled.checked;
-  if (window._globalFilter) {
-    if (filterEnabled.checked) {
-      window._globalFilter.type = filterType.value;
-      window._globalFilter.frequency.value = sliderToFreq(Number(filterFreq.value));
-      window._globalFilter.Q.value = Number(filterQ.value);
-    } else {
-      window._globalFilter.type = 'lowpass';
-      window._globalFilter.frequency.value = 20000;
-      window._globalFilter.Q.value = 0.1;
-    }
+// 初期値: HPF=20Hz(左端), LPF=20kHz(上端) → 右下がデフォルト位置
+window._hpfFreq = 20;
+window._lpfFreq = 20000;
+
+function xyPosToFreqs(x, y, w, h) {
+  const hpfFreq = FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (x / w);
+  const lpfFreq = FREQ_MAX * (FREQ_MIN / FREQ_MAX) ** (y / h);
+  return { hpfFreq: Math.max(20, Math.min(hpfFreq, 20000)), lpfFreq: Math.max(20, Math.min(lpfFreq, 20000)) };
+}
+
+function formatFreq(f) {
+  return f >= 1000 ? `${(f / 1000).toFixed(1)}kHz` : `${Math.round(f)}Hz`;
+}
+
+function applyXYFilter(x, y) {
+  const rect = xyPad.getBoundingClientRect();
+  const cx = Math.max(0, Math.min(x - rect.left, rect.width));
+  const cy = Math.max(0, Math.min(y - rect.top, rect.height));
+  const { hpfFreq, lpfFreq } = xyPosToFreqs(cx, cy, rect.width, rect.height);
+  window._hpfFreq = hpfFreq;
+  window._lpfFreq = lpfFreq;
+  if (window._hpf) window._hpf.frequency.value = hpfFreq;
+  if (window._lpf) window._lpf.frequency.value = lpfFreq;
+  xyHpfLabel.textContent = `HPF: ${formatFreq(hpfFreq)}`;
+  xyLpfLabel.textContent = `LPF: ${formatFreq(lpfFreq)}`;
+  drawXYPad(cx, cy, rect.width, rect.height);
+}
+
+function drawXYPad(cx, cy, w, h) {
+  const canvas = xyPad;
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(90,77,112,0.3)';
+  ctx.lineWidth = 0.5;
+  for (let i = 1; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo((w * i) / 4, 0);
+    ctx.lineTo((w * i) / 4, h);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, (h * i) / 4);
+    ctx.lineTo(w, (h * i) / 4);
+    ctx.stroke();
   }
+
+  // Crosshair
+  ctx.strokeStyle = 'rgba(179,157,219,0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx, 0);
+  ctx.lineTo(cx, h);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, cy);
+  ctx.lineTo(w, cy);
+  ctx.stroke();
+
+  // Dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#b39ddb';
+  ctx.fill();
+  ctx.strokeStyle = '#e0d6f0';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(122,109,144,0.6)';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('HPF →', 4, h - 4);
+  ctx.textAlign = 'right';
+  ctx.fillText('← LPF', w - 4, 12);
+}
+
+// 初期描画
+requestAnimationFrame(() => {
+  const rect = xyPad.getBoundingClientRect();
+  drawXYPad(0, 0, rect.width, rect.height);
 });
 
-filterType.addEventListener('change', () => {
-  if (window._globalFilter) window._globalFilter.type = filterType.value;
+xyPad.addEventListener('mousedown', (e) => {
+  xyDragging = true;
+  applyXYFilter(e.clientX, e.clientY);
+});
+document.addEventListener('mousemove', (e) => {
+  if (xyDragging) applyXYFilter(e.clientX, e.clientY);
+});
+document.addEventListener('mouseup', () => {
+  xyDragging = false;
 });
 
-filterFreq.addEventListener('input', () => {
-  const freq = Math.round(sliderToFreq(Number(filterFreq.value)));
-  filterFreqVal.textContent = freq;
-  if (window._globalFilter) window._globalFilter.frequency.value = freq;
+// タッチ対応
+xyPad.addEventListener('touchstart', (e) => {
+  xyDragging = true;
+  applyXYFilter(e.touches[0].clientX, e.touches[0].clientY);
+  e.preventDefault();
 });
-
-filterQ.addEventListener('input', () => {
-  filterQVal.textContent = Number(filterQ.value).toFixed(1);
-  if (window._globalFilter) window._globalFilter.Q.value = Number(filterQ.value);
+document.addEventListener('touchmove', (e) => {
+  if (xyDragging) applyXYFilter(e.touches[0].clientX, e.touches[0].clientY);
 });
-
-// スペクトラムcanvasクリックでフィルター周波数設定
-spectrumCanvas.addEventListener('click', (e) => {
-  if (!filterEnabled.checked) return;
-  const rect = spectrumCanvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const ratio = x / spectrumCanvas.width;
-  const freq = Math.round(FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** ratio);
-  filterFreq.value = freqToSlider(freq);
-  filterFreqVal.textContent = freq;
-  if (window._globalFilter) window._globalFilter.frequency.value = freq;
+document.addEventListener('touchend', () => {
+  xyDragging = false;
 });
 
 // メトロノーム
