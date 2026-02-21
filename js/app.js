@@ -179,17 +179,12 @@ function processMidi(buffer, fileName) {
 
   // チャンネルUI構築
   buildChannelUI(currentChannels);
-  document.getElementById('visualizer-section').style.display = 'block';
-
   // 再生コントロール有効化
   btnPlay.disabled = false;
   btnStop.disabled = true;
 
   // 全体の長さを事前計算
   currentTotalDuration = notes.length > 0 ? Math.max(...notes.map((n) => n.startTime + n.duration)) : 0;
-
-  // ピアノロール表示
-  document.getElementById('piano-roll-section').style.display = 'block';
 
   // 描画（表示後に実行）
   requestAnimationFrame(() => {

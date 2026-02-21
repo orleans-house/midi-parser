@@ -39,9 +39,6 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   // ミュート/ソロ状態を適用
   updateChannelGains();
 
-  // ビジュアライザー表示
-  document.getElementById('visualizer-section').style.display = 'block';
-
   // === Output層: 波形描画開始 ===
   drawWaveforms();
 
@@ -249,7 +246,7 @@ function stopPlayback() {
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
   btnStop.disabled = true;
-  document.getElementById('position-display').textContent = '';
+  document.getElementById('position-display').textContent = '-';
 }
 
 function playNotesFrom(notes, bpm, fromTime) {
