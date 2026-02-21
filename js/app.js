@@ -355,6 +355,124 @@ document.addEventListener('input', (e) => {
   }
 });
 
+// スペクトラム描画
+const spectrumCanvas = document.getElementById('spectrum-canvas');
+const specCtx = spectrumCanvas.getContext('2d');
+let spectrumTimer = null;
+
+function startSpectrumDraw() {
+  if (spectrumTimer) return;
+  spectrumTimer = setInterval(() => {
+    const analyser = window._spectrumAnalyser;
+    if (!analyser) return;
+
+    spectrumCanvas.width = spectrumCanvas.offsetWidth;
+    const w = spectrumCanvas.width;
+    const h = spectrumCanvas.height;
+    const bufLen = analyser.frequencyBinCount;
+    const data = new Uint8Array(bufLen);
+    analyser.getByteFrequencyData(data);
+
+    specCtx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
+    specCtx.fillRect(0, 0, w, h);
+
+    // スペクトラムバー (対数スケール)
+    const nyquist = 24000;
+    const minFreq = 20;
+    const maxFreq = 20000;
+
+    specCtx.fillStyle = getThemeColor('--accent-purple', '#b39ddb');
+    specCtx.globalAlpha = 0.6;
+    for (let i = 0; i < w; i++) {
+      const freq = minFreq * (maxFreq / minFreq) ** (i / w);
+      const bin = Math.round((freq / nyquist) * bufLen);
+      if (bin >= bufLen) break;
+      const val = data[bin] / 255;
+      const barH = val * h;
+      specCtx.fillRect(i, h - barH, 1, barH);
+    }
+    specCtx.globalAlpha = 1;
+
+    // フィルターカットオフ線
+    if (window._globalFilterEnabled) {
+      const filterFreq = window._globalFilter?.frequency.value || 1000;
+      const x = w * (Math.log(filterFreq / minFreq) / Math.log(maxFreq / minFreq));
+      specCtx.strokeStyle = getThemeColor('--accent-green', '#81c784');
+      specCtx.lineWidth = 2;
+      specCtx.setLineDash([4, 4]);
+      specCtx.beginPath();
+      specCtx.moveTo(x, 0);
+      specCtx.lineTo(x, h);
+      specCtx.stroke();
+      specCtx.setLineDash([]);
+
+      // 周波数ラベル
+      specCtx.fillStyle = getThemeColor('--accent-green', '#81c784');
+      specCtx.font = '10px monospace';
+      specCtx.fillText(`${Math.round(filterFreq)}Hz`, x + 4, 12);
+    }
+  }, 50);
+}
+
+function stopSpectrumDraw() {
+  if (spectrumTimer) {
+    clearInterval(spectrumTimer);
+    spectrumTimer = null;
+  }
+}
+
+// フィルターコントロール
+const filterEnabled = document.getElementById('filter-enabled');
+const filterType = document.getElementById('filter-type');
+const filterFreq = document.getElementById('filter-freq');
+const filterQ = document.getElementById('filter-q');
+const filterFreqVal = document.getElementById('filter-freq-val');
+const filterQVal = document.getElementById('filter-q-val');
+
+filterEnabled.addEventListener('change', () => {
+  filterType.disabled = !filterEnabled.checked;
+  filterFreq.disabled = !filterEnabled.checked;
+  filterQ.disabled = !filterEnabled.checked;
+  window._globalFilterEnabled = filterEnabled.checked;
+  if (window._globalFilter) {
+    if (filterEnabled.checked) {
+      window._globalFilter.type = filterType.value;
+      window._globalFilter.frequency.value = Number(filterFreq.value);
+      window._globalFilter.Q.value = Number(filterQ.value);
+    } else {
+      window._globalFilter.type = 'lowpass';
+      window._globalFilter.frequency.value = 20000;
+      window._globalFilter.Q.value = 0.1;
+    }
+  }
+});
+
+filterType.addEventListener('change', () => {
+  if (window._globalFilter) window._globalFilter.type = filterType.value;
+});
+
+filterFreq.addEventListener('input', () => {
+  filterFreqVal.textContent = filterFreq.value;
+  if (window._globalFilter) window._globalFilter.frequency.value = Number(filterFreq.value);
+});
+
+filterQ.addEventListener('input', () => {
+  filterQVal.textContent = Number(filterQ.value).toFixed(1);
+  if (window._globalFilter) window._globalFilter.Q.value = Number(filterQ.value);
+});
+
+// スペクトラムcanvasクリックでフィルター周波数設定
+spectrumCanvas.addEventListener('click', (e) => {
+  if (!filterEnabled.checked) return;
+  const rect = spectrumCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const ratio = x / spectrumCanvas.width;
+  const freq = Math.round(20 * (20000 / 20) ** ratio);
+  filterFreq.value = freq;
+  filterFreqVal.textContent = freq;
+  if (window._globalFilter) window._globalFilter.frequency.value = freq;
+});
+
 // Lucide アイコン初期化
 if (typeof lucide !== 'undefined') {
   lucide.createIcons();
