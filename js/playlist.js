@@ -41,50 +41,48 @@ function clearPlaylist() {
 }
 
 function selectTrack(index) {
-  if (index < 0 || index >= playlist.tracks.length) return;
+  if (index < 0 || index >= playlist.tracks.length) return Promise.resolve();
   playlist.currentIndex = index;
   renderPlaylist();
 
   const track = playlist.tracks[index];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    track.buffer = e.target.result;
-    if (isAudioFile(track.name)) {
-      processAudioFile(e.target.result, track.name);
-    } else {
-      processMidi(e.target.result, track.name);
-    }
-  };
-  reader.readAsArrayBuffer(track.file);
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      track.buffer = e.target.result;
+      if (isAudioFile(track.name)) {
+        processAudioFile(e.target.result, track.name);
+      } else {
+        processMidi(e.target.result, track.name);
+      }
+      resolve();
+    };
+    reader.readAsArrayBuffer(track.file);
+  });
 }
 
-function playNextTrack() {
+async function playNextTrack() {
   if (!playlist.autoAdvance) return;
   const next = playlist.currentIndex + 1;
   if (next < playlist.tracks.length) {
-    selectTrack(next);
-    // 選択後に自動再生
-    setTimeout(() => {
-      if (audioFileMode) {
-        playAudioFile(window._audioFileRawBuffer);
-      } else {
-        playNotes(currentNotes, currentBpm);
-      }
-    }, 100);
+    await selectTrack(next);
+    if (audioFileMode) {
+      playAudioFile(window._audioFileRawBuffer);
+    } else {
+      playNotes(currentNotes, currentBpm);
+    }
   }
 }
 
-function playPrevTrack() {
+async function playPrevTrack() {
   const prev = playlist.currentIndex - 1;
   if (prev >= 0) {
-    selectTrack(prev);
-    setTimeout(() => {
-      if (audioFileMode) {
-        playAudioFile(window._audioFileRawBuffer);
-      } else {
-        playNotes(currentNotes, currentBpm);
-      }
-    }, 100);
+    await selectTrack(prev);
+    if (audioFileMode) {
+      playAudioFile(window._audioFileRawBuffer);
+    } else {
+      playNotes(currentNotes, currentBpm);
+    }
   }
 }
 
