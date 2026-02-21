@@ -449,6 +449,10 @@ select {
   font-weight: bold;
   font-size: 0.85rem;
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .btn-ch {
