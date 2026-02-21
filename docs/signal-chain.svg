@@ -60,22 +60,20 @@
   <rect x="525" y="180" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
   <text x="590" y="200" text-anchor="middle" fill="#e0d6f0">EQ 5-band</text>
 
-  <!-- 3-way split -->
-  <line x1="545" y1="210" x2="490" y2="235" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Global FX group -->
   <line x1="590" y1="210" x2="590" y2="235" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="635" y1="210" x2="690" y2="235" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="460" y="235" width="260" height="40" rx="8" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="510" y="260" text-anchor="middle" fill="#e0d6f0" font-size="12">Dist</text>
+  <text x="510" y="248" text-anchor="middle" fill="#7a6d90" font-size="9">┃</text>
+  <text x="590" y="260" text-anchor="middle" fill="#e0d6f0" font-size="12">Delay</text>
+  <text x="590" y="248" text-anchor="middle" fill="#7a6d90" font-size="9">┃</text>
+  <text x="670" y="260" text-anchor="middle" fill="#e0d6f0" font-size="12">Reverb</text>
+  <!-- separators -->
+  <line x1="550" y1="242" x2="550" y2="268" stroke="#5a4d70" stroke-width="1"/>
+  <line x1="630" y1="242" x2="630" y2="268" stroke="#5a4d70" stroke-width="1"/>
 
-  <rect x="440" y="235" width="100" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="490" y="255" text-anchor="middle" fill="#e0d6f0">Distortion</text>
-  <rect x="550" y="235" width="80" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="590" y="255" text-anchor="middle" fill="#e0d6f0">Delay</text>
-  <rect x="640" y="235" width="100" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="690" y="255" text-anchor="middle" fill="#e0d6f0">Reverb</text>
-
-  <!-- Converge to FX Trim -->
-  <line x1="490" y1="265" x2="555" y2="295" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="590" y1="265" x2="590" y2="295" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="690" y1="265" x2="625" y2="295" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- FX group → FX Trim -->
+  <line x1="590" y1="275" x2="590" y2="295" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <rect x="525" y="295" width="130" height="30" rx="6" fill="#2e2440" stroke="#b39ddb" stroke-width="2"/>
   <text x="590" y="315" text-anchor="middle" fill="#b39ddb" font-weight="bold">FX Trim</text>
