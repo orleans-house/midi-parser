@@ -377,9 +377,9 @@ function startSpectrumDraw() {
     specCtx.fillRect(0, 0, w, h);
 
     // スペクトラムバー (対数スケール)
-    const nyquist = 24000;
-    const minFreq = 20;
-    const maxFreq = 20000;
+    const nyquist = (window._audioCtxSampleRate || 48000) / 2;
+    const minFreq = FREQ_MIN;
+    const maxFreq = FREQ_MAX;
 
     specCtx.fillStyle = getThemeColor('--accent-purple', '#b39ddb');
     specCtx.globalAlpha = 0.6;
@@ -437,7 +437,7 @@ filterEnabled.addEventListener('change', () => {
   if (window._globalFilter) {
     if (filterEnabled.checked) {
       window._globalFilter.type = filterType.value;
-      window._globalFilter.frequency.value = Number(filterFreq.value);
+      window._globalFilter.frequency.value = sliderToFreq(Number(filterFreq.value));
       window._globalFilter.Q.value = Number(filterQ.value);
     } else {
       window._globalFilter.type = 'lowpass';
@@ -452,8 +452,9 @@ filterType.addEventListener('change', () => {
 });
 
 filterFreq.addEventListener('input', () => {
-  filterFreqVal.textContent = filterFreq.value;
-  if (window._globalFilter) window._globalFilter.frequency.value = Number(filterFreq.value);
+  const freq = Math.round(sliderToFreq(Number(filterFreq.value)));
+  filterFreqVal.textContent = freq;
+  if (window._globalFilter) window._globalFilter.frequency.value = freq;
 });
 
 filterQ.addEventListener('input', () => {
@@ -467,8 +468,8 @@ spectrumCanvas.addEventListener('click', (e) => {
   const rect = spectrumCanvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const ratio = x / spectrumCanvas.width;
-  const freq = Math.round(20 * (20000 / 20) ** ratio);
-  filterFreq.value = freq;
+  const freq = Math.round(FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** ratio);
+  filterFreq.value = freqToSlider(freq);
   filterFreqVal.textContent = freq;
   if (window._globalFilter) window._globalFilter.frequency.value = freq;
 });

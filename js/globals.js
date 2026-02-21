@@ -26,6 +26,18 @@ function getChannelFx(ch) {
   return channelFxState[ch];
 }
 
+// 対数スケール変換 (スライダー0-100 ↔ 周波数20-20000Hz)
+const FREQ_MIN = 20;
+const FREQ_MAX = 20000;
+
+function sliderToFreq(val) {
+  return FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (val / 100);
+}
+
+function freqToSlider(freq) {
+  return (100 * Math.log(freq / FREQ_MIN)) / Math.log(FREQ_MAX / FREQ_MIN);
+}
+
 // CSS変数からテーマカラーを取得するヘルパー
 function getThemeColor(varName, fallback) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;

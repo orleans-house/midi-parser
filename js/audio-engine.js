@@ -54,6 +54,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   const mVol = masterSlider ? masterSlider.value / 100 : 1.0;
   masterGain.gain.value = waveVol * mVol;
   window._masterGain = masterGain;
+  window._audioCtxSampleRate = audioCtx.sampleRate;
 
   // スペクトラム表示用Analyser (masterGain前に配置)
   const spectrumAnalyser = audioCtx.createAnalyser();
@@ -64,7 +65,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   // グローバルフィルター (masterGainとEQの間に挿入)
   const globalFilter = audioCtx.createBiquadFilter();
   globalFilter.type = document.getElementById('filter-type').value;
-  globalFilter.frequency.value = Number(document.getElementById('filter-freq').value);
+  globalFilter.frequency.value = sliderToFreq(Number(document.getElementById('filter-freq').value));
   globalFilter.Q.value = Number(document.getElementById('filter-q').value);
   window._globalFilter = globalFilter;
   window._globalFilterEnabled = document.getElementById('filter-enabled').checked;
