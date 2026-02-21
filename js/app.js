@@ -492,15 +492,85 @@ const xyPad = document.getElementById('xy-pad');
 const xyHpfLabel = document.getElementById('xy-hpf-label');
 const xyLpfLabel = document.getElementById('xy-lpf-label');
 let xyDragging = false;
+let filterMode = 'hpf-lpf';
+window._filterMode = filterMode;
 
-// 初期値: HPF=20Hz(左端), LPF=20kHz(上端) → 左上がデフォルト位置(フィルターOFF相当)
+// 初期値
 window._hpfFreq = 20;
 window._lpfFreq = 20000;
+window._bpFreq = 1000;
+window._bpQ = 1;
+window._notchFreq = 1000;
+window._notchQ = 1;
+window._peakFreq = 1000;
+window._peakQ = 1;
+window._peakGain = 0;
+// 初期化後にチェーン構築を通知（audio-master.js側で_switchFilterChainが設定される）
+
+// フィルターモード切替
+const filterModeBtns = document.querySelectorAll('.filter-mode-btn');
+for (const btn of filterModeBtns) {
+  btn.addEventListener('click', () => {
+    filterMode = btn.dataset.mode;
+    window._filterMode = filterMode;
+    for (const b of filterModeBtns) {
+      b.classList.toggle('active', b === btn);
+    }
+    // モード変更時にフィルターチェーンを切替・リセット
+    resetFilterBypass();
+    if (window._switchFilterChain) window._switchFilterChain(filterMode);
+    const rect = xyPad.getBoundingClientRect();
+    drawXYPad(rect.width / 2, rect.height / 2, rect.width, rect.height);
+  });
+}
+
+function resetFilterBypass() {
+  // HPF/LPFをデフォルトに戻す
+  window._hpfFreq = 20;
+  window._lpfFreq = 20000;
+  if (window._hpf) window._hpf.frequency.value = 20;
+  if (window._lpf) window._lpf.frequency.value = 20000;
+  // 各フィルターのパラメータをデフォルトに戻す
+  window._bpFreq = 1000;
+  window._bpQ = 1;
+  if (window._bandpass) {
+    window._bandpass.frequency.value = 1000;
+    window._bandpass.Q.value = 1;
+  }
+  window._notchFreq = 1000;
+  window._notchQ = 1;
+  if (window._notch) {
+    window._notch.frequency.value = 1000;
+    window._notch.Q.value = 1;
+  }
+  window._peakFreq = 1000;
+  window._peakQ = 1;
+  window._peakGain = 0;
+  if (window._peaking) {
+    window._peaking.frequency.value = 1000;
+    window._peaking.Q.value = 1;
+    window._peaking.gain.value = 0;
+  }
+  xyHpfLabel.textContent = '';
+  xyLpfLabel.textContent = '';
+}
 
 function xyPosToFreqs(x, y, w, h) {
   const hpfFreq = FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (x / w);
   const lpfFreq = FREQ_MAX * (FREQ_MIN / FREQ_MAX) ** (y / h);
   return { hpfFreq: Math.max(20, Math.min(hpfFreq, 20000)), lpfFreq: Math.max(20, Math.min(lpfFreq, 20000)) };
+}
+
+function xyPosToFreqQ(x, y, w, h) {
+  const freq = FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (x / w);
+  const q = 0.1 + (1 - y / h) * 19.9; // 上=高Q(狭い), 下=低Q(広い)
+  return { freq: Math.max(20, Math.min(freq, 20000)), q: Math.max(0.1, Math.min(q, 20)) };
+}
+
+function xyPosToFreqGain(x, y, w, h) {
+  const freq = FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (x / w);
+  const gain = (0.5 - y / h) * 24; // 上=+12dB, 下=-12dB, 中央=0
+  return { freq: Math.max(20, Math.min(freq, 20000)), gain: Math.max(-12, Math.min(gain, 12)) };
 }
 
 function formatFreq(f) {
@@ -511,15 +581,58 @@ function applyXYFilter(x, y) {
   const rect = xyPad.getBoundingClientRect();
   const cx = Math.max(0, Math.min(x - rect.left, rect.width));
   const cy = Math.max(0, Math.min(y - rect.top, rect.height));
-  const { hpfFreq, lpfFreq } = xyPosToFreqs(cx, cy, rect.width, rect.height);
-  window._hpfFreq = hpfFreq;
-  window._lpfFreq = lpfFreq;
-  if (window._hpf) window._hpf.frequency.value = hpfFreq;
-  if (window._lpf) window._lpf.frequency.value = lpfFreq;
-  xyHpfLabel.textContent = `HPF: ${formatFreq(hpfFreq)}`;
-  xyLpfLabel.textContent = `LPF: ${formatFreq(lpfFreq)}`;
+
+  if (filterMode === 'hpf-lpf') {
+    const { hpfFreq, lpfFreq } = xyPosToFreqs(cx, cy, rect.width, rect.height);
+    window._hpfFreq = hpfFreq;
+    window._lpfFreq = lpfFreq;
+    if (window._hpf) window._hpf.frequency.value = hpfFreq;
+    if (window._lpf) window._lpf.frequency.value = lpfFreq;
+    xyHpfLabel.textContent = `HPF: ${formatFreq(hpfFreq)}`;
+    xyLpfLabel.textContent = `LPF: ${formatFreq(lpfFreq)}`;
+  } else if (filterMode === 'bandpass') {
+    const { freq, q } = xyPosToFreqQ(cx, cy, rect.width, rect.height);
+    window._bpFreq = freq;
+    window._bpQ = q;
+    if (window._bandpass) {
+      window._bandpass.frequency.value = freq;
+      window._bandpass.Q.value = q;
+    }
+    xyHpfLabel.textContent = `Freq: ${formatFreq(freq)}`;
+    xyLpfLabel.textContent = `Q: ${q.toFixed(1)}`;
+  } else if (filterMode === 'notch') {
+    const { freq, q } = xyPosToFreqQ(cx, cy, rect.width, rect.height);
+    window._notchFreq = freq;
+    window._notchQ = q;
+    if (window._notch) {
+      window._notch.frequency.value = freq;
+      window._notch.Q.value = q;
+    }
+    xyHpfLabel.textContent = `Freq: ${formatFreq(freq)}`;
+    xyLpfLabel.textContent = `Q: ${q.toFixed(1)}`;
+  } else if (filterMode === 'peaking') {
+    const { freq, gain } = xyPosToFreqGain(cx, cy, rect.width, rect.height);
+    window._peakFreq = freq;
+    window._peakGain = gain;
+    window._peakQ = 2;
+    if (window._peaking) {
+      window._peaking.frequency.value = freq;
+      window._peaking.gain.value = gain;
+      window._peaking.Q.value = 2;
+    }
+    xyHpfLabel.textContent = `Freq: ${formatFreq(freq)}`;
+    xyLpfLabel.textContent = `Gain: ${gain > 0 ? '+' : ''}${gain.toFixed(1)}dB`;
+  }
+
   drawXYPad(cx, cy, rect.width, rect.height);
 }
+
+const modeAxisLabels = {
+  'hpf-lpf': { x: 'HPF →', y: '← LPF' },
+  bandpass: { x: 'Freq →', y: '← Q' },
+  notch: { x: 'Freq →', y: '← Q' },
+  peaking: { x: 'Freq →', y: '← Gain' },
+};
 
 function drawXYPad(cx, cy, w, h) {
   const canvas = xyPad;
@@ -565,12 +678,13 @@ function drawXYPad(cx, cy, w, h) {
   ctx.stroke();
 
   // Axis labels
+  const labels = modeAxisLabels[filterMode] || modeAxisLabels['hpf-lpf'];
   ctx.fillStyle = 'rgba(122,109,144,0.6)';
   ctx.font = '9px sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('HPF →', 4, h - 4);
+  ctx.fillText(labels.x, 4, h - 4);
   ctx.textAlign = 'right';
-  ctx.fillText('← LPF', w - 4, 12);
+  ctx.fillText(labels.y, w - 4, 12);
 }
 
 // 初期描画

@@ -69,14 +69,64 @@ function buildMasterChain(audioCtx) {
   });
   window._eqFilters = eqFilters;
 
-  // MasterGain → HPF → LPF → EQ chain
+  // 追加フィルター（モード切替で動的に挿入/取り外し）
+  const bandpass = audioCtx.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.frequency.value = window._bpFreq || 1000;
+  bandpass.Q.value = window._bpQ || 1;
+  window._bandpass = bandpass;
+
+  const notch = audioCtx.createBiquadFilter();
+  notch.type = 'notch';
+  notch.frequency.value = window._notchFreq || 1000;
+  notch.Q.value = window._notchQ || 1;
+  window._notch = notch;
+
+  const peaking = audioCtx.createBiquadFilter();
+  peaking.type = 'peaking';
+  peaking.frequency.value = window._peakFreq || 1000;
+  peaking.Q.value = window._peakQ || 1;
+  peaking.gain.value = window._peakGain || 0;
+  window._peaking = peaking;
+
+  // EQチェーンの先頭ノードを取得
+  const eqHead = eqFilters.length > 0 ? eqFilters[0] : null;
+
+  // フィルターモード切替: LPF → [activeFilter | direct] → EQ先頭
+  // デフォルトは HPF/LPF モード（追加フィルターなし）
+  window._switchFilterChain = (mode) => {
+    // 既存接続を切断
+    lpf.disconnect();
+    bandpass.disconnect();
+    notch.disconnect();
+    peaking.disconnect();
+
+    const target = eqHead || masterGain; // EQがない場合のフォールバック
+    if (mode === 'bandpass') {
+      lpf.connect(bandpass);
+      bandpass.connect(target);
+    } else if (mode === 'notch') {
+      lpf.connect(notch);
+      notch.connect(target);
+    } else if (mode === 'peaking') {
+      lpf.connect(peaking);
+      peaking.connect(target);
+    } else {
+      // hpf-lpf: 直結
+      lpf.connect(target);
+    }
+  };
+
+  // EQフィルター同士を直列接続
+  for (let i = 0; i < eqFilters.length - 1; i++) {
+    eqFilters[i].connect(eqFilters[i + 1]);
+  }
+
+  // MasterGain → HPF → LPF → EQ chain（デフォルト: 追加フィルターなし）
   masterGain.connect(hpf);
   hpf.connect(lpf);
-  let prevNode = lpf;
-  for (const filter of eqFilters) {
-    prevNode.connect(filter);
-    prevNode = filter;
-  }
+  lpf.connect(eqHead || masterGain);
+  let prevNode = eqFilters.length > 0 ? eqFilters[eqFilters.length - 1] : lpf;
 
   // === マスターリバーブ ===
   const reverbDry = audioCtx.createGain();
@@ -146,6 +196,9 @@ function buildMasterChain(audioCtx) {
   applyLimiterParams(limiter);
   prevNode.connect(limiter);
   window._limiter = limiter;
+
+  // 現在のフィルターモードを適用（再生開始時にチェーンが再構築されるため）
+  window._switchFilterChain(window._filterMode || 'hpf-lpf');
 
   return { masterGain, eqOut: limiter };
 }

@@ -882,3 +882,33 @@ select {
   border-top: 1px solid var(--border, #2a2440);
   margin: 8px 0;
 }
+
+/* フィルターモードボタン */
+#filter-mode-btns {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.filter-mode-btn {
+  flex: 1;
+  padding: 4px 0;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  background: var(--bg-input, #1a1730);
+  color: var(--text-muted, #5a4d70);
+  border: 1px solid var(--border, #2a2440);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-mode-btn:hover {
+  border-color: var(--accent-purple, #b39ddb);
+}
+
+.filter-mode-btn.active {
+  background: var(--accent-purple, #b39ddb);
+  color: var(--bg-main, #0e0b14);
+  border-color: var(--accent-purple, #b39ddb);
+  font-weight: bold;
+}
