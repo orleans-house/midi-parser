@@ -299,7 +299,7 @@ h3 svg,
 
 #visualizer-container {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
   gap: 12px;
 }
 
@@ -530,7 +530,7 @@ select {
 
 .fx-module-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
   gap: 8px;
   margin-top: 4px;
 }
@@ -712,7 +712,7 @@ select {
 
 #hot-cue-pads {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
   gap: 4px;
   margin-bottom: 10px;
 }
