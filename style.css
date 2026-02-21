@@ -796,6 +796,25 @@ select {
   margin: 0;
   max-height: 200px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-purple, #b39ddb) transparent;
+}
+
+#playlist::-webkit-scrollbar {
+  width: 6px;
+}
+
+#playlist::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#playlist::-webkit-scrollbar-thumb {
+  background: var(--accent-purple, #b39ddb);
+  border-radius: 3px;
+}
+
+#playlist::-webkit-scrollbar-thumb:hover {
+  background: var(--text-primary, #e0d6f0);
 }
 
 .playlist-item {
