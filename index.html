@@ -170,6 +170,28 @@
         </div>
       </div>
 
+      <div class="panel-section">
+        <h3><i data-lucide="timer"></i> メトロノーム</h3>
+        <div class="fx-row">
+          <label class="fx-toggle">
+            <input type="checkbox" id="metronome-on">
+            <span>ON</span>
+          </label>
+          <select id="metronome-type" style="font-size:0.7rem;" disabled>
+            <option value="click">Click</option>
+            <option value="wood">Wood</option>
+            <option value="hihat">HiHat</option>
+            <option value="rim">Rim</option>
+            <option value="beep">Beep</option>
+          </select>
+        </div>
+        <div class="fx-row">
+          <span class="fx-val" style="min-width:28px">Vol</span>
+          <input type="range" id="metronome-vol" class="fx-slider" min="0" max="100" value="50" disabled>
+          <span class="fx-val" id="metronome-vol-val">50%</span>
+        </div>
+      </div>
+
       <div id="position-info" class="panel-section">
         <span id="position-display"></span>
       </div>
