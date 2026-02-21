@@ -30,14 +30,25 @@ masterVolume.addEventListener('input', () => {
   applyCurrentWaveVolume();
 });
 
-// 現在の波形の音量 × マスター を masterGain に反映
+// 波形音量をチャンネルごとに適用 + マスター音量を masterGain に反映
 function applyCurrentWaveVolume() {
-  const currentWave = waveTypeSelect.value;
-  const slider = mixerSliders[currentWave];
-  if (slider && window._masterGain) {
-    const waveVol = slider.value / 100;
-    const masterVol = masterVolume.value / 100;
-    window._masterGain.gain.value = waveVol * masterVol;
+  const masterVol = masterVolume.value / 100;
+  if (window._masterGain) {
+    window._masterGain.gain.value = masterVol;
+  }
+  applyChannelWaveVolumes();
+}
+
+// 各チャンネルの gainNode に波形別音量を適用
+function applyChannelWaveVolumes() {
+  if (typeof channelStates === 'undefined') return;
+  for (const [ch, state] of Object.entries(channelStates)) {
+    if (!state.gainNode) continue;
+    const chFx = getChannelFx(Number(ch));
+    const waveType = chFx.customWave ? chFx.waveType : waveTypeSelect.value;
+    const slider = mixerSliders[waveType];
+    const waveVol = slider ? slider.value / 100 : 0.5;
+    state.gainNode.gain.value = waveVol;
   }
 }
 
@@ -45,7 +56,7 @@ function applyCurrentWaveVolume() {
 for (const [wave, slider] of Object.entries(mixerSliders)) {
   slider.addEventListener('input', () => {
     mixerDisplays[wave].textContent = `${slider.value}%`;
-    applyCurrentWaveVolume();
+    applyChannelWaveVolumes();
   });
 }
 
@@ -296,6 +307,9 @@ document.addEventListener('click', (e) => {
         }
       }
     }
+
+    // 波形変更に伴い音量も更新
+    applyChannelWaveVolumes();
   }
 });
 
