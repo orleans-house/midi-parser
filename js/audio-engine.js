@@ -55,6 +55,20 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   masterGain.gain.value = waveVol * mVol;
   window._masterGain = masterGain;
 
+  // スペクトラム表示用Analyser (masterGain前に配置)
+  const spectrumAnalyser = audioCtx.createAnalyser();
+  spectrumAnalyser.fftSize = 4096;
+  spectrumAnalyser.smoothingTimeConstant = 0.8;
+  window._spectrumAnalyser = spectrumAnalyser;
+
+  // グローバルフィルター (masterGainとEQの間に挿入)
+  const globalFilter = audioCtx.createBiquadFilter();
+  globalFilter.type = document.getElementById('filter-type').value;
+  globalFilter.frequency.value = Number(document.getElementById('filter-freq').value);
+  globalFilter.Q.value = Number(document.getElementById('filter-q').value);
+  window._globalFilter = globalFilter;
+  window._globalFilterEnabled = document.getElementById('filter-enabled').checked;
+
   // マスター合成波用AnalyserNode
   // EQ フィルターチェーン
   const eqBands = document.querySelectorAll('.eq-band');
@@ -70,7 +84,17 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   });
 
   // masterGain → EQ chain → analyser → destination
-  let prevNode = masterGain;
+  // masterGain → spectrumAnalyser (表示用、音声経路外)
+  // masterGain → globalFilter → EQ (フィルターは常に接続、OFF時はallpass的に動作)
+  masterGain.connect(spectrumAnalyser);
+  if (!window._globalFilterEnabled) {
+    // OFF時: 高周波数のlowpassで実質素通し
+    globalFilter.type = 'lowpass';
+    globalFilter.frequency.value = 20000;
+    globalFilter.Q.value = 0.1;
+  }
+  masterGain.connect(globalFilter);
+  let prevNode = globalFilter;
   for (const filter of eqFilters) {
     prevNode.connect(filter);
     prevNode = filter;
@@ -384,6 +408,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   btnPlay.innerHTML = '<i data-lucide="pause"></i> 一時停止';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
+  if (typeof startSpectrumDraw === 'function') startSpectrumDraw();
   btnStop.disabled = false;
 
   // シークバー表示・設定
@@ -459,6 +484,7 @@ function resumePlayback() {
 }
 
 function stopPlayback() {
+  if (typeof stopSpectrumDraw === 'function') stopSpectrumDraw();
   isPaused = false;
   pauseDuration = 0;
   pauseStartTime = 0;
