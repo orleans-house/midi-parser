@@ -6,6 +6,9 @@
     <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6" fill="#81c784"/>
     </marker>
+    <marker id="arrow-cyan" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#4dd0e1"/>
+    </marker>
   </defs>
 
   <rect width="960" height="500" rx="12" fill="#0e0a14"/>
@@ -83,17 +86,25 @@
   <text x="860" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">🔊 Output</text>
   <text x="860" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-output.js</text>
 
+  <!-- Audio out -->
   <rect x="800" y="80" width="120" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
   <text x="860" y="100" text-anchor="middle" fill="#e0d6f0">Spectrum</text>
-  <text x="860" y="120" text-anchor="middle" fill="#7a6d90" font-size="10">visual only</text>
+  <rect x="800" y="125" width="120" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="860" y="145" text-anchor="middle" fill="#e0d6f0">MasterAnalyser</text>
+  <line x1="860" y1="155" x2="860" y2="275" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="800" y="140" width="120" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="860" y="160" text-anchor="middle" fill="#e0d6f0">MasterAnalyser</text>
-  <line x1="860" y1="170" x2="860" y2="370" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Waveform Renderer -->
+  <rect x="800" y="200" width="120" height="55" rx="6" fill="#1e2a30" stroke="#4dd0e1" stroke-width="1.5"/>
+  <text x="860" y="220" text-anchor="middle" fill="#4dd0e1" font-size="11" font-weight="bold">Waveform</text>
+  <text x="860" y="236" text-anchor="middle" fill="#4dd0e1" font-size="11" font-weight="bold">Renderer</text>
+  <text x="860" y="250" text-anchor="middle" fill="#7a6d90" font-size="9">Canvas draw</text>
 
   <!-- destination inside Output -->
   <rect x="800" y="370" width="120" height="30" rx="6" fill="#2e2440" stroke="#81c784" stroke-width="2"/>
   <text x="860" y="390" text-anchor="middle" fill="#81c784" font-weight="bold">🔊 destination</text>
+
+  <!-- MasterAnalyser → destination -->
+  <line x1="860" y1="275" x2="860" y2="370" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <!-- Inter-layer connections -->
   <!-- Source → Channel -->
@@ -103,16 +114,26 @@
   <!-- FX Trim → Spectrum -->
   <line x1="655" y1="305" x2="800" y2="95" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
   <!-- FX Trim → MasterAnalyser -->
-  <line x1="655" y1="310" x2="800" y2="155" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="655" y1="310" x2="800" y2="140" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Visual data flow to Waveform Renderer (cyan dashed) -->
+  <!-- ChAnalyser → Renderer -->
+  <path d="M380,295 Q720,300 800,220" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <!-- Spectrum → Renderer -->
+  <line x1="860" y1="110" x2="860" y2="200" stroke="#4dd0e1" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <!-- MasterAnalyser → Renderer -->
+  <line x1="830" y1="155" x2="815" y2="200" stroke="#4dd0e1" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
 
   <!-- Metronome → destination (green dashed, crosses all layers) -->
   <line x1="180" y1="385" x2="800" y2="385" stroke="#81c784" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrow-green)"/>
 
   <!-- Legend -->
-  <rect x="300" y="445" width="360" height="40" rx="6" fill="#1a1525" stroke="#5a4d70" stroke-width="0.5"/>
-  <line x1="320" y1="465" x2="360" y2="465" stroke="#b39ddb" stroke-width="2"/>
-  <text x="370" y="469" fill="#7a6d90" font-size="11">Audio signal</text>
-  <line x1="480" y1="465" x2="520" y2="465" stroke="#81c784" stroke-width="2" stroke-dasharray="8,4"/>
-  <text x="530" y="469" fill="#7a6d90" font-size="11">Metronome</text>
-  <text x="480" y="480" text-anchor="middle" fill="#5a4d70" font-size="9">Orchestrator: audio-engine.js</text>
+  <rect x="230" y="440" width="500" height="50" rx="6" fill="#1a1525" stroke="#5a4d70" stroke-width="0.5"/>
+  <line x1="250" y1="458" x2="290" y2="458" stroke="#b39ddb" stroke-width="2"/>
+  <text x="300" y="462" fill="#7a6d90" font-size="11">Audio signal</text>
+  <line x1="400" y1="458" x2="440" y2="458" stroke="#81c784" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="450" y="462" fill="#7a6d90" font-size="11">Metronome</text>
+  <line x1="540" y1="458" x2="580" y2="458" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="590" y="462" fill="#7a6d90" font-size="11">Visual data</text>
+  <text x="480" y="482" text-anchor="middle" fill="#5a4d70" font-size="9">Orchestrator: audio-engine.js</text>
 </svg>
