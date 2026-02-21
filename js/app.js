@@ -622,6 +622,51 @@ metronomeVol.addEventListener('input', () => {
   }
 });
 
+// リミッター
+const limiterOn = document.getElementById('limiter-on');
+const limiterThreshold = document.getElementById('limiter-threshold');
+const limiterThresholdVal = document.getElementById('limiter-threshold-val');
+const limiterKnee = document.getElementById('limiter-knee');
+const limiterKneeVal = document.getElementById('limiter-knee-val');
+const limiterReduction = document.getElementById('limiter-reduction');
+
+limiterOn.addEventListener('change', () => {
+  applyLimiterParams(window._limiter);
+});
+
+limiterThreshold.addEventListener('input', () => {
+  limiterThresholdVal.textContent = `${limiterThreshold.value} dB`;
+  applyLimiterParams(window._limiter);
+});
+
+limiterKnee.addEventListener('input', () => {
+  limiterKneeVal.textContent = `${limiterKnee.value} dB`;
+  applyLimiterParams(window._limiter);
+});
+
+// リミッターのゲインリダクション表示
+let limiterMeterTimer = null;
+
+function startLimiterMeter() {
+  if (limiterMeterTimer) return;
+  limiterMeterTimer = setInterval(() => {
+    if (window._limiter && !window._limiterBypassed) {
+      const reduction = window._limiter.reduction;
+      limiterReduction.textContent = `Reduction: ${reduction.toFixed(1)} dB`;
+    } else {
+      limiterReduction.textContent = 'Reduction: OFF';
+    }
+  }, 100);
+}
+
+function stopLimiterMeter() {
+  if (limiterMeterTimer) {
+    clearInterval(limiterMeterTimer);
+    limiterMeterTimer = null;
+  }
+  limiterReduction.textContent = 'Reduction: 0 dB';
+}
+
 // Lucide アイコン初期化
 if (typeof lucide !== 'undefined') {
   lucide.createIcons();

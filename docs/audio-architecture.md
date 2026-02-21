@@ -24,8 +24,9 @@ graph TD
 
   subgraph Master
     MGain[MasterGain] --> HPF[HPF] --> LPF[LPF] --> EQ[EQ 5-band]
-    EQ --> Spec[Spectrum]
-    EQ --> MAna[MasterAnalyser]
+    EQ --> Lim[Limiter]
+    Lim --> Spec[Spectrum]
+    Lim --> MAna[MasterAnalyser]
   end
 
   subgraph User
@@ -82,6 +83,7 @@ graph TD
 | **HPF** | BiquadFilterNode (highpass)。XYパッドのX軸で周波数を操作。低音域をカットする |
 | **LPF** | BiquadFilterNode (lowpass)。XYパッドのY軸で周波数を操作。高音域をカットする |
 | **EQ 5-band** | 5つの BiquadFilterNode を直列接続。lowshelf / peaking×3 / highshelf で帯域別に音量調整 |
+| **Limiter** | DynamicsCompressorNode。ratio=20のブリックウォールリミッター。閾値(threshold)とkneeを調整可能。ピーク超過時に音量を自動圧縮して破裂音を防ぐ |
 | **Spectrum** | AnalyserNode（観測点）。`getByteFrequencyData()` で周波数領域のデータを Wave Renderer に提供。スペクトラム表示用 |
 | **MasterAnalyser** | AnalyserNode（観測点）。`getByteTimeDomainData()` で時間領域のデータを Wave Renderer に提供。マスター波形表示用。また音声出力への接続点でもある |
 

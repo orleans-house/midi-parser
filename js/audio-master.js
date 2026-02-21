@@ -78,5 +78,34 @@ function buildMasterChain(audioCtx) {
     prevNode = filter;
   }
 
-  return { masterGain, eqOut: prevNode };
+  // リミッター (DynamicsCompressorNode) — 常時チェーンに挿入
+  const limiter = audioCtx.createDynamicsCompressor();
+  limiter.attack.value = 0.003;
+  limiter.release.value = 0.05;
+  applyLimiterParams(limiter);
+  prevNode.connect(limiter);
+  window._limiter = limiter;
+
+  return { masterGain, eqOut: limiter };
+}
+
+// リミッターのパラメータをUI状態に応じて適用
+function applyLimiterParams(limiter) {
+  if (!limiter) return;
+  const limiterOn = document.getElementById('limiter-on');
+  const isOn = limiterOn && limiterOn.checked;
+
+  if (isOn) {
+    const thresholdSlider = document.getElementById('limiter-threshold');
+    const kneeSlider = document.getElementById('limiter-knee');
+    limiter.threshold.value = thresholdSlider ? Number(thresholdSlider.value) : -6;
+    limiter.knee.value = kneeSlider ? Number(kneeSlider.value) : 3;
+    limiter.ratio.value = 20; // ほぼブリックウォール
+  } else {
+    // 実質バイパス: threshold=0dB, ratio=1 で圧縮なし
+    limiter.threshold.value = 0;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 1;
+  }
+  window._limiterBypassed = !isOn;
 }

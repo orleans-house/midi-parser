@@ -65,6 +65,7 @@ async function playAudioFile(buffer, seekOffset = 0) {
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
   if (typeof startSpectrumDraw === 'function') startSpectrumDraw();
+  if (typeof startLimiterMeter === 'function') startLimiterMeter();
   btnStop.disabled = false;
 
   // 位置表示
