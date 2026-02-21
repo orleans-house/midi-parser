@@ -15,7 +15,7 @@
 
   <!-- Source Layer -->
   <rect x="20" y="20" width="160" height="400" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
-  <text x="100" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">🎵 Source</text>
+  <text x="100" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Source</text>
   <text x="100" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-source.js</text>
 
   <rect x="35" y="80" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
@@ -26,16 +26,16 @@
 
   <!-- Metronome inside Source -->
   <rect x="35" y="370" width="130" height="30" rx="6" fill="#2e2440" stroke="#81c784"/>
-  <text x="100" y="390" text-anchor="middle" fill="#81c784">🥁 Metronome</text>
+  <text x="100" y="390" text-anchor="middle" fill="#81c784">Metronome</text>
 
   <!-- Channel Layer -->
   <rect x="195" y="20" width="160" height="400" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
-  <text x="275" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">🔀 Channel ×16</text>
+  <text x="275" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Channel x16</text>
   <text x="275" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-channel.js</text>
 
   <rect x="210" y="80" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
   <text x="275" y="100" text-anchor="middle" fill="#e0d6f0">ChGain</text>
-  <text x="275" y="120" text-anchor="middle" fill="#7a6d90" font-size="10">waveVol × playGate</text>
+  <text x="275" y="120" text-anchor="middle" fill="#7a6d90" font-size="10">waveVol x playGate</text>
   <line x1="275" y1="110" x2="275" y2="135" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
   <rect x="210" y="135" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
   <text x="275" y="155" text-anchor="middle" fill="#e0d6f0">Distortion</text>
@@ -51,7 +51,7 @@
 
   <!-- Master Layer -->
   <rect x="370" y="20" width="310" height="400" rx="8" fill="#1a1525" stroke="#5a4d70" stroke-width="1.5"/>
-  <text x="525" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">🎛️ Master</text>
+  <text x="525" y="45" text-anchor="middle" fill="#b39ddb" font-weight="bold" font-size="14">Master</text>
   <text x="525" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-master.js</text>
 
   <rect x="460" y="80" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
@@ -66,52 +66,49 @@
   <rect x="460" y="230" width="130" height="30" rx="6" fill="#2e2440" stroke="#b39ddb" stroke-width="2"/>
   <text x="525" y="250" text-anchor="middle" fill="#b39ddb" font-weight="bold">FX Trim</text>
 
-  <!-- Spectrum & MasterAnalyser in Master layer -->
-  <line x1="525" y1="260" x2="460" y2="285" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="525" y1="260" x2="590" y2="285" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- FX Trim splits to Spectrum and MasterAnalyser -->
+  <line x1="490" y1="260" x2="440" y2="290" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="560" y1="260" x2="610" y2="290" stroke="#b39ddb" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="395" y="285" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="460" y="305" text-anchor="middle" fill="#e0d6f0">Spectrum</text>
-  <text x="460" y="323" text-anchor="middle" fill="#7a6d90" font-size="10">観測点</text>
+  <rect x="390" y="290" width="110" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="445" y="310" text-anchor="middle" fill="#e0d6f0" font-size="12">Spectrum</text>
 
-  <rect x="540" y="285" width="130" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
-  <text x="605" y="305" text-anchor="middle" fill="#e0d6f0">MasterAnalyser</text>
-  <text x="605" y="323" text-anchor="middle" fill="#7a6d90" font-size="10">観測点</text>
+  <rect x="560" y="290" width="110" height="30" rx="6" fill="#2e2440" stroke="#5a4d70"/>
+  <text x="615" y="310" text-anchor="middle" fill="#e0d6f0" font-size="12">MasterAnalyser</text>
 
   <!-- User Layer -->
   <rect x="700" y="20" width="240" height="400" rx="8" fill="#1a1525" stroke="#81c784" stroke-width="1.5"/>
-  <text x="820" y="45" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="14">👤 User</text>
+  <text x="820" y="45" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="14">User</text>
   <text x="820" y="62" text-anchor="middle" fill="#7a6d90" font-size="11">audio-output.js</text>
 
   <!-- Waveform Renderer -->
-  <rect x="730" y="100" width="180" height="70" rx="8" fill="#1e2a30" stroke="#4dd0e1" stroke-width="1.5"/>
-  <text x="820" y="125" text-anchor="middle" fill="#4dd0e1" font-weight="bold" font-size="13">👁️ Waveform Renderer</text>
-  <text x="820" y="145" text-anchor="middle" fill="#7a6d90" font-size="11">Canvas描画 (60fps)</text>
-  <text x="820" y="160" text-anchor="middle" fill="#7a6d90" font-size="10">Ch波形 / Master波形 / Spectrum</text>
+  <rect x="730" y="90" width="180" height="60" rx="8" fill="#1e2a30" stroke="#4dd0e1" stroke-width="1.5"/>
+  <text x="820" y="115" text-anchor="middle" fill="#4dd0e1" font-weight="bold" font-size="13">Waveform Renderer</text>
+  <text x="820" y="135" text-anchor="middle" fill="#7a6d90" font-size="11">Canvas (60fps)</text>
 
   <!-- destination -->
   <rect x="730" y="340" width="180" height="50" rx="8" fill="#1e2a30" stroke="#81c784" stroke-width="2"/>
-  <text x="820" y="365" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="14">👂 destination</text>
-  <text x="820" y="382" text-anchor="middle" fill="#7a6d90" font-size="10">スピーカー出力</text>
+  <text x="820" y="365" text-anchor="middle" fill="#81c784" font-weight="bold" font-size="14">destination</text>
+  <text x="820" y="382" text-anchor="middle" fill="#7a6d90" font-size="10">Speaker output</text>
 
-  <!-- Inter-layer audio connections -->
-  <!-- Source → Channel -->
+  <!-- === Audio connections (purple solid) === -->
+  <!-- Source Envelope → Channel ChGain -->
   <line x1="165" y1="145" x2="210" y2="95" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- Channel → Master -->
-  <line x1="340" y1="300" x2="460" y2="95" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- MasterAnalyser → destination -->
-  <line x1="670" y1="300" x2="730" y2="360" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Channel ChAnalyser → Master MasterGain -->
+  <line x1="340" y1="295" x2="460" y2="95" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- MasterAnalyser → User destination -->
+  <line x1="670" y1="305" x2="730" y2="355" stroke="#b39ddb" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <!-- Metronome → destination (green dashed) -->
-  <line x1="165" y1="385" x2="730" y2="370" stroke="#81c784" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrow-green)"/>
+  <!-- === Metronome path (green dashed) === -->
+  <path d="M165,385 L700,385 L730,365" fill="none" stroke="#81c784" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrow-green)"/>
 
-  <!-- Visual data flow to Waveform Renderer (cyan dashed) -->
-  <!-- ChAnalyser → Renderer -->
-  <path d="M340,295 Q550,80 730,130" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
-  <!-- Spectrum → Renderer -->
-  <line x1="460" y1="285" x2="730" y2="140" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
-  <!-- MasterAnalyser → Renderer -->
-  <line x1="605" y1="285" x2="730" y2="135" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <!-- === Visual data (cyan dashed) === -->
+  <!-- ChAnalyser → Renderer (curve above to avoid crossing audio lines) -->
+  <path d="M340,290 C450,250 650,70 730,110" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <!-- Spectrum → Renderer (straight, below ChAnalyser line) -->
+  <path d="M500,300 C550,270 680,160 730,125" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <!-- MasterAnalyser → Renderer (curve below) -->
+  <path d="M670,300 C700,250 720,180 730,140" fill="none" stroke="#4dd0e1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
 
   <!-- Legend -->
   <rect x="230" y="445" width="500" height="40" rx="6" fill="#1a1525" stroke="#5a4d70" stroke-width="0.5"/>
