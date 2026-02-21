@@ -25,7 +25,37 @@ https://orleans-house.github.io/midi-parser/
 
 ## Audio Signal Chain
 
-![Audio Signal Chain](docs/signal-chain.svg)
+```mermaid
+graph TD
+  subgraph Source
+    Osc[Oscillator] --> Env[Envelope]
+  end
+
+  subgraph Channel["Channel x16"]
+    ChGain[ChGain] --> ChDist[Distortion] --> ChDelay[Delay] --> ChReverb[Reverb] --> ChAna[ChAnalyser]
+  end
+
+  subgraph Master
+    MGain[MasterGain] --> GF[GlobalFilter] --> EQ[EQ 5-band] --> Trim[FX Trim]
+    Trim --> Spec[Spectrum]
+    Trim --> MAna[MasterAnalyser]
+  end
+
+  subgraph User
+    Wave[Wave Renderer]
+    Sound[Sound Output]
+  end
+
+  Env --> ChGain
+  ChAna --> MGain
+  MAna --> Sound
+  Metronome -. metronome .-> Sound
+  ChAna -. visual .-> Wave
+  Spec -. visual .-> Wave
+  MAna -. visual .-> Wave
+```
+
+> See [`docs/signal-chain.svg`](docs/signal-chain.svg) for the detailed diagram.
 
 ## Privacy / Security
 
