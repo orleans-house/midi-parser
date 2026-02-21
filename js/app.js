@@ -45,7 +45,7 @@ function applyChannelWaveVolumes() {
   for (const [ch, state] of Object.entries(channelStates)) {
     if (!state.gainNode) continue;
     const chFx = getChannelFx(Number(ch));
-    const waveType = chFx.customWave ? chFx.waveType : waveTypeSelect.value;
+    const waveType = chFx.waveType;
     const slider = mixerSliders[waveType];
     state.waveGain = slider ? slider.value / 100 : 0.5;
     applyChannelGain(state);
@@ -68,15 +68,27 @@ function setActiveWave(newWave) {
   }
   applyCurrentWaveVolume();
 
-  // 再生中のオシレーターの波形を変更（個別設定のないチャンネルのみ）
+  // 全チャンネルの波形を一括変更（channelFxState全体 + currentChannels）
+  for (const ch of Object.keys(channelFxState)) {
+    channelFxState[ch].waveType = newWave;
+  }
+  for (const ch of currentChannels) {
+    getChannelFx(ch).waveType = newWave;
+  }
+
+  // FXモジュールの波形ボタンUIも同期
+  for (const btn of document.querySelectorAll('.fx-wave-btn')) {
+    btn.classList.toggle('active', btn.dataset.wave === newWave);
+  }
+
+  // 切替先の波形の音量を全チャンネルに反映
+  applyChannelWaveVolumes();
+
+  // 再生中のオシレーターの波形を変更
   if (typeof scheduledNodes !== 'undefined') {
     for (const osc of scheduledNodes) {
       try {
-        const chFx = getChannelFx(osc._channel);
-        // チャンネル別で明示的に変更されていなければグローバルに従う
-        if (!chFx.customWave) {
-          osc.type = newWave;
-        }
+        osc.type = newWave;
       } catch (_) {
         /* already stopped */
       }
@@ -236,7 +248,6 @@ document.addEventListener('click', (e) => {
     const wave = waveBtn.dataset.wave;
     const chFx = getChannelFx(ch);
     chFx.waveType = wave;
-    chFx.customWave = true;
 
     // ボタンのactive状態を更新
     const container = waveBtn.closest('.fx-wave-btns');

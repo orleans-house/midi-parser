@@ -8,7 +8,7 @@ function buildChannelChain(audioCtx, ch, masterGain) {
 
   const gainNode = audioCtx.createGain();
   // 波形別音量を初期値に適用
-  const chWaveType = chFx.customWave ? chFx.waveType : document.getElementById('wave-type').value;
+  const chWaveType = chFx.waveType;
   const chWaveSlider = document.querySelector(`.mixer-channel[data-wave="${chWaveType}"] .mixer-vol`);
   const initWaveGain = chWaveSlider ? chWaveSlider.value / 100 : 0.5;
   state.waveGain = initWaveGain;
