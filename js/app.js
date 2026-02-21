@@ -215,17 +215,6 @@ btnRepeat.addEventListener('click', () => {
   btnRepeat.classList.toggle('active', repeatEnabled);
 });
 
-// FX コントロール
-// FX Trim
-const fxTrimSlider = document.getElementById('fx-trim');
-const fxTrimVal = document.getElementById('fx-trim-val');
-fxTrimSlider.addEventListener('input', () => {
-  fxTrimVal.textContent = `${fxTrimSlider.value}%`;
-  if (window._fxTrim) {
-    window._fxTrim.gain.value = Number(fxTrimSlider.value) / 100;
-  }
-});
-
 // EQ スライダーイベント
 document.querySelectorAll('.eq-band').forEach((band, i) => {
   const slider = band.querySelector('.eq-slider');

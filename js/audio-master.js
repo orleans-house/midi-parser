@@ -1,5 +1,5 @@
 // ============================================================
-// Master層: MasterGain, GlobalFilter, EQ, Global FX, FX Trim
+// Master層: MasterGain, HPF/LPF, EQ
 // ============================================================
 
 // ディストーションカーブ生成
@@ -31,7 +31,7 @@ function createReverbIR(ctx, duration, decay) {
   return ir;
 }
 
-// マスターチェーン構築: masterGain → GlobalFilter → EQ → Global FX → FX Trim
+// マスターチェーン構築: masterGain → HPF → LPF → EQ
 function buildMasterChain(audioCtx) {
   const masterGain = audioCtx.createGain();
   const masterSlider = document.getElementById('master-volume');
@@ -78,13 +78,5 @@ function buildMasterChain(audioCtx) {
     prevNode = filter;
   }
 
-  // EQ → FX Trim
-  const fxTrim = audioCtx.createGain();
-  const fxTrimSlider = document.getElementById('fx-trim');
-  fxTrim.gain.value = fxTrimSlider ? Number(fxTrimSlider.value) / 100 : 1;
-  window._fxTrim = fxTrim;
-
-  prevNode.connect(fxTrim);
-
-  return { masterGain, fxTrim };
+  return { masterGain, eqOut: prevNode };
 }

@@ -5,7 +5,7 @@
 // Signal Chain:
 //   [Source層]  Osc → Envelope ─┐
 //   [Channel層] ChGain(waveVol×playGate) → ChDist → ChDelay → ChReverb → ChAnalyser
-//   [Master層]  MasterGain → GlobalFilter → EQ → Dist/Delay/Reverb → FX Trim
+//   [Master層]  MasterGain → HPF → LPF → EQ
 //   [Output層]  → SpectrumAnalyser (visual) / MasterAnalyser → destination
 //   [Source層]  Metronome → destination (独立経路)
 // ============================================================
@@ -26,10 +26,10 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   scheduledNodes = [];
 
   // === Master層 ===
-  const { masterGain, fxTrim } = buildMasterChain(audioCtx);
+  const { masterGain, eqOut } = buildMasterChain(audioCtx);
 
   // === Output層 ===
-  buildOutputChain(audioCtx, fxTrim);
+  buildOutputChain(audioCtx, eqOut);
 
   // === Channel層 ===
   for (const ch of currentChannels) {
