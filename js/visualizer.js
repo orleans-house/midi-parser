@@ -165,11 +165,11 @@ function buildFxModules(allChannels, activeChannels) {
     const header = document.createElement('div');
     header.className = 'fx-module-header';
     header.innerHTML = `<span class="fx-module-label" style="color:${getChannelColor(ch)}">Ch.${ch + 1}</span>
-      <button class="fx-module-toggle btn-ch" title="展開"><i data-lucide="chevron-down"></i></button>`;
+`;
 
     const body = document.createElement('div');
     body.className = 'fx-module-body';
-    body.style.display = 'none';
+    body.style.display = 'block';
 
     // 波形選択
     const waveSection = document.createElement('div');
@@ -206,14 +206,6 @@ function buildFxModules(allChannels, activeChannels) {
     body.append(waveSection, distSection, delaySection, reverbSection);
     mod.append(header, body);
     fxContainer.appendChild(mod);
-
-    // 折りたたみトグル
-    header.querySelector('.fx-module-toggle').addEventListener('click', () => {
-      const isOpen = body.style.display !== 'none';
-      body.style.display = isOpen ? 'none' : 'block';
-      header.querySelector('.fx-module-toggle i').setAttribute('data-lucide', isOpen ? 'chevron-down' : 'chevron-up');
-      if (typeof lucide !== 'undefined') lucide.createIcons({ node: header });
-    });
   }
 
   // ケーブルSVG描画
@@ -231,27 +223,21 @@ function drawCables(allChannels) {
   svg.style.height = '32px';
   svg.style.overflow = 'visible';
 
-  for (const ch of allChannels) {
-    const card = document.getElementById(`channel-card-${ch}`);
-    const mod = document.getElementById(`fx-module-${ch}`);
-    if (!card || !mod) continue;
-
-    const cardRect = card.getBoundingClientRect();
-    const modRect = mod.getBoundingClientRect();
-    const svgRect = svg.getBoundingClientRect ? cableSection.getBoundingClientRect() : { left: 0, top: 0 };
-
-    const x1 = cardRect.left + cardRect.width / 2 - svgRect.left;
-    const x2 = modRect.left + modRect.width / 2 - svgRect.left;
-    const y1 = 0;
-    const y2 = 32;
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', `M${x1},${y1} C${x1},${y1 + 16} ${x2},${y2 - 16} ${x2},${y2}`);
-    path.setAttribute('stroke', getChannelColor(ch));
-    path.setAttribute('stroke-width', '2');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('opacity', '0.4');
-    svg.appendChild(path);
+  // 16本の縦線ケーブル（各チャンネル、均等配置）
+  const svgRect = cableSection.getBoundingClientRect();
+  const totalWidth = svgRect.width;
+  for (let i = 0; i < allChannels.length; i++) {
+    const ch = allChannels[i];
+    const x = ((i + 0.5) / allChannels.length) * totalWidth;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x);
+    line.setAttribute('y1', 0);
+    line.setAttribute('x2', x);
+    line.setAttribute('y2', 32);
+    line.setAttribute('stroke', getChannelColor(ch));
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('opacity', '0.4');
+    svg.appendChild(line);
   }
 
   cableSection.appendChild(svg);

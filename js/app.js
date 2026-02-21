@@ -474,6 +474,28 @@ spectrumCanvas.addEventListener('click', (e) => {
   if (window._globalFilter) window._globalFilter.frequency.value = freq;
 });
 
+// メトロノーム
+const metronomeOn = document.getElementById('metronome-on');
+const metronomeVol = document.getElementById('metronome-vol');
+const metronomeVolVal = document.getElementById('metronome-vol-val');
+
+const metronomeType = document.getElementById('metronome-type');
+
+metronomeOn.addEventListener('change', () => {
+  metronomeVol.disabled = !metronomeOn.checked;
+  metronomeType.disabled = !metronomeOn.checked;
+  if (window._metronomeGain) {
+    window._metronomeGain.gain.value = metronomeOn.checked ? Number(metronomeVol.value) / 100 : 0;
+  }
+});
+
+metronomeVol.addEventListener('input', () => {
+  metronomeVolVal.textContent = `${metronomeVol.value}%`;
+  if (window._metronomeGain && metronomeOn.checked) {
+    window._metronomeGain.gain.value = Number(metronomeVol.value) / 100;
+  }
+});
+
 // Lucide アイコン初期化
 if (typeof lucide !== 'undefined') {
   lucide.createIcons();

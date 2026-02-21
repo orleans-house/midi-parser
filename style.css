@@ -522,23 +522,6 @@ select {
   font-weight: bold;
 }
 
-.fx-module-toggle {
-  background: none;
-  border: none;
-  padding: 2px;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.fx-module-toggle:hover {
-  color: var(--text-primary);
-}
-
-.fx-module-toggle svg {
-  width: 14px;
-  height: 14px;
-}
-
 .fx-module-body {
   margin-top: 8px;
 }
