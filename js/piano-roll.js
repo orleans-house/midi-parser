@@ -1,26 +1,37 @@
 // ============================================================
-// ピアノロール描画
+// ピアノロール描画（オフスクリーンキャッシュ方式）
 // ============================================================
 
 const PIANO_PADDING_LEFT = 0;
 
-function drawPianoRoll() {
+// オフスクリーンCanvasにノート+ラベルをキャッシュ
+let pianoRollCache = null;
+let pianoRollCacheW = 0;
+let pianoRollCacheH = 0;
+
+function buildPianoRollCache() {
   const canvas = document.getElementById('piano-roll-canvas');
-  const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = canvas.clientWidth * dpr;
-  canvas.height = canvas.clientHeight * dpr;
-  ctx.scale(dpr, dpr);
   const W = canvas.clientWidth;
   const H = canvas.clientHeight;
 
-  ctx.clearRect(0, 0, W, H);
-  if (!currentNotes.length) return;
+  if (!W || !H || !currentNotes.length) {
+    pianoRollCache = null;
+    return;
+  }
+
+  // オフスクリーンCanvas作成
+  const offscreen = document.createElement('canvas');
+  offscreen.width = W * dpr;
+  offscreen.height = H * dpr;
+  const ctx = offscreen.getContext('2d');
+  ctx.scale(dpr, dpr);
 
   const dur = currentTotalDuration || Math.max(...currentNotes.map((n) => n.startTime + n.duration));
+
   // 音域検出（パディング付き）
-  let minNote = 127,
-    maxNote = 0;
+  let minNote = 127;
+  let maxNote = 0;
   for (const n of currentNotes) {
     if (n.note < minNote) minNote = n.note;
     if (n.note > maxNote) maxNote = n.note;
@@ -29,9 +40,6 @@ function drawPianoRoll() {
   maxNote = Math.min(127, maxNote + 4);
   const noteRange = maxNote - minNote + 1;
 
-  const plotW = W;
-  const plotH = H;
-
   // ノート描画
   for (const n of currentNotes) {
     const isMuted = channelStates[n.channel]?.muted;
@@ -39,10 +47,10 @@ function drawPianoRoll() {
     const isSoloed = channelStates[n.channel]?.soloed;
     const hidden = anySolo ? !isSoloed : isMuted;
 
-    const x = (n.startTime / dur) * plotW;
-    const w = Math.max(1, (n.duration / dur) * plotW);
-    const y = plotH - ((n.note - minNote + 1) / noteRange) * plotH;
-    const h = Math.max(1, plotH / noteRange);
+    const x = (n.startTime / dur) * W;
+    const w = Math.max(1, (n.duration / dur) * W);
+    const y = H - ((n.note - minNote + 1) / noteRange) * H;
+    const h = Math.max(1, H / noteRange);
 
     const color = CHANNEL_COLORS[n.channel] || getThemeColor('--text-secondary', '#a89bb5');
     ctx.globalAlpha = hidden ? 0.15 : 0.85;
@@ -51,19 +59,52 @@ function drawPianoRoll() {
   }
   ctx.globalAlpha = 1;
 
-  // DJ markers (hot cues, A-B loop)
-  if (typeof drawDJMarkers === 'function') {
-    drawDJMarkers(ctx, W, H, PIANO_PADDING_LEFT);
-  }
-
   // Y軸ラベル（C音のみ）
   ctx.fillStyle = getThemeColor('--text-muted', '#6b5f7a');
   ctx.font = '9px monospace';
   for (let note = minNote; note <= maxNote; note++) {
     if (note % 12 === 0) {
-      const y = plotH - ((note - minNote + 0.5) / noteRange) * plotH;
+      const y = H - ((note - minNote + 0.5) / noteRange) * H;
       ctx.fillText(`C${Math.floor(note / 12) - 1}`, 2, y + 3);
     }
+  }
+
+  pianoRollCache = offscreen;
+  pianoRollCacheW = W;
+  pianoRollCacheH = H;
+}
+
+// キャッシュを無効化（mute/solo変更時、ファイル再読み込み時に呼ぶ）
+function invalidatePianoRollCache() {
+  pianoRollCache = null;
+}
+
+function drawPianoRoll() {
+  const canvas = document.getElementById('piano-roll-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  ctx.clearRect(0, 0, W, H);
+  if (!currentNotes.length) return;
+
+  // キャッシュがなければ構築
+  if (!pianoRollCache || pianoRollCacheW !== W || pianoRollCacheH !== H) {
+    buildPianoRollCache();
+  }
+
+  // キャッシュを貼り付け
+  if (pianoRollCache) {
+    ctx.drawImage(pianoRollCache, 0, 0, W, H);
+  }
+
+  // DJ markers (hot cues, A-B loop) — 動的要素なのでキャッシュ外
+  if (typeof drawDJMarkers === 'function') {
+    drawDJMarkers(ctx, W, H, PIANO_PADDING_LEFT);
   }
 }
 
@@ -82,37 +123,32 @@ document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
   playNotesFrom(currentNotes, currentBpm, seekTime);
 });
 
-// (removed: drum roll, density graph, donut chart, velocity histogram)
-
 // ============================================================
 // 再生ヘッド統合更新
 // ============================================================
 
 function updatePlayhead(elapsed) {
-  // ピアノロール再描画 + ヘッド
   const prCanvas = document.getElementById('piano-roll-canvas');
-  if (prCanvas.clientWidth > 0) {
-    drawPianoRoll();
-    const ctx = prCanvas.getContext('2d');
-    const W = prCanvas.clientWidth;
-    const H = prCanvas.clientHeight;
-    const PADDING_LEFT = PIANO_PADDING_LEFT;
-    const plotW = W - PADDING_LEFT;
-    const dur = currentTotalDuration || 1;
-    const x = PADDING_LEFT + (elapsed / dur) * plotW;
-    // DJ markers (hot cues, A-B loop)
-    if (typeof drawDJMarkers === 'function') {
-      drawDJMarkers(ctx, W, H, PADDING_LEFT);
-    }
+  if (prCanvas.clientWidth <= 0) return;
 
-    // Playhead
-    ctx.save();
-    ctx.strokeStyle = getThemeColor('--accent-green', '#81c784');
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, H);
-    ctx.stroke();
-    ctx.restore();
-  }
+  // キャッシュから再描画（ノート部分はキャッシュ済み）
+  drawPianoRoll();
+
+  const ctx = prCanvas.getContext('2d');
+  const W = prCanvas.clientWidth;
+  const H = prCanvas.clientHeight;
+  const PADDING_LEFT = PIANO_PADDING_LEFT;
+  const plotW = W - PADDING_LEFT;
+  const dur = currentTotalDuration || 1;
+  const x = PADDING_LEFT + (elapsed / dur) * plotW;
+
+  // Playhead
+  ctx.save();
+  ctx.strokeStyle = getThemeColor('--accent-green', '#81c784');
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, 0);
+  ctx.lineTo(x, H);
+  ctx.stroke();
+  ctx.restore();
 }
