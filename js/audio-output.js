@@ -110,9 +110,11 @@ function drawWaveforms() {
 
     const sliceWidth = canvas.width / bufferLength;
     let x = 0;
+    const chWaveGain = 3.0; // チャンネル波形の描画ゲイン
     for (let i = 0; i < bufferLength; i++) {
       const v = waveformChBufs[ch][i] / 128.0;
-      const y = (v * canvas.height) / 2;
+      const centered = (v - 1.0) * chWaveGain + 1.0;
+      const y = (centered * canvas.height) / 2;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
       x += sliceWidth;
