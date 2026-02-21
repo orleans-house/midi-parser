@@ -54,10 +54,14 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   let nextMetroBeat = startOffset;
   let metroBeatCount = 0;
 
-  function scheduleMetronome(horizon) {
+  // メトロノームは短い先読みで独立スケジュール（音色リアルタイム切替対応）
+  const METRO_LOOK_AHEAD = 0.3;
+
+  function scheduleMetronome() {
     if (!document.getElementById('metronome-on').checked) return;
     const metroType = document.getElementById('metronome-type').value;
-    while (nextMetroBeat < horizon) {
+    const metroHorizon = audioCtx.currentTime + METRO_LOOK_AHEAD;
+    while (nextMetroBeat < metroHorizon) {
       if (nextMetroBeat >= startOffset) {
         const isAccent = metroBeatCount % 4 === 0;
         createMetroClick(audioCtx, metronomeGain, nextMetroBeat, isAccent, metroType);
@@ -70,7 +74,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   function scheduler() {
     if (!isPlaying || !audioCtx) return;
     const horizon = audioCtx.currentTime + LOOK_AHEAD;
-    scheduleMetronome(horizon);
+    scheduleMetronome();
 
     while (chunkIndex < notes.length) {
       const t = startOffset + notes[chunkIndex].startTime;
