@@ -27,39 +27,48 @@ https://orleans-house.github.io/midi-parser/
 
 ```mermaid
 graph LR
-  subgraph SRC["Source層"]
-    direction LR
-    Osc --> Env[Envelope]
+  subgraph SRC["🎵 Source"]
+    direction TB
+    Osc[Oscillator]
+    Env[Envelope]
+    Metro[Metronome]
+    Osc --> Env
   end
 
-  subgraph CH["Channel層 ×16ch"]
-    direction LR
-    ChGain[ChGain] --> ChDist[Dist] --> ChDelay[Delay] --> ChReverb[Reverb] --> ChAna[Analyser]
+  subgraph CH["🔀 Channel ×16"]
+    direction TB
+    ChGain[ChGain]
+    ChDist[Distortion]
+    ChDelay[Delay]
+    ChReverb[Reverb]
+    ChGain --> ChDist --> ChDelay --> ChReverb
   end
 
-  subgraph MAS["Master層"]
-    direction LR
-    MGain[MasterGain] --> GF[GlobalFilter] --> EQ[EQ 5-band]
-    EQ --> Dist[Distortion] --> Trim[FX Trim]
-    EQ --> Dly[Delay] --> DlyWet[DelayWet] --> Trim
-    EQ --> Conv[Convolver] --> RevWet[ReverbWet] --> Trim
+  subgraph MAS["🎛️ Master"]
+    direction TB
+    MGain[MasterGain]
+    GF[GlobalFilter]
+    EQ[EQ 5-band]
+    Dist[Distortion]
+    Dly[Delay]
+    Conv[Reverb]
+    Trim[FX Trim]
+    MGain --> GF --> EQ
+    EQ --> Dist --> Trim
+    EQ --> Dly --> Trim
+    EQ --> Conv --> Trim
   end
 
-  subgraph OUT["Output層"]
-    direction LR
-    Spec[SpectrumAnalyser]
-    MAna[MasterAnalyser] --> Dest[destination]
+  subgraph OUT["🔊 Output"]
+    direction TB
+    Spec[Spectrum]
+    MAna[MasterAnalyser]
+    Dest[destination]
+    MAna --> Dest
   end
 
-  subgraph METRO["Metronome"]
-    direction LR
-    MOsc[MetroOsc] --> MEnv[Envelope] --> MGn[MetroGain] --> MDest[destination]
-  end
-
-  Env --> ChGain
-  ChAna --> MGain
-  Trim --> Spec
-  Trim --> MAna
+  SRC ==> CH ==> MAS ==> OUT
+  Metro --> Dest
 ```
 
 ## Privacy / Security
