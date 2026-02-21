@@ -368,11 +368,65 @@ h3 svg,
   accent-color: var(--accent-green);
 }
 
+/* ===== 共通横スライダー ===== */
+input[type="range"].slider-h {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 6px;
+  background: var(--bg-input, #1a1730);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"].slider-h::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-purple, #b39ddb);
+  border: 2px solid var(--bg-card, #1e1a2e);
+  cursor: pointer;
+}
+
+input[type="range"].slider-h::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-purple, #b39ddb);
+  border: 2px solid var(--bg-card, #1e1a2e);
+  cursor: pointer;
+}
+
+input[type="range"].slider-h::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+}
+
+input[type="range"].slider-h::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-input, #1a1730);
+}
+
+input[type="range"].slider-h:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+input[type="range"].slider-h:disabled::-webkit-slider-thumb {
+  background: var(--text-muted, #5a4d70);
+}
+
+input[type="range"].slider-h:disabled::-moz-range-thumb {
+  background: var(--text-muted, #5a4d70);
+}
+
+/* 後方互換: 既存クラス */
 .fx-slider {
   flex: 1;
-  height: 4px;
-  accent-color: var(--accent-purple);
-  cursor: pointer;
 }
 
 .fx-slider:disabled {
@@ -617,9 +671,6 @@ select {
 
 .ch-fx-slider {
   flex: 1;
-  height: 3px;
-  accent-color: var(--accent-purple);
-  cursor: pointer;
 }
 
 .ch-fx-slider:disabled {
@@ -693,7 +744,6 @@ select {
 }
 .q-slider-row input[type="range"] {
   flex: 1;
-  height: 4px;
 }
 .q-slider-row span {
   font-size: 11px;
