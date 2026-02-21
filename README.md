@@ -25,33 +25,7 @@ https://orleans-house.github.io/midi-parser/
 
 ## Audio Signal Chain
 
-```mermaid
-graph TD
-  subgraph Source層
-    Osc[Oscillator] --> Env[Envelope]
-  end
-
-  subgraph Channel層 ×16ch
-    ChGain[ChGain] --> ChDist[Dist] --> ChDelay[Delay] --> ChReverb[Reverb]
-  end
-
-  subgraph Master層
-    MGain[MasterGain] --> GF[GlobalFilter] --> EQ[EQ 5-band]
-    EQ --> Dist[Distortion] --> Trim[FX Trim]
-    EQ --> Dly[Delay] --> Trim
-    EQ --> Conv[Reverb] --> Trim
-  end
-
-  subgraph Output層
-    Trim --> Spec[SpectrumAnalyser]
-    Trim --> MAna[MasterAnalyser] --> Dest[🔊 destination]
-  end
-
-  Env --> ChGain
-  ChReverb --> MGain
-
-  Metro[🥁 Metronome] --> Dest
-```
+![Audio Signal Chain](docs/signal-chain.svg)
 
 ## Privacy / Security
 
