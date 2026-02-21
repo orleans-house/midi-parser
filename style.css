@@ -516,6 +516,18 @@ select {
 }
 
 /* ===== エフェクターモジュールグリッド ===== */
+.cable-section {
+  position: relative;
+  height: 32px;
+  margin-top: 8px;
+}
+
+.cable-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
 .fx-module-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(240px, 1fr));
