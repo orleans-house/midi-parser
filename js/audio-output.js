@@ -2,9 +2,9 @@
 // Output層: SpectrumAnalyser, MasterAnalyser, 波形描画
 // ============================================================
 
-// Output分岐構築: fxTrim → spectrumAnalyser (表示用)
-//                fxTrim → masterAnalyser → destination
-function buildOutputChain(audioCtx, fxTrim) {
+// Output分岐構築: eqOut → spectrumAnalyser (表示用)
+//                eqOut → masterAnalyser → destination
+function buildOutputChain(audioCtx, eqOut) {
   // スペクトラム表示用Analyser
   const spectrumAnalyser = audioCtx.createAnalyser();
   spectrumAnalyser.fftSize = 4096;
@@ -16,8 +16,8 @@ function buildOutputChain(audioCtx, fxTrim) {
   masterAnalyser.fftSize = 2048;
   window._masterAnalyser = masterAnalyser;
 
-  fxTrim.connect(spectrumAnalyser);
-  fxTrim.connect(masterAnalyser);
+  eqOut.connect(spectrumAnalyser);
+  eqOut.connect(masterAnalyser);
   masterAnalyser.connect(audioCtx.destination);
 
   return { spectrumAnalyser, masterAnalyser };

@@ -23,9 +23,9 @@ graph TD
   end
 
   subgraph Master
-    MGain[MasterGain] --> GF[GlobalFilter] --> EQ[EQ 5-band] --> Trim[FX Trim]
-    Trim --> Spec[Spectrum]
-    Trim --> MAna[MasterAnalyser]
+    MGain[MasterGain] --> HPF[HPF] --> LPF[LPF] --> EQ[EQ 5-band]
+    EQ --> Spec[Spectrum]
+    EQ --> MAna[MasterAnalyser]
   end
 
   subgraph User
@@ -79,9 +79,9 @@ graph TD
 | モジュール | 説明 |
 |-----------|------|
 | **MasterGain** | マスター音量を制御する GainNode。16チャンネルのChAnalyserからの出力がここに合流する |
-| **GlobalFilter** | BiquadFilterNode によるグローバルフィルター。lowpass/highpass/bandpass等を切り替え可能。OFF時はallpass的に素通し |
+| **HPF** | BiquadFilterNode (highpass)。XYパッドのX軸で周波数を操作。低音域をカットする |
+| **LPF** | BiquadFilterNode (lowpass)。XYパッドのY軸で周波数を操作。高音域をカットする |
 | **EQ 5-band** | 5つの BiquadFilterNode を直列接続。lowshelf / peaking×3 / highshelf で帯域別に音量調整 |
-| **FX Trim** | 最終段の GainNode。全体音量の最終調整（クリッピング防止） |
 | **Spectrum** | AnalyserNode（観測点）。`getByteFrequencyData()` で周波数領域のデータを Wave Renderer に提供。スペクトラム表示用 |
 | **MasterAnalyser** | AnalyserNode（観測点）。`getByteTimeDomainData()` で時間領域のデータを Wave Renderer に提供。マスター波形表示用。また音声出力への接続点でもある |
 
