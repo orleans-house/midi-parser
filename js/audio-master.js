@@ -40,13 +40,20 @@ function buildMasterChain(audioCtx) {
   window._masterGain = masterGain;
   window._audioCtxSampleRate = audioCtx.sampleRate;
 
-  // グローバルフィルター
-  const globalFilter = audioCtx.createBiquadFilter();
-  globalFilter.type = document.getElementById('filter-type').value;
-  globalFilter.frequency.value = sliderToFreq(Number(document.getElementById('filter-freq').value));
-  globalFilter.Q.value = Number(document.getElementById('filter-q').value);
-  window._globalFilter = globalFilter;
-  window._globalFilterEnabled = document.getElementById('filter-enabled').checked;
+  // HPF / LPF (常時接続、XYパッドで操作)
+  const hpf = audioCtx.createBiquadFilter();
+  hpf.type = 'highpass';
+  hpf.frequency.value = window._hpfFreq || 20;
+  const hpfQSlider = document.getElementById('hpf-q');
+  hpf.Q.value = hpfQSlider ? Number(hpfQSlider.value) : 10;
+  window._hpf = hpf;
+
+  const lpf = audioCtx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.value = window._lpfFreq || 20000;
+  const lpfQSlider = document.getElementById('lpf-q');
+  lpf.Q.value = lpfQSlider ? Number(lpfQSlider.value) : 10;
+  window._lpf = lpf;
 
   // EQ フィルターチェーン
   const eqBands = document.querySelectorAll('.eq-band');
@@ -62,14 +69,10 @@ function buildMasterChain(audioCtx) {
   });
   window._eqFilters = eqFilters;
 
-  // GlobalFilter → EQ chain 接続
-  if (!window._globalFilterEnabled) {
-    globalFilter.type = 'lowpass';
-    globalFilter.frequency.value = 20000;
-    globalFilter.Q.value = 0.1;
-  }
-  masterGain.connect(globalFilter);
-  let prevNode = globalFilter;
+  // MasterGain → HPF → LPF → EQ chain
+  masterGain.connect(hpf);
+  hpf.connect(lpf);
+  let prevNode = lpf;
   for (const filter of eqFilters) {
     prevNode.connect(filter);
     prevNode = filter;

@@ -155,28 +155,24 @@
       <div class="panel-section">
         <h3><i data-lucide="activity"></i> スペクトラム</h3>
         <canvas id="spectrum-canvas" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
-        <div id="filter-controls" style="margin-top:6px;">
-          <div class="fx-row">
-            <label class="fx-toggle">
-              <input type="checkbox" id="filter-enabled">
-              <span>Filter</span>
-            </label>
-            <select id="filter-type" style="font-size:0.7rem;" disabled>
-              <option value="lowpass">Lowpass</option>
-              <option value="highpass">Highpass</option>
-              <option value="bandpass">Bandpass</option>
-              <option value="notch">Notch</option>
-            </select>
+      </div>
+      <div class="panel-section">
+        <h3><i data-lucide="move"></i> Filter XY</h3>
+        <div id="xy-pad-wrapper" style="position:relative;">
+          <canvas id="xy-pad" height="200" style="width:100%; border-radius:4px; background:var(--bg-canvas); display:block; cursor:crosshair;"></canvas>
+          <span id="xy-hpf-label" style="position:absolute; bottom:4px; left:4px; font-size:10px; color:var(--text-muted);">HPF: 20Hz</span>
+          <span id="xy-lpf-label" style="position:absolute; top:4px; right:4px; font-size:10px; color:var(--text-muted);">LPF: 20kHz</span>
+        </div>
+        <div class="q-sliders">
+          <div class="q-slider-row">
+            <label style="color:var(--accent-red, #ef5350);">HPF Q</label>
+            <input type="range" id="hpf-q" min="0.1" max="20" step="0.1" value="10">
+            <span id="hpf-q-value">10.0</span>
           </div>
-          <div class="fx-row">
-            <span class="fx-val" style="min-width:28px">Freq</span>
-            <input type="range" id="filter-freq" class="fx-slider" min="0" max="100" value="57" disabled>
-            <span class="fx-val" id="filter-freq-val">1000</span>
-          </div>
-          <div class="fx-row">
-            <span class="fx-val" style="min-width:28px">Q</span>
-            <input type="range" id="filter-q" class="fx-slider" min="0.1" max="20" value="1" step="0.1" disabled>
-            <span class="fx-val" id="filter-q-val">1.0</span>
+          <div class="q-slider-row">
+            <label style="color:var(--accent-cyan, #4dd0e1);">LPF Q</label>
+            <input type="range" id="lpf-q" min="0.1" max="20" step="0.1" value="10">
+            <span id="lpf-q-value">10.0</span>
           </div>
         </div>
       </div>
