@@ -78,6 +78,67 @@ function buildMasterChain(audioCtx) {
     prevNode = filter;
   }
 
+  // === マスターリバーブ ===
+  const reverbDry = audioCtx.createGain();
+  const reverbWet = audioCtx.createGain();
+  const reverbConvolver = audioCtx.createConvolver();
+  const reverbOn = document.getElementById('master-reverb-on');
+  const reverbMixSlider = document.getElementById('master-reverb-mix');
+  const reverbDecaySlider = document.getElementById('master-reverb-decay');
+
+  const reverbDecay = reverbDecaySlider ? Number(reverbDecaySlider.value) / 10 : 2.0;
+  reverbConvolver.buffer = createReverbIR(audioCtx, reverbDecay, 2);
+
+  const reverbEnabled = reverbOn && reverbOn.checked;
+  reverbDry.gain.value = 1;
+  reverbWet.gain.value = reverbEnabled ? (reverbMixSlider ? Number(reverbMixSlider.value) / 100 : 0.3) : 0;
+
+  const reverbMerge = audioCtx.createGain();
+  prevNode.connect(reverbDry);
+  prevNode.connect(reverbConvolver);
+  reverbConvolver.connect(reverbWet);
+  reverbDry.connect(reverbMerge);
+  reverbWet.connect(reverbMerge);
+
+  window._masterReverbWet = reverbWet;
+  window._masterReverbConvolver = reverbConvolver;
+  prevNode = reverbMerge;
+
+  // === マスターコーラス ===
+  const chorusDry = audioCtx.createGain();
+  const chorusWet = audioCtx.createGain();
+  const chorusDelay = audioCtx.createDelay(0.05);
+  const chorusLfo = audioCtx.createOscillator();
+  const chorusLfoGain = audioCtx.createGain();
+  const chorusOn = document.getElementById('master-chorus-on');
+  const chorusRateSlider = document.getElementById('master-chorus-rate');
+  const chorusDepthSlider = document.getElementById('master-chorus-depth');
+  const chorusMixSlider = document.getElementById('master-chorus-mix');
+
+  const chorusEnabled = chorusOn && chorusOn.checked;
+  chorusDelay.delayTime.value = 0.015;
+  chorusLfo.type = 'sine';
+  chorusLfo.frequency.value = chorusRateSlider ? Number(chorusRateSlider.value) / 10 : 1.5;
+  chorusLfoGain.gain.value = chorusDepthSlider ? Number(chorusDepthSlider.value) / 1000 : 0.005;
+  chorusLfo.connect(chorusLfoGain);
+  chorusLfoGain.connect(chorusDelay.delayTime);
+  chorusLfo.start();
+
+  chorusDry.gain.value = 1;
+  chorusWet.gain.value = chorusEnabled ? (chorusMixSlider ? Number(chorusMixSlider.value) / 100 : 0.5) : 0;
+
+  const chorusMerge = audioCtx.createGain();
+  prevNode.connect(chorusDry);
+  prevNode.connect(chorusDelay);
+  chorusDelay.connect(chorusWet);
+  chorusDry.connect(chorusMerge);
+  chorusWet.connect(chorusMerge);
+
+  window._masterChorusWet = chorusWet;
+  window._masterChorusLfo = chorusLfo;
+  window._masterChorusLfoGain = chorusLfoGain;
+  prevNode = chorusMerge;
+
   // リミッター (DynamicsCompressorNode) — 常時チェーンに挿入
   const limiter = audioCtx.createDynamicsCompressor();
   limiter.attack.value = 0.003;

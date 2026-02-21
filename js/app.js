@@ -687,6 +687,79 @@ function stopLimiterMeter() {
   limiterReduction.textContent = 'Reduction: 0 dB';
 }
 
+// マスターリバーブ
+const masterReverbOn = document.getElementById('master-reverb-on');
+const masterReverbMix = document.getElementById('master-reverb-mix');
+const masterReverbMixVal = document.getElementById('master-reverb-mix-val');
+const masterReverbDecay = document.getElementById('master-reverb-decay');
+const masterReverbDecayVal = document.getElementById('master-reverb-decay-val');
+
+masterReverbOn.addEventListener('change', () => {
+  const on = masterReverbOn.checked;
+  masterReverbMix.disabled = !on;
+  masterReverbDecay.disabled = !on;
+  if (window._masterReverbWet) {
+    window._masterReverbWet.gain.value = on ? Number(masterReverbMix.value) / 100 : 0;
+  }
+});
+
+masterReverbMix.addEventListener('input', () => {
+  masterReverbMixVal.textContent = `${masterReverbMix.value}%`;
+  if (window._masterReverbWet && masterReverbOn.checked) {
+    window._masterReverbWet.gain.value = Number(masterReverbMix.value) / 100;
+  }
+});
+
+masterReverbDecay.addEventListener('input', () => {
+  const decay = Number(masterReverbDecay.value) / 10;
+  masterReverbDecayVal.textContent = `${decay.toFixed(1)}s`;
+  if (window._masterReverbConvolver && audioCtx) {
+    window._masterReverbConvolver.buffer = createReverbIR(audioCtx, decay, 2);
+  }
+});
+
+// マスターコーラス
+const masterChorusOn = document.getElementById('master-chorus-on');
+const masterChorusRate = document.getElementById('master-chorus-rate');
+const masterChorusRateVal = document.getElementById('master-chorus-rate-val');
+const masterChorusDepth = document.getElementById('master-chorus-depth');
+const masterChorusDepthVal = document.getElementById('master-chorus-depth-val');
+const masterChorusMix = document.getElementById('master-chorus-mix');
+const masterChorusMixVal = document.getElementById('master-chorus-mix-val');
+
+masterChorusOn.addEventListener('change', () => {
+  const on = masterChorusOn.checked;
+  masterChorusRate.disabled = !on;
+  masterChorusDepth.disabled = !on;
+  masterChorusMix.disabled = !on;
+  if (window._masterChorusWet) {
+    window._masterChorusWet.gain.value = on ? Number(masterChorusMix.value) / 100 : 0;
+  }
+});
+
+masterChorusRate.addEventListener('input', () => {
+  const rate = Number(masterChorusRate.value) / 10;
+  masterChorusRateVal.textContent = `${rate.toFixed(1)} Hz`;
+  if (window._masterChorusLfo) {
+    window._masterChorusLfo.frequency.value = rate;
+  }
+});
+
+masterChorusDepth.addEventListener('input', () => {
+  const depth = Number(masterChorusDepth.value);
+  masterChorusDepthVal.textContent = `${depth} ms`;
+  if (window._masterChorusLfoGain) {
+    window._masterChorusLfoGain.gain.value = depth / 1000;
+  }
+});
+
+masterChorusMix.addEventListener('input', () => {
+  masterChorusMixVal.textContent = `${masterChorusMix.value}%`;
+  if (window._masterChorusWet && masterChorusOn.checked) {
+    window._masterChorusWet.gain.value = Number(masterChorusMix.value) / 100;
+  }
+});
+
 // Lucide アイコン初期化
 if (typeof lucide !== 'undefined') {
   lucide.createIcons();
