@@ -288,6 +288,7 @@ function toggleMute(ch) {
   const btn = document.querySelector(`#channel-card-${ch} .btn-mute`);
   btn.classList.toggle('active', state.muted);
   updateChannelGains();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 }
 
 function toggleSolo(ch) {
@@ -296,6 +297,7 @@ function toggleSolo(ch) {
   const btn = document.querySelector(`#channel-card-${ch} .btn-solo`);
   btn.classList.toggle('active', state.soloed);
   updateChannelGains();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 }
 
 function updateChannelGains() {
