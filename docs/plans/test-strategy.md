@@ -35,152 +35,158 @@
 
 ## 2. 全export関数のカバレッジマップ
 
+**ステータス凡例:**
+- ⬜ 未着手 — テスト未実装
+- 🔧 実装中 — テスト作成中
+- ✅ 完了 — ユニット/統合テスト実装済み
+- ✅ E2Eカバー済み — 既存E2Eテストでカバー（ユニット/統合テスト対象外）
+
 ### globals.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `getChannelFx(ch)` | ユニット | 純粋な状態初期化・取得ロジック |
-| `sliderToFreq(val)` | ユニット | 純粋な数学変換 |
-| `freqToSlider(freq)` | ユニット | 純粋な数学変換（往復誤差検証含む） |
-| `getThemeColor(varName, fallback)` | E2E | `getComputedStyle` 依存（DOM必須） |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `getChannelFx(ch)` | ユニット | ⬜ 未着手 | 純粋な状態初期化・取得ロジック |
+| `sliderToFreq(val)` | ユニット | ⬜ 未着手 | 純粋な数学変換 |
+| `freqToSlider(freq)` | ユニット | ⬜ 未着手 | 純粋な数学変換（往復誤差検証含む） |
+| `getThemeColor(varName, fallback)` | E2E | ✅ E2Eカバー済み | `getComputedStyle` 依存（DOM必須） |
 
 ### midi-parser.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `MidiParser.parse()` | ユニット | バイナリパース（純粋ロジック）。正常系・不正データ・エッジケース |
-| `extractNotes(parsed)` | ユニット | パース結果からのノート抽出。複雑度高 |
-| `extractChannelPrograms(parsed)` | ユニット | チャンネル→楽器マッピング |
-| `noteName(midi)` | ユニット | 数値→文字列変換 |
-| `getInstrumentName(program)` | ユニット | 範囲チェック込み |
-| `remapNote(note)` | ユニット | 全スケール×全キーの変換。`state._scaleConvert` 依存 |
-| `detectKeyScale(notes)` | ユニット | 統計的キー検出。代表パターン＋境界ケース |
-| `midiToFreq(midi)` | ユニット | シフト組合せ（pitch/freq/scale）、下限クランプ1Hz |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `MidiParser.parse()` | ユニット | ⬜ 未着手 | バイナリパース（純粋ロジック）。正常系・不正データ・エッジケース |
+| `extractNotes(parsed)` | ユニット | ⬜ 未着手 | パース結果からのノート抽出。複雑度高 |
+| `extractChannelPrograms(parsed)` | ユニット | ⬜ 未着手 | チャンネル→楽器マッピング |
+| `noteName(midi)` | ユニット | ⬜ 未着手 | 数値→文字列変換 |
+| `getInstrumentName(program)` | ユニット | ⬜ 未着手 | 範囲チェック込み |
+| `remapNote(note)` | ユニット | ⬜ 未着手 | 全スケール×全キーの変換。`state._scaleConvert` 依存 |
+| `detectKeyScale(notes)` | ユニット | ⬜ 未着手 | 統計的キー検出。代表パターン＋境界ケース |
+| `midiToFreq(midi)` | ユニット | ⬜ 未着手 | シフト組合せ（pitch/freq/scale）、下限クランプ1Hz |
 
 ### waveforms.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `CUSTOM_WAVEFORMS` | ユニット | 全波形の real/imag 配列長一致、定義整合性 |
-| `isCustomWaveform(name)` | ユニット | 文字列判定 |
-| `getPeriodicWave(audioCtx, name)` | 統合 | AudioContext.createPeriodicWave 呼び出し |
-| `clearPeriodicWaveCache()` | ユニット | キャッシュクリアの副作用検証 |
-| `applyWaveform(osc, name, ctx)` | 統合 | OscillatorNode操作 |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `CUSTOM_WAVEFORMS` | ユニット | ⬜ 未着手 | 全波形の real/imag 配列長一致、定義整合性 |
+| `isCustomWaveform(name)` | ユニット | ⬜ 未着手 | 文字列判定 |
+| `getPeriodicWave(audioCtx, name)` | 統合 | ⬜ 未着手 | AudioContext.createPeriodicWave 呼び出し |
+| `clearPeriodicWaveCache()` | ユニット | ⬜ 未着手 | キャッシュクリアの副作用検証 |
+| `applyWaveform(osc, name, ctx)` | 統合 | ⬜ 未着手 | OscillatorNode操作 |
 
 ### sf2-parser.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `SF2Parser.parse()` | ユニット | RIFFバイナリ解析。正常系・不正ヘッダー・空チャンク |
-| `buildSF2PresetMap(sf2)` | ユニット | プリセットマッピング構築 |
-| `getInstrumentZones(sf2, preset)` | ユニット | ゾーン抽出ロジック |
-| `findSF2Sample(sf2, presetMap, bank, program, key, vel)` | ユニット | キー/ベロシティ範囲マッチング。境界値重要 |
-| `getSF2AudioBuffer(audioCtx, sf2, shdr)` | 統合 | AudioBuffer生成（AudioContext依存） |
-| `clearSF2BufferCache()` | ユニット | キャッシュクリア |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `SF2Parser.parse()` | ユニット | ⬜ 未着手 | RIFFバイナリ解析。正常系・不正ヘッダー・空チャンク |
+| `buildSF2PresetMap(sf2)` | ユニット | ⬜ 未着手 | プリセットマッピング構築 |
+| `getInstrumentZones(sf2, preset)` | ユニット | ⬜ 未着手 | ゾーン抽出ロジック |
+| `findSF2Sample(sf2, presetMap, bank, program, key, vel)` | ユニット | ⬜ 未着手 | キー/ベロシティ範囲マッチング。境界値重要 |
+| `getSF2AudioBuffer(audioCtx, sf2, shdr)` | 統合 | ⬜ 未着手 | AudioBuffer生成（AudioContext依存） |
+| `clearSF2BufferCache()` | ユニット | ⬜ 未着手 | キャッシュクリア |
 
 ### audio-master.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `makeDistortionCurve(amount)` | ユニット | Float32Array生成（純粋関数） |
-| `updateDistortionCurve(node, amount)` | 統合 | WaveShaperNode操作 |
-| `createReverbIR(audioCtx, decay, channels)` | 統合 | AudioBuffer生成 |
-| `buildMasterChain(audioCtx)` | 統合 | ノード接続チェーン構築 |
-| `applyLimiterParams(limiter)` | 統合 | DynamicsCompressorNode パラメータ設定 |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `makeDistortionCurve(amount)` | ユニット | ⬜ 未着手 | Float32Array生成（純粋関数） |
+| `updateDistortionCurve(node, amount)` | 統合 | ⬜ 未着手 | WaveShaperNode操作 |
+| `createReverbIR(audioCtx, decay, channels)` | 統合 | ⬜ 未着手 | AudioBuffer生成 |
+| `buildMasterChain(audioCtx)` | 統合 | ⬜ 未着手 | ノード接続チェーン構築 |
+| `applyLimiterParams(limiter)` | 統合 | ⬜ 未着手 | DynamicsCompressorNode パラメータ設定 |
 
 ### audio-source.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `buildMetronome(audioCtx, dest)` | 統合 | メトロノームGainNode構築 |
-| `createMetroClick(audioCtx, gain, time, accent, type)` | 統合 | OscillatorNode生成 |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `buildMetronome(audioCtx, dest)` | 統合 | ⬜ 未着手 | メトロノームGainNode構築 |
+| `createMetroClick(audioCtx, gain, time, accent, type)` | 統合 | ⬜ 未着手 | OscillatorNode生成 |
 
 ### audio-channel.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `buildChannelChain(audioCtx, ch, masterGain)` | 統合 | チャンネルFXチェーン構築（複数ノード接続） |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `buildChannelChain(audioCtx, ch, masterGain)` | 統合 | ⬜ 未着手 | チャンネルFXチェーン構築（複数ノード接続） |
 
 ### audio-output.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `buildOutputChain(audioCtx, eqOut)` | 統合 | Analyserノード構築 |
-| `drawWaveforms()` | E2E | Canvas描画（DOM+requestAnimationFrame） |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `buildOutputChain(audioCtx, eqOut)` | 統合 | ⬜ 未着手 | Analyserノード構築 |
+| `drawWaveforms()` | E2E | ✅ E2Eカバー済み | Canvas描画（DOM+requestAnimationFrame） |
 
 ### audio-engine.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `applyFreqShiftToActive()` | 統合 | scheduledNodes操作 |
-| `playNotes(notes, bpm, seekOffset)` | 統合 | 再生オーケストレーション全体 |
-| `pausePlayback()` | 統合 | AudioContext.suspend |
-| `resumePlayback()` | 統合 | AudioContext.resume |
-| `stopPlayback()` | 統合 | 全ノード停止・クリーンアップ |
-| `playNotesFrom(notes, bpm, fromTime)` | 統合 | シーク再生 |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `applyFreqShiftToActive()` | 統合 | ⬜ 未着手 | scheduledNodes操作 |
+| `playNotes(notes, bpm, seekOffset)` | 統合 | ⬜ 未着手 | 再生オーケストレーション全体 |
+| `pausePlayback()` | 統合 | ⬜ 未着手 | AudioContext.suspend |
+| `resumePlayback()` | 統合 | ⬜ 未着手 | AudioContext.resume |
+| `stopPlayback()` | 統合 | ⬜ 未着手 | 全ノード停止・クリーンアップ |
+| `playNotesFrom(notes, bpm, fromTime)` | 統合 | ⬜ 未着手 | シーク再生 |
 
 ### audio-file-engine.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `playAudioFile(buffer, seekOffset)` | 統合 | AudioBufferSourceNode再生 |
-| `pauseAudioFile()` | 統合 | suspend |
-| `resumeAudioFile()` | 統合 | resume + シーク再開 |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `playAudioFile(buffer, seekOffset)` | 統合 | ⬜ 未着手 | AudioBufferSourceNode再生 |
+| `pauseAudioFile()` | 統合 | ⬜ 未着手 | suspend |
+| `resumeAudioFile()` | 統合 | ⬜ 未着手 | resume + シーク再開 |
 
 ### visualizer.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `getChannelColor(ch)` | ユニット | インデックス→色文字列（純粋関数） |
-| `detectChannels(notes)` | ユニット | ノート配列→チャンネル番号配列（純粋関数） |
-| `buildChannelUI(channels)` | E2E | DOM生成 |
-| `toggleMute(ch)` | E2E | DOM操作 + state変更 |
-| `toggleSolo(ch)` | E2E | DOM操作 + state変更 |
-| `updateChannelGains()` | 統合 | GainNode操作（ロジックはテスト可能） |
-| `applyChannelGain(chState)` | ユニット | waveGain × playGate 計算（GainNode設定） |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `getChannelColor(ch)` | ユニット | ⬜ 未着手 | インデックス→色文字列（純粋関数） |
+| `detectChannels(notes)` | ユニット | ⬜ 未着手 | ノート配列→チャンネル番号配列（純粋関数） |
+| `buildChannelUI(channels)` | E2E | ✅ E2Eカバー済み | DOM生成 |
+| `toggleMute(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
+| `toggleSolo(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
+| `updateChannelGains()` | 統合 | ⬜ 未着手 | GainNode操作（ロジックはテスト可能） |
+| `applyChannelGain(chState)` | ユニット | ⬜ 未着手 | waveGain × playGate 計算（GainNode設定） |
 
 ### piano-roll.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `invalidatePianoRollCache()` | ユニット | キャッシュフラグ操作 |
-| `drawPianoRoll()` | E2E | Canvas描画 |
-| `updatePlayhead(elapsed)` | E2E | Canvas描画 + クリックシーク |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `invalidatePianoRollCache()` | ユニット | ⬜ 未着手 | キャッシュフラグ操作 |
+| `drawPianoRoll()` | E2E | ✅ E2Eカバー済み | Canvas描画 |
+| `updatePlayhead(elapsed)` | E2E | ✅ E2Eカバー済み | Canvas描画 + クリックシーク |
 
 ### dj-controls.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `getCurrentPlaybackTime()` | ユニット | state から再生位置計算（純粋ロジック） |
-| `clearLoopTimer()` | ユニット | タイマークリア |
-| `clearABLoop()` | E2E | DOM操作込み |
-| `drawDJMarkers(ctx, W, H, pad)` | E2E | Canvas描画 |
-| `resetDJControls()` | E2E | DOM操作 |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `getCurrentPlaybackTime()` | ユニット | ⬜ 未着手 | state から再生位置計算（純粋ロジック） |
+| `clearLoopTimer()` | ユニット | ⬜ 未着手 | タイマークリア |
+| `clearABLoop()` | E2E | ✅ E2Eカバー済み | DOM操作込み |
+| `drawDJMarkers(ctx, W, H, pad)` | E2E | ✅ E2Eカバー済み | Canvas描画 |
+| `resetDJControls()` | E2E | ✅ E2Eカバー済み | DOM操作 |
 
 ### playlist.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `addFilesToPlaylist(files)` | E2E | FileList操作 + DOM更新 |
-| `clearPlaylist()` | E2E | DOM更新 |
-| `selectTrack(index)` | E2E | FileReader + DOM更新 |
-| `playNextTrack()` | E2E | 再生遷移フロー |
-| `playPrevTrack()` | E2E | 再生遷移フロー |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `addFilesToPlaylist(files)` | E2E | ✅ E2Eカバー済み | FileList操作 + DOM更新 |
+| `clearPlaylist()` | E2E | ✅ E2Eカバー済み | DOM更新 |
+| `selectTrack(index)` | E2E | ✅ E2Eカバー済み | FileReader + DOM更新 |
+| `playNextTrack()` | E2E | ✅ E2Eカバー済み | 再生遷移フロー |
+| `playPrevTrack()` | E2E | ✅ E2Eカバー済み | 再生遷移フロー |
 
 ### app.js
 
-| 関数 | テスト種別 | 理由 |
-|------|-----------|------|
-| `isAudioFile(fileName)` | ユニット | 拡張子判定（純粋関数） |
-| `loadFile(file)` | E2E | FileReader + 分岐処理 |
-| `loadFiles(fileList)` | E2E | プレイリスト連携 |
-| `processAudioFile(buffer, name)` | E2E | 複合処理（state + DOM + Audio） |
-| `processMidi(buffer, name)` | E2E | 複合処理（parse + UI構築） |
-| `startSpectrumDraw()` | E2E | requestAnimationFrame + Canvas |
-| `stopSpectrumDraw()` | E2E | アニメーション停止 |
-| `updateScaleConvert()` | E2E | DOM読み取り + state更新 |
-| `startLimiterMeter()` | E2E | requestAnimationFrame + Canvas |
-| `stopLimiterMeter()` | E2E | アニメーション停止 |
+| 関数 | テスト種別 | ステータス | 理由 |
+|------|-----------|----------|------|
+| `isAudioFile(fileName)` | ユニット | ⬜ 未着手 | 拡張子判定（純粋関数） |
+| `loadFile(file)` | E2E | ✅ E2Eカバー済み | FileReader + 分岐処理 |
+| `loadFiles(fileList)` | E2E | ✅ E2Eカバー済み | プレイリスト連携 |
+| `processAudioFile(buffer, name)` | E2E | ✅ E2Eカバー済み | 複合処理（state + DOM + Audio） |
+| `processMidi(buffer, name)` | E2E | ✅ E2Eカバー済み | 複合処理（parse + UI構築） |
+| `startSpectrumDraw()` | E2E | ✅ E2Eカバー済み | requestAnimationFrame + Canvas |
+| `stopSpectrumDraw()` | E2E | ✅ E2Eカバー済み | アニメーション停止 |
+| `updateScaleConvert()` | E2E | ✅ E2Eカバー済み | DOM読み取り + state更新 |
+| `startLimiterMeter()` | E2E | ✅ E2Eカバー済み | requestAnimationFrame + Canvas |
+| `stopLimiterMeter()` | E2E | ✅ E2Eカバー済み | アニメーション停止 |
 
 ---
 
