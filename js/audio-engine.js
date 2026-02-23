@@ -16,14 +16,21 @@ let scheduledNodes = [];
 let animationTimer = null;
 let schedulerTimer = null;
 
-// ピッチ/周波数/スケール変更時に再生中のオシレーターを即時更新
+// ピッチ/周波数/スケール変更時に再生中のノードを即時更新
 function applyFreqShiftToActive() {
-  for (const osc of scheduledNodes) {
-    if (osc._baseMidi != null) {
-      try {
-        osc.frequency.value = midiToFreq(osc._baseMidi);
-      } catch {}
-    }
+  const pitchShift = window._pitchShift || 0;
+  for (const node of scheduledNodes) {
+    if (node._baseMidi == null) continue;
+    try {
+      if (node._isSF2) {
+        // SF2: playbackRateでピッチシフトを反映（周波数シフトはBufferSourceでは不可）
+        const semitones = node._baseMidi - node._rootKey + node._sampleTuning + pitchShift;
+        node.playbackRate.value = 2 ** (semitones / 12);
+      } else {
+        // オシレーター: frequency.valueで反映
+        node.frequency.value = midiToFreq(node._baseMidi);
+      }
+    } catch {}
   }
 }
 
@@ -144,6 +151,9 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
             src._channel = n.channel;
             src._baseMidi = n.note;
+            src._isSF2 = true;
+            src._rootKey = sample.rootKey;
+            src._sampleTuning = sample.tuning;
             src.start(t);
             src.stop(t + dur + 0.05);
             sourceNode = src;
