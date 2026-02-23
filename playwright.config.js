@@ -8,7 +8,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'python3 -m http.server 3000',
+    command: 'npx vite --port 3000',
     port: 3000,
     reuseExistingServer: !process.env.CI,
   },

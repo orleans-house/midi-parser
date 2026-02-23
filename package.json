@@ -1,14 +1,20 @@
 {
   "name": "midi-parser",
   "version": "1.0.0",
-  "description": "",
+  "description": "ブラウザで動く軽量な MIDI ビジュアライザー / プレイヤーです。   MIDIファイルを読み込み、再生しながら波形とピアノロールを確認できます。",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "biome check .",
     "format": "biome format --write .",
     "fix": "biome check --fix .",
     "test": "npx playwright test",
-    "test:e2e": "npx playwright test"
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "npx playwright test",
+    "test:all": "vitest run && npx playwright test"
   },
   "repository": {
     "type": "git",
@@ -23,6 +29,14 @@
   "homepage": "https://github.com/orleans-house/midi-parser#readme",
   "devDependencies": {
     "@biomejs/biome": "^2.4.3",
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2",
+    "playwright-core": "^1.58.2",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
   }
 }
