@@ -1,7 +1,9 @@
 // ============================================================
-// ============================================================
 // チャンネル管理
 // ============================================================
+
+import { getChannelFx, getThemeColor } from './globals.js';
+import { getInstrumentName } from './midi-parser.js';
 
 const CHANNEL_COLORS = [
   '#b39ddb', // パステル紫
@@ -22,30 +24,32 @@ const CHANNEL_COLORS = [
   '#90caf9', // パステルブルー
 ];
 
+export { CHANNEL_COLORS };
+
 function getChannelLabel(ch) {
   const num = ch + 1;
   if (num === 10) return 'Ch.10 (Drums)';
-  const program = channelPrograms[ch];
+  const program = window.channelPrograms[ch];
   if (program !== undefined) {
     return `Ch.${num} - ${getInstrumentName(program)}`;
   }
   return `Ch.${num}`;
 }
 
-function getChannelColor(ch) {
+export function getChannelColor(ch) {
   return CHANNEL_COLORS[ch % CHANNEL_COLORS.length];
 }
 
-function detectChannels(notes) {
+export function detectChannels(notes) {
   const channels = new Set();
   for (const n of notes) channels.add(n.channel);
   return [...channels].sort((a, b) => a - b);
 }
 
-function buildChannelUI(channels) {
+export function buildChannelUI(channels) {
   const container = document.getElementById('visualizer-container');
   container.innerHTML = '';
-  channelStates = {};
+  window.channelStates = {};
 
   // マスター合成波カード（4列幅）
   const masterCard = document.createElement('div');
@@ -72,7 +76,13 @@ function buildChannelUI(channels) {
 
   for (const ch of allChannels) {
     const isActive = channels.includes(ch);
-    channelStates[ch] = { muted: !isActive, soloed: false, gainNode: null, analyser: null, active: isActive };
+    window.channelStates[ch] = {
+      muted: !isActive,
+      soloed: false,
+      gainNode: null,
+      analyser: null,
+      active: isActive,
+    };
 
     const card = document.createElement('div');
     card.className = `channel-card${isActive ? '' : ' channel-inactive'}`;
@@ -229,7 +239,10 @@ function restoreFxUI(channels) {
 
     // エフェクトトグル＋スライダー
     const fxMap = {
-      distortion: { val: chFx.distortion.amount, enabled: chFx.distortion.enabled },
+      distortion: {
+        val: chFx.distortion.amount,
+        enabled: chFx.distortion.enabled,
+      },
       delay: { val: chFx.delay.time, enabled: chFx.delay.enabled },
       reverb: { val: chFx.reverb.mix, enabled: chFx.reverb.enabled },
     };
@@ -282,27 +295,27 @@ function drawCables(allChannels) {
   cableSection.appendChild(svg);
 }
 
-function toggleMute(ch) {
-  const state = channelStates[ch];
+export function toggleMute(ch) {
+  const state = window.channelStates[ch];
   state.muted = !state.muted;
   const btn = document.querySelector(`#channel-card-${ch} .btn-mute`);
   btn.classList.toggle('active', state.muted);
   updateChannelGains();
-  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
+  if (typeof window.invalidatePianoRollCache === 'function') window.invalidatePianoRollCache();
 }
 
-function toggleSolo(ch) {
-  const state = channelStates[ch];
+export function toggleSolo(ch) {
+  const state = window.channelStates[ch];
   state.soloed = !state.soloed;
   const btn = document.querySelector(`#channel-card-${ch} .btn-solo`);
   btn.classList.toggle('active', state.soloed);
   updateChannelGains();
-  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
+  if (typeof window.invalidatePianoRollCache === 'function') window.invalidatePianoRollCache();
 }
 
-function updateChannelGains() {
-  const anySolo = Object.values(channelStates).some((s) => s.soloed);
-  for (const [ch, state] of Object.entries(channelStates)) {
+export function updateChannelGains() {
+  const anySolo = Object.values(window.channelStates).some((s) => s.soloed);
+  for (const [ch, state] of Object.entries(window.channelStates)) {
     if (!state.gainNode) continue;
     const shouldPlay = anySolo ? state.soloed && !state.muted : !state.muted;
     state.playGate = shouldPlay ? 1 : 0;
@@ -311,7 +324,7 @@ function updateChannelGains() {
 }
 
 // waveGain × playGate を gainNode に適用
-function applyChannelGain(state) {
+export function applyChannelGain(state) {
   if (!state.gainNode) return;
   const waveGain = state.waveGain ?? 1;
   const playGate = state.playGate ?? 1;

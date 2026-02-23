@@ -2,7 +2,7 @@
 // MIDI バイナリパーサー
 // ============================================================
 
-class MidiParser {
+export class MidiParser {
   constructor(buffer) {
     this.data = new DataView(buffer);
     this.pos = 0;
@@ -142,7 +142,7 @@ class MidiParser {
 // MIDI データ → ノートリスト変換
 // ============================================================
 
-function extractNotes(parsed) {
+export function extractNotes(parsed) {
   const { header, tracks } = parsed;
   const ticksPerBeat = header.ticksPerBeat;
   let tempo = 500000; // デフォルト 120 BPM
@@ -188,7 +188,12 @@ function extractNotes(parsed) {
 
       if (e.type === 'noteOn' && e.velocity > 0) {
         const key = `${e.channel}-${e.note}`;
-        activeNotes.set(key, { tick, channel: e.channel, note: e.note, velocity: e.velocity });
+        activeNotes.set(key, {
+          tick,
+          channel: e.channel,
+          note: e.note,
+          velocity: e.velocity,
+        });
       } else if (e.type === 'noteOff' || (e.type === 'noteOn' && e.velocity === 0)) {
         const key = `${e.channel}-${e.note}`;
         const start = activeNotes.get(key);
@@ -219,9 +224,9 @@ function extractNotes(parsed) {
 // 音名変換
 // ============================================================
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-function noteName(midiNote) {
+export function noteName(midiNote) {
   const octave = Math.floor(midiNote / 12) - 1;
   return NOTE_NAMES[midiNote % 12] + octave;
 }
@@ -230,7 +235,7 @@ function noteName(midiNote) {
 // General MIDI 音色マップ（128種類）
 // ============================================================
 
-const GM_INSTRUMENTS = [
+export const GM_INSTRUMENTS = [
   // Piano (0-7)
   'Acoustic Grand Piano',
   'Bright Acoustic Piano',
@@ -377,13 +382,13 @@ const GM_INSTRUMENTS = [
   'Gunshot',
 ];
 
-function getInstrumentName(program) {
+export function getInstrumentName(program) {
   return GM_INSTRUMENTS[program] || `Program ${program}`;
 }
 
 // チャンネルごとのプログラム番号（楽器）
 
-function extractChannelPrograms(parsed) {
+export function extractChannelPrograms(parsed) {
   const programs = {};
   for (const events of parsed.tracks) {
     for (const e of events) {
@@ -396,7 +401,7 @@ function extractChannelPrograms(parsed) {
 }
 
 // スケール定義: 各スケールの半音パターン（ルートからの距離）
-const SCALES = {
+export const SCALES = {
   major: [0, 2, 4, 5, 7, 9, 11],
   minor: [0, 2, 3, 5, 7, 8, 10],
   dorian: [0, 2, 3, 5, 7, 9, 10],
@@ -414,7 +419,7 @@ const SCALES = {
 };
 
 // スケール変換: ソーススケールの度数→ターゲットスケールの度数にマッピング
-function remapNote(midiNote) {
+export function remapNote(midiNote) {
   const cfg = window._scaleConvert;
   if (!cfg || !cfg.enabled || cfg.from === cfg.to) return midiNote;
 
@@ -446,7 +451,7 @@ function remapNote(midiNote) {
 }
 
 // キー＋スケール自動検出: ノート分布とスケールパターンの相関で推定
-function detectKeyScale(notes) {
+export function detectKeyScale(notes) {
   // ピッチクラスのヒストグラム（ノート長で重み付け）
   const hist = new Array(12).fill(0);
   for (const n of notes) {
@@ -485,7 +490,7 @@ function detectKeyScale(notes) {
   return { key: bestKey, scale: bestScale };
 }
 
-function midiToFreq(midiNote) {
+export function midiToFreq(midiNote) {
   const remapped = remapNote(midiNote);
   const shifted = remapped + (window._pitchShift || 0);
   return Math.max(1, 440 * 2 ** ((shifted - 69) / 12) + (window._freqShift || 0));

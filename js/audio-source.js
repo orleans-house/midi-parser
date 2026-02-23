@@ -2,7 +2,7 @@
 // Source層: メトロノーム生成
 // ============================================================
 
-function buildMetronome(audioCtx, destination) {
+export function buildMetronome(audioCtx, destination) {
   const metronomeGain = audioCtx.createGain();
   const metroVolSlider = document.getElementById('metronome-vol');
   metronomeGain.gain.value = document.getElementById('metronome-on').checked
@@ -15,7 +15,7 @@ function buildMetronome(audioCtx, destination) {
   return metronomeGain;
 }
 
-function createMetroClick(audioCtx, metronomeGain, time, isAccent, type) {
+export function createMetroClick(audioCtx, metronomeGain, time, isAccent, type) {
   if (type === 'hihat') {
     const bufSize = audioCtx.sampleRate * 0.03;
     const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);

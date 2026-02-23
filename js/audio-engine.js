@@ -10,21 +10,29 @@
 //   [Source層]  Metronome → destination (独立経路)
 // ============================================================
 
-let audioCtx = null;
-let isPlaying = false;
-let scheduledNodes = [];
+import { buildChannelChain } from './audio-channel.js';
+import { buildMasterChain } from './audio-master.js';
+import { buildOutputChain, drawWaveforms } from './audio-output.js';
+import { buildMetronome, createMetroClick } from './audio-source.js';
+import { getChannelFx } from './globals.js';
+import { midiToFreq, remapNote } from './midi-parser.js';
+import { clearSF2BufferCache, findSF2Sample, getSF2AudioBuffer } from './sf2-parser.js';
+import { updateChannelGains } from './visualizer.js';
+import { applyWaveform, clearPeriodicWaveCache } from './waveforms.js';
+
 let animationTimer = null;
 let schedulerTimer = null;
+let stopTimerId = null;
 
 // ピッチ/周波数/スケール変更時に再生中のノードを即時更新
-function applyFreqShiftToActive() {
+export function applyFreqShiftToActive() {
   const pitchShift = window._pitchShift || 0;
-  for (const node of scheduledNodes) {
+  for (const node of window.scheduledNodes) {
     if (node._baseMidi == null) continue;
     try {
       if (node._isSF2) {
         // SF2: playbackRateでピッチシフト+スケール変換を反映
-        const remapped = typeof remapNote === 'function' ? remapNote(node._baseMidi) : node._baseMidi;
+        const remapped = remapNote(node._baseMidi);
         const semitones = remapped - node._rootKey + node._sampleTuning + pitchShift;
         node.playbackRate.value = 2 ** (semitones / 12);
       } else {
@@ -35,14 +43,16 @@ function applyFreqShiftToActive() {
   }
 }
 
-async function playNotes(notes, bpm, seekOffset = 0) {
+export async function playNotes(notes, bpm, seekOffset = 0) {
   stopPlayback();
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') {
-    await audioCtx.resume();
+  window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (window.audioCtx.state === 'suspended') {
+    await window.audioCtx.resume();
   }
-  isPlaying = true;
-  scheduledNodes = [];
+  window.isPlaying = true;
+  window.scheduledNodes = [];
+
+  const audioCtx = window.audioCtx;
 
   // === Master層 ===
   const { masterGain, eqOut } = buildMasterChain(audioCtx);
@@ -51,7 +61,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   buildOutputChain(audioCtx, eqOut);
 
   // === Channel層 ===
-  for (const ch of currentChannels) {
+  for (const ch of window.currentChannels) {
     buildChannelChain(audioCtx, ch, masterGain);
   }
 
@@ -91,7 +101,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   }
 
   function scheduler() {
-    if (!isPlaying || !audioCtx) return;
+    if (!window.isPlaying || !window.audioCtx) return;
     const horizon = audioCtx.currentTime + LOOK_AHEAD;
     scheduleMetronome();
 
@@ -110,7 +120,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
         const sf2Data = window._sf2Data;
         const sf2PresetMap = window._sf2PresetMap;
         const bank = n.channel === 9 ? 128 : 0; // Ch10=ドラム
-        const program = channelPrograms[n.channel] || 0;
+        const program = window.channelPrograms[n.channel] || 0;
         const sample = findSF2Sample(sf2Data, sf2PresetMap, bank, program, n.note, n.velocity);
 
         if (sample) {
@@ -120,7 +130,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
             src.buffer = buf;
 
             // スケール変換 + ピッチシフト適用
-            const remapped = typeof remapNote === 'function' ? remapNote(n.note) : n.note;
+            const remapped = remapNote(n.note);
             const pitchShift = window._pitchShift || 0;
             const semitones = remapped - sample.rootKey + sample.tuning + pitchShift;
             src.playbackRate.value = 2 ** (semitones / 12);
@@ -144,7 +154,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
             env.gain.linearRampToValueAtTime(0, t + dur);
 
             src.connect(env);
-            const chState = channelStates[n.channel];
+            const chState = window.channelStates[n.channel];
             if (chState?.gainNode) {
               env.connect(chState.gainNode);
             } else {
@@ -181,7 +191,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
         env.gain.linearRampToValueAtTime(0, t + dur);
 
         osc.connect(env);
-        const chState = channelStates[n.channel];
+        const chState = window.channelStates[n.channel];
         if (chState?.gainNode) {
           env.connect(chState.gainNode);
         } else {
@@ -194,11 +204,11 @@ async function playNotes(notes, bpm, seekOffset = 0) {
         sourceNode = osc;
       }
 
-      scheduledNodes.push(sourceNode);
+      window.scheduledNodes.push(sourceNode);
       chunkIndex++;
     }
 
-    if (chunkIndex < notes.length && isPlaying) {
+    if (chunkIndex < notes.length && window.isPlaying) {
       schedulerTimer = setTimeout(scheduler, CHECK_INTERVAL);
     }
   }
@@ -208,36 +218,38 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   // 再生終了検知
   const totalDuration = notes.length > 0 ? Math.max(...notes.map((n) => n.startTime + n.duration)) : 0;
 
-  if (seekOffset === 0) currentTotalDuration = totalDuration;
+  if (seekOffset === 0) window.currentTotalDuration = totalDuration;
 
+  const btnPlay = document.getElementById('btn-play');
+  const btnStop = document.getElementById('btn-stop');
   btnPlay.innerHTML = '<i data-lucide="pause"></i>';
   btnPlay.title = '一時停止';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
-  if (typeof startSpectrumDraw === 'function') startSpectrumDraw();
-  if (typeof startLimiterMeter === 'function') startLimiterMeter();
+  if (typeof window.startSpectrumDraw === 'function') window.startSpectrumDraw();
+  if (typeof window.startLimiterMeter === 'function') window.startLimiterMeter();
   btnStop.disabled = false;
 
   // シークバー表示・設定
   const posDisplay = document.getElementById('position-display');
   const startReal = performance.now();
-  playbackStartReal = startReal;
-  playbackStartOffset = seekOffset;
+  window.playbackStartReal = startReal;
+  window.playbackStartOffset = seekOffset;
 
   animationTimer = setInterval(() => {
-    const elapsed = (performance.now() - startReal - pauseDuration) / 1000 + seekOffset;
-    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
-    updatePlayhead(elapsed);
+    const elapsed = (performance.now() - startReal - window.pauseDuration) / 1000 + seekOffset;
+    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${window.currentTotalDuration.toFixed(1)}s`;
+    if (typeof window.updatePlayhead === 'function') window.updatePlayhead(elapsed);
   }, 100);
 
   stopTimerId = setTimeout(
     () => {
-      if (isPlaying) {
-        if (repeatEnabled && currentNotes.length > 0) {
-          playNotes(currentNotes, currentBpm);
+      if (window.isPlaying) {
+        if (window.repeatEnabled && window.currentNotes.length > 0) {
+          playNotes(window.currentNotes, window.currentBpm);
         } else {
           stopPlayback();
-          if (typeof playNextTrack === 'function') playNextTrack();
+          if (typeof window.playNextTrack === 'function') window.playNextTrack();
         }
       }
     },
@@ -245,16 +257,11 @@ async function playNotes(notes, bpm, seekOffset = 0) {
   );
 }
 
-let stopTimerId = null;
-let isPaused = false;
-let pauseDuration = 0;
-let pauseStartTime = 0;
-
-function pausePlayback() {
-  if (!isPlaying || !audioCtx || isPaused) return;
-  isPaused = true;
-  pauseStartTime = performance.now();
-  audioCtx.suspend();
+export function pausePlayback() {
+  if (!window.isPlaying || !window.audioCtx || window.isPaused) return;
+  window.isPaused = true;
+  window.pauseStartTime = performance.now();
+  window.audioCtx.suspend();
   if (animationTimer) {
     clearInterval(animationTimer);
     animationTimer = null;
@@ -263,46 +270,50 @@ function pausePlayback() {
     clearTimeout(stopTimerId);
     stopTimerId = null;
   }
+  const btnPlay = document.getElementById('btn-play');
   btnPlay.innerHTML = '<i data-lucide="play"></i>';
   btnPlay.title = '再生';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
 }
 
-function resumePlayback() {
-  if (!isPlaying || !audioCtx || !isPaused) return;
-  isPaused = false;
-  pauseDuration += performance.now() - pauseStartTime;
-  audioCtx.resume();
+export function resumePlayback() {
+  if (!window.isPlaying || !window.audioCtx || !window.isPaused) return;
+  window.isPaused = false;
+  window.pauseDuration += performance.now() - window.pauseStartTime;
+  window.audioCtx.resume();
   const posDisplay = document.getElementById('position-display');
   animationTimer = setInterval(() => {
-    const elapsed = (performance.now() - playbackStartReal - pauseDuration) / 1000 + playbackStartOffset;
-    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
-    updatePlayhead(elapsed);
+    const elapsed =
+      (performance.now() - window.playbackStartReal - window.pauseDuration) / 1000 + window.playbackStartOffset;
+    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${window.currentTotalDuration.toFixed(1)}s`;
+    if (typeof window.updatePlayhead === 'function') window.updatePlayhead(elapsed);
   }, 100);
-  const currentElapsed = (performance.now() - playbackStartReal - pauseDuration) / 1000 + playbackStartOffset;
-  const remaining = currentTotalDuration - currentElapsed;
+  const currentElapsed =
+    (performance.now() - window.playbackStartReal - window.pauseDuration) / 1000 + window.playbackStartOffset;
+  const remaining = window.currentTotalDuration - currentElapsed;
   if (remaining > 0) {
     stopTimerId = setTimeout(
       () => {
-        if (isPlaying) stopPlayback();
+        if (window.isPlaying) stopPlayback();
       },
       (remaining + 1.0) * 1000,
     );
   }
+  const btnPlay = document.getElementById('btn-play');
   btnPlay.innerHTML = '<i data-lucide="pause"></i>';
   btnPlay.title = '一時停止';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
 }
 
-function stopPlayback() {
-  if (typeof stopSpectrumDraw === 'function') stopSpectrumDraw();
-  if (typeof stopLimiterMeter === 'function') stopLimiterMeter();
-  isPaused = false;
-  pauseDuration = 0;
-  pauseStartTime = 0;
-  isPlaying = false;
-  if (typeof clearLoopTimer === 'function') clearLoopTimer();
+export function stopPlayback() {
+  if (typeof window.stopSpectrumDraw === 'function') window.stopSpectrumDraw();
+  if (typeof window.stopLimiterMeter === 'function') window.stopLimiterMeter();
+  window.isPaused = false;
+  window.pauseDuration = 0;
+  window.pauseStartTime = 0;
+  window.isPlaying = false;
+  if (typeof window.clearLoopTimer === 'function') window.clearLoopTimer();
   if (stopTimerId) {
     clearTimeout(stopTimerId);
     stopTimerId = null;
@@ -316,30 +327,32 @@ function stopPlayback() {
     animationTimer = null;
   }
   // オーディオファイルソースの停止
-  if (audioFileSource) {
+  if (window.audioFileSource) {
     try {
-      audioFileSource.stop();
+      window.audioFileSource.stop();
     } catch {}
-    audioFileSource = null;
+    window.audioFileSource = null;
   }
 
-  for (const osc of scheduledNodes) {
+  for (const osc of window.scheduledNodes) {
     try {
       osc.stop();
     } catch {}
   }
-  scheduledNodes = [];
+  window.scheduledNodes = [];
   // チャンネルオーディオノードのクリーンアップ
-  for (const ch of Object.keys(channelStates)) {
-    channelStates[ch].gainNode = null;
-    channelStates[ch].analyser = null;
+  for (const ch of Object.keys(window.channelStates)) {
+    window.channelStates[ch].gainNode = null;
+    window.channelStates[ch].analyser = null;
   }
-  if (audioCtx) {
-    audioCtx.close().catch(() => {});
-    if (typeof clearPeriodicWaveCache === 'function') clearPeriodicWaveCache();
-    if (typeof clearSF2BufferCache === 'function') clearSF2BufferCache();
-    audioCtx = null;
+  if (window.audioCtx) {
+    window.audioCtx.close().catch(() => {});
+    clearPeriodicWaveCache();
+    clearSF2BufferCache();
+    window.audioCtx = null;
   }
+  const btnPlay = document.getElementById('btn-play');
+  const btnStop = document.getElementById('btn-stop');
   btnPlay.innerHTML = '<i data-lucide="play"></i>';
   btnPlay.title = '再生';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
@@ -348,7 +361,7 @@ function stopPlayback() {
   document.getElementById('position-display').textContent = '-';
 }
 
-function playNotesFrom(notes, bpm, fromTime) {
+export function playNotesFrom(notes, bpm, fromTime) {
   const offsetNotes = notes
     .filter((n) => n.startTime + n.duration > fromTime)
     .map((n) => ({
@@ -358,3 +371,5 @@ function playNotesFrom(notes, bpm, fromTime) {
     }));
   playNotes(offsetNotes, bpm, fromTime);
 }
+
+// Export scheduledNodes for app.js wave switching

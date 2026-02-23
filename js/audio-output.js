@@ -2,9 +2,12 @@
 // Output層: SpectrumAnalyser, MasterAnalyser, 波形描画
 // ============================================================
 
+import { getThemeColor } from './globals.js';
+import { getChannelColor } from './visualizer.js';
+
 // Output分岐構築: eqOut → spectrumAnalyser (表示用)
 //                eqOut → masterAnalyser → destination
-function buildOutputChain(audioCtx, eqOut) {
+export function buildOutputChain(audioCtx, eqOut) {
   // スペクトラム表示用Analyser
   const spectrumAnalyser = audioCtx.createAnalyser();
   spectrumAnalyser.fftSize = 4096;
@@ -29,15 +32,15 @@ const waveformChBufs = {};
 let waveFrameCount = 0;
 
 // 波形描画ループ（30fpsに間引き）
-function drawWaveforms() {
-  if (!isPlaying) {
+export function drawWaveforms() {
+  if (!window.isPlaying) {
     // マスタークリア
     const mc = document.getElementById('waveform-master');
     if (mc) {
       const mctx = mc.getContext('2d');
       mctx.clearRect(0, 0, mc.width, mc.height);
     }
-    for (const ch of currentChannels) {
+    for (const ch of window.currentChannels) {
       const canvas = document.getElementById(`waveform-${ch}`);
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -82,8 +85,8 @@ function drawWaveforms() {
     }
   }
 
-  for (const ch of currentChannels) {
-    const state = channelStates[ch];
+  for (const ch of window.currentChannels) {
+    const state = window.channelStates[ch];
     if (!state.analyser) continue;
 
     // ミュート中 or ソロ外のチャンネルはスキップ

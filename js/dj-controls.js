@@ -2,23 +2,27 @@
 // DJ Controls: Hot Cue, A-B Loop, Beat Jump
 // ============================================================
 
+import { playNotesFrom, stopPlayback } from './audio-engine.js';
+
 // --- Hot Cue ---
 const hotCues = [null, null, null, null, null, null, null, null];
 
 function getCurrentPlaybackTime() {
-  if (!isPlaying || !playbackStartReal) return 0;
-  const pause = isPaused ? performance.now() - pauseStartTime + pauseDuration : pauseDuration;
-  return (performance.now() - playbackStartReal - pause) / 1000 + playbackStartOffset;
+  if (!window.isPlaying || !window.playbackStartReal) return 0;
+  const pause = window.isPaused
+    ? performance.now() - window.pauseStartTime + window.pauseDuration
+    : window.pauseDuration;
+  return (performance.now() - window.playbackStartReal - pause) / 1000 + window.playbackStartOffset;
 }
 
 document.getElementById('hot-cue-pads').addEventListener('click', (e) => {
   const pad = e.target.closest('.hot-cue-pad');
-  if (!pad || !currentNotes.length) return;
+  if (!pad || !window.currentNotes.length) return;
   const slot = Number(pad.dataset.slot);
 
   if (hotCues[slot] === null) {
     // Set cue at current position
-    const time = isPlaying ? getCurrentPlaybackTime() : 0;
+    const time = window.isPlaying ? getCurrentPlaybackTime() : 0;
     hotCues[slot] = time;
     pad.classList.add('set');
     pad.title = `${time.toFixed(1)}s`;
@@ -26,7 +30,7 @@ document.getElementById('hot-cue-pads').addEventListener('click', (e) => {
     // Jump to cue（ABループは解除）
     clearABLoop();
     stopPlayback();
-    playNotesFrom(currentNotes, currentBpm, hotCues[slot]);
+    playNotesFrom(window.currentNotes, window.currentBpm, hotCues[slot]);
   }
 });
 
@@ -52,16 +56,16 @@ const btnLoopClear = document.getElementById('btn-loop-clear');
 const abLoopInfo = document.getElementById('ab-loop-info');
 
 btnLoopA.addEventListener('click', () => {
-  if (!currentNotes.length) return;
-  loopA = isPlaying ? getCurrentPlaybackTime() : 0;
+  if (!window.currentNotes.length) return;
+  loopA = window.isPlaying ? getCurrentPlaybackTime() : 0;
   btnLoopA.classList.add('active');
   btnLoopB.disabled = false;
   abLoopInfo.textContent = `A: ${loopA.toFixed(1)}s`;
 });
 
 btnLoopB.addEventListener('click', () => {
-  if (loopA === null || !currentNotes.length) return;
-  loopB = isPlaying ? getCurrentPlaybackTime() : currentTotalDuration;
+  if (loopA === null || !window.currentNotes.length) return;
+  loopB = window.isPlaying ? getCurrentPlaybackTime() : window.currentTotalDuration;
   if (loopB <= loopA) return;
   btnLoopB.classList.add('active');
   abLoopInfo.textContent = `A: ${loopA.toFixed(1)}s → B: ${loopB.toFixed(1)}s`;
@@ -74,7 +78,7 @@ function startABLoop() {
   clearLoopTimer();
   // Jump to A point
   stopPlayback();
-  playNotesFrom(currentNotes, currentBpm, loopA);
+  playNotesFrom(window.currentNotes, window.currentBpm, loopA);
 
   // Schedule loop back to A when reaching B
   const loopDuration = loopB - loopA;
@@ -95,7 +99,7 @@ function clearABLoop() {
   abLoopInfo.textContent = '';
 }
 
-function clearLoopTimer() {
+export function clearLoopTimer() {
   if (loopTimerId) {
     clearTimeout(loopTimerId);
     loopTimerId = null;
@@ -105,19 +109,19 @@ function clearLoopTimer() {
 // --- Beat Jump ---
 document.getElementById('beat-jump-controls').addEventListener('click', (e) => {
   const btn = e.target.closest('.beat-jump-btn');
-  if (!btn || !isPlaying || !currentNotes.length) return;
+  if (!btn || !window.isPlaying || !window.currentNotes.length) return;
   const beats = Number(btn.dataset.beats);
-  const beatDuration = 60 / currentBpm;
+  const beatDuration = 60 / window.currentBpm;
   const jumpTime = beats * beatDuration;
   const current = getCurrentPlaybackTime();
-  const target = Math.max(0, Math.min(current + jumpTime, currentTotalDuration));
+  const target = Math.max(0, Math.min(current + jumpTime, window.currentTotalDuration));
   stopPlayback();
-  playNotesFrom(currentNotes, currentBpm, target);
+  playNotesFrom(window.currentNotes, window.currentBpm, target);
 });
 
 // --- Piano Roll Markers ---
-function drawDJMarkers(ctx, W, H, paddingLeft = 0) {
-  const dur = currentTotalDuration || 1;
+export function drawDJMarkers(ctx, W, H, paddingLeft = 0) {
+  const dur = window.currentTotalDuration || 1;
   const plotW = W - paddingLeft;
 
   // Hot Cue markers
@@ -176,7 +180,7 @@ function drawDJMarkers(ctx, W, H, paddingLeft = 0) {
 }
 
 // Reset hot cues when new file is loaded
-function resetDJControls() {
+export function resetDJControls() {
   for (let i = 0; i < hotCues.length; i++) hotCues[i] = null;
   for (const pad of document.querySelectorAll('.hot-cue-pad')) {
     pad.classList.remove('set');

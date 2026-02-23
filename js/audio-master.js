@@ -3,7 +3,7 @@
 // ============================================================
 
 // ディストーションカーブ生成
-function makeDistortionCurve(amount) {
+export function makeDistortionCurve(amount) {
   const samples = 44100;
   const curve = new Float32Array(samples);
   const k = amount;
@@ -14,12 +14,12 @@ function makeDistortionCurve(amount) {
   return curve;
 }
 
-function updateDistortionCurve(node, value) {
+export function updateDistortionCurve(node, value) {
   node.curve = value > 0 ? makeDistortionCurve(value) : null;
 }
 
 // リバーブIR生成
-function createReverbIR(ctx, duration, decay) {
+export function createReverbIR(ctx, duration, decay) {
   const length = ctx.sampleRate * duration;
   const ir = ctx.createBuffer(2, length, ctx.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
@@ -32,7 +32,7 @@ function createReverbIR(ctx, duration, decay) {
 }
 
 // マスターチェーン構築: masterGain → HPF → LPF → EQ
-function buildMasterChain(audioCtx) {
+export function buildMasterChain(audioCtx) {
   const masterGain = audioCtx.createGain();
   const masterSlider = document.getElementById('master-volume');
   const mVol = masterSlider ? masterSlider.value / 100 : 1.0;
@@ -204,7 +204,7 @@ function buildMasterChain(audioCtx) {
 }
 
 // リミッターのパラメータをUI状態に応じて適用
-function applyLimiterParams(limiter) {
+export function applyLimiterParams(limiter) {
   if (!limiter) return;
   const limiterOn = document.getElementById('limiter-on');
   const isOn = limiterOn?.checked;
