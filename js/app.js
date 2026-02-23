@@ -797,6 +797,26 @@ lpfQSlider.addEventListener('input', () => {
 });
 
 // メトロノーム
+// --- ピッチシフト ---
+const pitchShiftSlider = document.getElementById('pitch-shift');
+const pitchShiftVal = document.getElementById('pitch-shift-val');
+const pitchShiftReset = document.getElementById('pitch-shift-reset');
+window._pitchShift = 0;
+
+pitchShiftSlider.addEventListener('input', () => {
+  const v = Number(pitchShiftSlider.value);
+  window._pitchShift = v;
+  pitchShiftVal.textContent = `${v >= 0 ? '+' : ''}${v} st`;
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+});
+
+pitchShiftReset.addEventListener('click', () => {
+  pitchShiftSlider.value = 0;
+  window._pitchShift = 0;
+  pitchShiftVal.textContent = '0 st';
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+});
+
 // --- 周波数シフト ---
 const freqShiftSlider = document.getElementById('freq-shift');
 const freqShiftVal = document.getElementById('freq-shift-val');
