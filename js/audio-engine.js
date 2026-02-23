@@ -100,7 +100,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
       const chFx = getChannelFx(n.channel);
       const waveType = chFx.waveType;
-      osc.type = waveType;
+      applyWaveform(osc, waveType, audioCtx);
       osc.frequency.value = freq;
       osc._baseMidi = n.note; // ピッチ/周波数シフト即時反映用
 
@@ -276,6 +276,7 @@ function stopPlayback() {
   }
   if (audioCtx) {
     audioCtx.close().catch(() => {});
+    if (typeof clearPeriodicWaveCache === 'function') clearPeriodicWaveCache();
     audioCtx = null;
   }
   btnPlay.innerHTML = '<i data-lucide="play"></i>';

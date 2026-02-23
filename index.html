@@ -81,6 +81,22 @@
             <span class="mixer-label">Saw</span>
           </div>
         </div>
+        <div class="fx-row" style="margin-top:6px;">
+          <span class="fx-val" style="min-width:36px">音色</span>
+          <select id="custom-waveform-select" class="fx-select" style="font-size:0.7rem; flex:1;">
+            <option value="">-- カスタム波形 --</option>
+            <option value="organ">Organ</option>
+            <option value="piano">Piano</option>
+            <option value="flute">Flute</option>
+            <option value="clarinet">Clarinet</option>
+            <option value="brass">Brass</option>
+            <option value="strings">Strings</option>
+            <option value="bell">Bell</option>
+            <option value="pad">Pad</option>
+            <option value="chiptune">Chiptune</option>
+            <option value="reed">Reed</option>
+          </select>
+        </div>
       </div>
 
       <div class="panel-section">
@@ -384,6 +400,7 @@
   <script src="js/midi-parser.js"></script>
   <script src="js/visualizer.js"></script>
   <script src="js/audio-master.js"></script>
+  <script src="js/waveforms.js"></script>
   <script src="js/audio-channel.js"></script>
   <script src="js/audio-output.js"></script>
   <script src="js/audio-source.js"></script>

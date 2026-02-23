@@ -88,7 +88,11 @@ function setActiveWave(newWave) {
   if (typeof scheduledNodes !== 'undefined') {
     for (const osc of scheduledNodes) {
       try {
-        osc.type = newWave;
+        if (typeof applyWaveform === 'function' && osc.context) {
+          applyWaveform(osc, newWave, osc.context);
+        } else {
+          osc.type = newWave;
+        }
       } catch (_) {
         /* already stopped */
       }
@@ -97,8 +101,23 @@ function setActiveWave(newWave) {
 }
 
 for (const [wave, btn] of Object.entries(mixerBtns)) {
-  btn.addEventListener('click', () => setActiveWave(wave));
+  btn.addEventListener('click', () => {
+    setActiveWave(wave);
+    // 標準波形選択時はカスタム波形セレクトをリセット
+    document.getElementById('custom-waveform-select').value = '';
+  });
 }
+
+// カスタム波形セレクト
+document.getElementById('custom-waveform-select').addEventListener('change', (e) => {
+  const val = e.target.value;
+  if (!val) return;
+  // 標準波形ボタンのアクティブ状態を解除
+  for (const btn of Object.values(mixerBtns)) {
+    btn.classList.remove('active');
+  }
+  setActiveWave(val);
+});
 
 // ファイル選択ボタン
 const btnOpenFolder = document.getElementById('btn-open-folder');
@@ -342,7 +361,13 @@ document.addEventListener('click', (e) => {
     if (typeof scheduledNodes !== 'undefined') {
       for (const osc of scheduledNodes) {
         try {
-          if (osc._channel === ch) osc.type = wave;
+          if (osc._channel === ch) {
+            if (typeof applyWaveform === 'function' && osc.context) {
+              applyWaveform(osc, wave, osc.context);
+            } else {
+              osc.type = wave;
+            }
+          }
         } catch (_) {
           /* already stopped */
         }
