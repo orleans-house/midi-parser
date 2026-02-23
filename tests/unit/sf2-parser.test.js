@@ -374,12 +374,31 @@ describe('findSF2Sample()', () => {
     expect(result.rootKey).toBe(60);
   });
 
-  it('範囲外のnoteではnullを返す（keyRangeフィルタ）', () => {
-    // buildMinimalSF2のkeyRangeは0-127なので全範囲カバー
-    // 代わりに存在しないbank/programでテスト
-    const result = findSF2Sample(sf2, presetMap, 99, 99, 60, 100);
-    // フォールバック (0-0) があるのでnullにならない可能性
-    // 実装上、0-0にフォールバックする
+  it('keyRange外のnoteではnullを返す', () => {
+    // keyRange を 48-72 に絞ったプリセットマップを手動構築
+    const narrowMap = {
+      '0-0': {
+        name: 'Narrow',
+        bank: 0,
+        preset: 0,
+        zones: [
+          {
+            keyRange: [48, 72],
+            velRange: [0, 127],
+            instrumentId: 0,
+            generators: {},
+          },
+        ],
+      },
+    };
+    // 範囲内: 見つかる
+    const found = findSF2Sample(sf2, narrowMap, 0, 0, 60, 100);
+    expect(found).not.toBeNull();
+    // 範囲外: null
+    const low = findSF2Sample(sf2, narrowMap, 0, 0, 30, 100);
+    expect(low).toBeNull();
+    const high = findSF2Sample(sf2, narrowMap, 0, 0, 100, 100);
+    expect(high).toBeNull();
   });
 
   it('存在しないプリセットで0-0にフォールバックする', () => {
