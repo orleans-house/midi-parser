@@ -539,6 +539,55 @@ input[type="range"].slider-h:disabled {
   color: var(--text, #eee);
 }
 
+/* チャンネル詳細パネル */
+.channel-detail-panel {
+  max-width: 500px;
+}
+.channel-detail-midi-intent {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #aaa);
+  padding: 4px 0;
+}
+.channel-detail-current {
+  font-size: 0.85rem;
+  color: var(--text, #eee);
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border, #333);
+}
+.channel-detail-reset {
+  background: none;
+  border: 1px solid var(--border, #444);
+  color: var(--text-secondary, #aaa);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  margin-bottom: 12px;
+}
+.channel-detail-reset:hover {
+  color: var(--text, #eee);
+  border-color: var(--text-secondary, #aaa);
+}
+.voice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.voice-grid-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border, #444);
+  color: var(--text, #eee);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+.voice-grid-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--text-secondary, #aaa);
+}
+
 .fx-reset-btn {
   font-size: 0.8rem;
   padding: 2px 6px;

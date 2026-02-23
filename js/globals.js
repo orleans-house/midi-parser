@@ -22,6 +22,36 @@ export function getChannelFx(ch) {
   return state.channelFxState[ch];
 }
 
+/**
+ * チャンネルの音色設定を解決する
+ * 優先順位: チャンネル個別設定 > MIDI Program Change > グローバル設定
+ * @param {number} ch - チャンネル番号 (0-15)
+ * @returns {{ type: 'sf2', bank: number, preset: number } | { type: 'waveform', waveType: string } | { type: 'custom', waveType: string }}
+ */
+export function resolveVoice(ch) {
+  const chFx = getChannelFx(ch);
+
+  // 1. チャンネル個別設定
+  if (chFx.voiceSource && chFx.voiceSource.type !== 'global') {
+    // SF2プリセット指定だがSF2が無効な場合 → フォールバック
+    if (chFx.voiceSource.type === 'sf2' && !(state._useSF && state._sf && state._sf2PresetMap)) {
+      // グローバル波形設定にフォールバック
+      return { type: 'waveform', waveType: chFx.waveType };
+    }
+    return chFx.voiceSource;
+  }
+
+  // 2. グローバル設定（SF2有効ならSF2、なければ波形）
+  if (state._useSF && state._sf && state._sf2PresetMap) {
+    const bank = ch === 9 ? 128 : 0;
+    const program = state.channelPrograms[ch] || 0;
+    return { type: 'sf2', bank, preset: program };
+  }
+
+  // 3. 波形フォールバック
+  return { type: 'waveform', waveType: chFx.waveType };
+}
+
 // 対数スケール変換 (スライダー0-100 ↔ 周波数20-20000Hz)
 export const FREQ_MIN = 20;
 export const FREQ_MAX = 20000;

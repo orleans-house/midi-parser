@@ -2,10 +2,11 @@
 // チャンネル管理
 // ============================================================
 
-import { getChannelFx, getThemeColor } from './globals.js';
+import { getChannelFx, getThemeColor, resolveVoice } from './globals.js';
 import { getInstrumentName } from './midi-parser.js';
 import { invalidatePianoRollCache } from './piano-roll.js';
 import state from './state/audioState.js';
+import { CUSTOM_WAVEFORMS } from './waveforms.js';
 
 const CHANNEL_COLORS = [
   '#b39ddb', // パステル紫
@@ -31,10 +32,9 @@ export { CHANNEL_COLORS };
 function getChannelLabel(ch) {
   const num = ch + 1;
   if (num === 10) return 'Ch.10 (Drums)';
-  const program = state.channelPrograms[ch];
-  if (program !== undefined) {
-    return `Ch.${num} - ${getInstrumentName(program)}`;
-  }
+  const voice = resolveVoice(ch);
+  const voiceName = getVoiceDisplayName(ch);
+  if (voiceName) return `Ch.${num} - ${voiceName}`;
   return `Ch.${num}`;
 }
 
@@ -121,6 +121,12 @@ export function buildChannelUI(channels) {
     canvas.style.display = 'block';
 
     card.append(header, canvas);
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      // Mute/Soloボタンのクリックは除外
+      if (e.target.closest('.btn-ch')) return;
+      showChannelDetail(ch);
+    });
     container.appendChild(card);
 
     // NO SIGNAL表示
@@ -331,4 +337,167 @@ export function applyChannelGain(chState) {
   const waveGain = chState.waveGain ?? 1;
   const playGate = chState.playGate ?? 1;
   chState.gainNode.gain.value = waveGain * playGate;
+}
+
+// --- チャンネル詳細パネル ---
+const BASIC_WAVES = ['sine', 'square', 'sawtooth', 'triangle'];
+
+function getVoiceDisplayName(ch) {
+  const voice = resolveVoice(ch);
+  if (voice.type === 'sf2') {
+    const key = `${voice.bank}-${voice.preset}`;
+    const preset = state._sf2PresetMap?.[key];
+    return preset ? `🎹 ${preset.name}` : `SF2 B${voice.bank}:P${voice.preset}`;
+  }
+  if (voice.type === 'custom' || voice.type === 'waveform') {
+    const custom = CUSTOM_WAVEFORMS[voice.waveType];
+    if (custom) return `🎵 ${custom.label}`;
+    return `〜 ${voice.waveType}`;
+  }
+  return '';
+}
+
+export function updateVoiceLabels() {
+  for (let ch = 0; ch < 16; ch++) {
+    const card = document.getElementById(`channel-card-${ch}`);
+    if (!card) continue;
+    const label = card.querySelector('.channel-label');
+    if (label) label.textContent = getChannelLabel(ch);
+  }
+  // 再生中なら即時反映（動的importで循環依存を回避）
+  if (state.isPlaying) {
+    import('./audio-engine.js').then((m) => m.reschedulePlayback());
+  }
+}
+
+function showChannelDetail(ch) {
+  // 既存のパネルがあれば閉じる
+  const existing = document.getElementById('channel-detail-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'channel-detail-overlay';
+  overlay.className = 'modal-overlay';
+
+  const panel = document.createElement('div');
+  panel.className = 'modal-content channel-detail-panel';
+
+  // ヘッダー
+  const header = document.createElement('div');
+  header.className = 'modal-header';
+  const title = document.createElement('h3');
+  title.textContent = getChannelLabel(ch);
+  title.style.color = getChannelColor(ch);
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', () => overlay.remove());
+  header.append(title, closeBtn);
+
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+
+  // MIDI意図（GM楽器名）
+  const program = state.channelPrograms[ch];
+  if (program !== undefined) {
+    const midiIntent = document.createElement('div');
+    midiIntent.className = 'channel-detail-midi-intent';
+    midiIntent.textContent = `MIDI楽器: ${getInstrumentName(program)}`;
+    body.appendChild(midiIntent);
+  }
+
+  // 現在の音色
+  const currentVoice = document.createElement('div');
+  currentVoice.className = 'channel-detail-current';
+  currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+  body.appendChild(currentVoice);
+
+  // デフォルトに戻す
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'channel-detail-reset';
+  resetBtn.textContent = '↩ デフォルトに戻す';
+  resetBtn.addEventListener('click', () => {
+    const chFx = getChannelFx(ch);
+    chFx.voiceSource = { type: 'global' };
+    currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+    updateVoiceLabels();
+  });
+  body.appendChild(resetBtn);
+
+  // 基本波形
+  addVoiceSection(
+    body,
+    '基本波形',
+    BASIC_WAVES.map((w) => ({
+      label: `〜 ${w}`,
+      onClick: () => {
+        getChannelFx(ch).voiceSource = { type: 'waveform', waveType: w };
+        currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+        updateVoiceLabels();
+      },
+    })),
+  );
+
+  // カスタム波形
+  const customEntries = Object.entries(CUSTOM_WAVEFORMS);
+  if (customEntries.length > 0) {
+    addVoiceSection(
+      body,
+      'カスタム波形',
+      customEntries.map(([key, cw]) => ({
+        label: `🎵 ${cw.label}`,
+        onClick: () => {
+          getChannelFx(ch).voiceSource = { type: 'custom', waveType: key };
+          currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+          updateVoiceLabels();
+        },
+      })),
+    );
+  }
+
+  // SF2プリセット
+  if (state._useSF && state._sf2PresetMap) {
+    const presets = Object.values(state._sf2PresetMap).sort((a, b) => a.bank - b.bank || a.preset - b.preset);
+    addVoiceSection(
+      body,
+      `SF2: ${state._sf?.info?.INAM || 'SoundFont'}`,
+      presets.map((p) => ({
+        label: `🎹 B${p.bank}:P${p.preset} ${p.name}`,
+        onClick: () => {
+          getChannelFx(ch).voiceSource = { type: 'sf2', bank: p.bank, preset: p.preset };
+          currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+          updateVoiceLabels();
+        },
+      })),
+    );
+  }
+
+  panel.append(header, body);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  // オーバーレイクリックで閉じる
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
+function addVoiceSection(container, title, items) {
+  const section = document.createElement('div');
+  section.className = 'sf2-info-section';
+  const h4 = document.createElement('h4');
+  h4.textContent = title;
+  section.appendChild(h4);
+
+  const grid = document.createElement('div');
+  grid.className = 'voice-grid';
+  for (const item of items) {
+    const btn = document.createElement('button');
+    btn.className = 'voice-grid-btn';
+    btn.textContent = item.label;
+    btn.addEventListener('click', item.onClick);
+    grid.appendChild(btn);
+  }
+  section.appendChild(grid);
+  container.appendChild(section);
 }
