@@ -364,6 +364,10 @@ export function updateVoiceLabels() {
     const label = card.querySelector('.channel-label');
     if (label) label.textContent = getChannelLabel(ch);
   }
+  // 再生中なら即時反映（動的importで循環依存を回避）
+  if (state.isPlaying) {
+    import('./audio-engine.js').then((m) => m.reschedulePlayback());
+  }
 }
 
 function showChannelDetail(ch) {

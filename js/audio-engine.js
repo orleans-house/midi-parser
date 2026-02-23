@@ -372,4 +372,15 @@ export function playNotesFrom(notes, bpm, fromTime) {
   playNotes(offsetNotes, bpm, fromTime);
 }
 
+/**
+ * 再生中のノートを全キャンセルし、現在位置から再スケジュールする
+ * 音色変更時のリアルタイム反映用
+ */
+export function reschedulePlayback() {
+  if (!state.isPlaying || !state.currentNotes?.length) return;
+  const elapsed =
+    (performance.now() - state.playbackStartReal - state.pauseDuration) / 1000 + state.playbackStartOffset;
+  playNotesFrom(state.currentNotes, state.currentBpm, elapsed);
+}
+
 // Export scheduledNodes for app.js wave switching
