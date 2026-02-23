@@ -77,12 +77,12 @@
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `SF2Parser.parse()` | ユニット | ⬜ 未着手 | RIFFバイナリ解析。正常系・不正ヘッダー・空チャンク |
-| `buildSF2PresetMap(sf2)` | ユニット | ⬜ 未着手 | プリセットマッピング構築 |
-| `getInstrumentZones(sf2, preset)` | ユニット | ⬜ 未着手 | ゾーン抽出ロジック |
-| `findSF2Sample(sf2, presetMap, bank, program, key, vel)` | ユニット | ⬜ 未着手 | キー/ベロシティ範囲マッチング。境界値重要 |
+| `SF2Parser.parse()` | ユニット | ✅ 完了 | RIFFバイナリ解析。正常系・不正ヘッダー・空チャンク |
+| `buildSF2PresetMap(sf2)` | ユニット | ✅ 完了 | プリセットマッピング構築 |
+| `getInstrumentZones(sf2, preset)` | ユニット | ✅ 完了 | ゾーン抽出ロジック |
+| `findSF2Sample(sf2, presetMap, bank, program, key, vel)` | ユニット | ✅ 完了 | キー/ベロシティ範囲マッチング。境界値重要 |
 | `getSF2AudioBuffer(audioCtx, sf2, shdr)` | 統合 | ⬜ 未着手 | AudioBuffer生成（AudioContext依存） |
-| `clearSF2BufferCache()` | ユニット | ⬜ 未着手 | キャッシュクリア |
+| `clearSF2BufferCache()` | ユニット | ✅ 完了 | キャッシュクリア |
 
 ### audio-master.js
 
