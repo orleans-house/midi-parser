@@ -177,7 +177,7 @@ sf2Input.addEventListener('change', () => {
       const parser = new window.SF2Parser(e.target.result);
       const sf2Data = parser.parse();
       window._sf2Data = sf2Data;
-      window._sf2PresetMap = buildSF2PresetMap(sf2Data);
+      window._sf2PresetMap = window.buildSF2PresetMap(sf2Data);
       const sf2DisplayName = sf2Data.info.INAM || file.name.replace('.sf2', '');
       window._useSF2 = true;
       btnLoadSF2.title = `SF2: ${sf2DisplayName}`;
@@ -380,7 +380,7 @@ btnPlay.addEventListener('click', () => {
     } else if (window.isPlaying && window.isPaused) {
       window.resumeAudioFile();
     } else {
-      playAudioFile(window._audioFileRawBuffer);
+      window.playAudioFile(window._audioFileRawBuffer);
     }
   } else {
     if (window.isPlaying && !window.isPaused) {
@@ -1007,17 +1007,17 @@ const limiterKneeVal = document.getElementById('limiter-knee-val');
 const limiterReduction = document.getElementById('limiter-reduction');
 
 limiterOn.addEventListener('change', () => {
-  applyLimiterParams(window._limiter);
+  window.applyLimiterParams(window._limiter);
 });
 
 limiterThreshold.addEventListener('input', () => {
   limiterThresholdVal.textContent = `${limiterThreshold.value} dB`;
-  applyLimiterParams(window._limiter);
+  window.applyLimiterParams(window._limiter);
 });
 
 limiterKnee.addEventListener('input', () => {
   limiterKneeVal.textContent = `${limiterKnee.value} dB`;
-  applyLimiterParams(window._limiter);
+  window.applyLimiterParams(window._limiter);
 });
 
 // リミッターのゲインリダクション表示
@@ -1070,7 +1070,7 @@ masterReverbDecay.addEventListener('input', () => {
   const decay = Number(masterReverbDecay.value) / 10;
   masterReverbDecayVal.textContent = `${decay.toFixed(1)}s`;
   if (window._masterReverbConvolver && audioCtx) {
-    window._masterReverbConvolver.buffer = createReverbIR(audioCtx, decay, 2);
+    window._masterReverbConvolver.buffer = window.createReverbIR(window.audioCtx, decay, 2);
   }
 });
 
