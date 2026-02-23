@@ -301,7 +301,7 @@ document.querySelectorAll('.eq-band').forEach((band, i) => {
   slider.addEventListener('input', () => {
     const val = Number(slider.value);
     valDisplay.textContent = val > 0 ? `+${val}` : `${val}`;
-    if (window._eqFilters && window._eqFilters[i]) {
+    if (window._eqFilters?.[i]) {
       window._eqFilters[i].gain.value = val;
     }
   });
@@ -477,6 +477,68 @@ function startSpectrumDraw() {
       specCtx.fillText(`LP ${formatFreq(lpfF)}`, xL + 4, 24);
     }
     specCtx.setLineDash([]);
+
+    // 周波数シフト時: 基準線（元の位置）とシフト後の位置を表示
+    const freqShift = window._freqShift || 0;
+    {
+      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      specCtx.font = '9px monospace';
+      // C1(24)〜C9(120) の範囲で描画
+      for (let midi = 24; midi <= 120; midi += 12) {
+        const baseFreq = 440 * 2 ** ((midi - 69) / 12);
+        const shiftedFreq = Math.max(1, baseFreq + freqShift);
+        if (baseFreq < minFreq && shiftedFreq < minFreq) continue;
+        if (baseFreq > maxFreq && shiftedFreq > maxFreq) continue;
+        const xBase = w * ((Math.log(baseFreq) - logMin) / logRange);
+        const xShift = w * ((Math.log(shiftedFreq) - logMin) / logRange);
+        const octave = Math.floor(midi / 12) - 1;
+        const label = `${noteNames[midi % 12]}${octave}`;
+
+        // 基準線（元の位置）
+        if (baseFreq >= minFreq && baseFreq <= maxFreq) {
+          specCtx.globalAlpha = freqShift !== 0 ? 0.25 : 0.35;
+          specCtx.strokeStyle = '#ffd54f';
+          specCtx.lineWidth = 1;
+          specCtx.setLineDash([2, 4]);
+          specCtx.beginPath();
+          specCtx.moveTo(xBase, 0);
+          specCtx.lineTo(xBase, h);
+          specCtx.stroke();
+          // シフトなしの場合はラベルを基準線に表示
+          if (freqShift === 0) {
+            specCtx.globalAlpha = 0.5;
+            specCtx.fillStyle = '#ffd54f';
+            specCtx.fillText(label, xBase + 3, h - 4);
+          }
+        }
+
+        // シフト後の位置 — 実線・明るめ（シフト時のみ）
+        if (freqShift !== 0 && shiftedFreq >= minFreq && shiftedFreq <= maxFreq) {
+          specCtx.globalAlpha = 0.7;
+          specCtx.strokeStyle = '#ff7043';
+          specCtx.lineWidth = 1.5;
+          specCtx.setLineDash([]);
+          specCtx.beginPath();
+          specCtx.moveTo(xShift, 0);
+          specCtx.lineTo(xShift, h);
+          specCtx.stroke();
+          // ラベルはシフト後の位置に表示
+          specCtx.fillStyle = '#ff7043';
+          specCtx.fillText(label, xShift + 3, h - 4);
+        }
+
+        // ズレ量を示す矢印帯（基準→シフト後、シフト時のみ）
+        if (freqShift !== 0 && baseFreq >= minFreq && shiftedFreq <= maxFreq) {
+          specCtx.globalAlpha = 0.1;
+          specCtx.fillStyle = '#ff7043';
+          const left = Math.min(xBase, xShift);
+          const right = Math.max(xBase, xShift);
+          specCtx.fillRect(left, 0, right - left, h);
+        }
+      }
+      specCtx.setLineDash([]);
+      specCtx.globalAlpha = 1;
+    }
   }, 80);
 }
 
@@ -735,6 +797,27 @@ lpfQSlider.addEventListener('input', () => {
 });
 
 // メトロノーム
+// --- 周波数シフト ---
+const freqShiftSlider = document.getElementById('freq-shift');
+const freqShiftVal = document.getElementById('freq-shift-val');
+const freqShiftReset = document.getElementById('freq-shift-reset');
+window._freqShift = 0;
+
+freqShiftSlider.addEventListener('input', () => {
+  const v = Number(freqShiftSlider.value);
+  window._freqShift = v;
+  freqShiftVal.textContent = `${v >= 0 ? '+' : ''}${v} Hz`;
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+});
+
+freqShiftReset.addEventListener('click', () => {
+  freqShiftSlider.value = 0;
+  window._freqShift = 0;
+  freqShiftVal.textContent = '0 Hz';
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+});
+
+// --- メトロノーム ---
 const metronomeOn = document.getElementById('metronome-on');
 const metronomeVol = document.getElementById('metronome-vol');
 const metronomeVolVal = document.getElementById('metronome-vol-val');

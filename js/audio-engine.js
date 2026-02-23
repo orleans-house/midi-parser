@@ -16,6 +16,18 @@ let scheduledNodes = [];
 let animationTimer = null;
 let schedulerTimer = null;
 
+// 周波数シフト変更時に再生中のオシレーターを即時更新
+function applyFreqShiftToActive() {
+  const shift = window._freqShift || 0;
+  for (const osc of scheduledNodes) {
+    if (osc._baseFreq != null) {
+      try {
+        osc.frequency.value = Math.max(1, osc._baseFreq + shift);
+      } catch {}
+    }
+  }
+}
+
 async function playNotes(notes, bpm, seekOffset = 0) {
   stopPlayback();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -91,6 +103,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const waveType = chFx.waveType;
       osc.type = waveType;
       osc.frequency.value = freq;
+      osc._baseFreq = 440 * 2 ** ((n.note - 69) / 12); // シフト前のベース周波数を保持
 
       const vel = n.velocity / 127;
       env.gain.setValueAtTime(0, t);
@@ -115,6 +128,16 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       scheduledNodes.push(osc);
       chunkIndex++;
     }
+
+    // 期限切れノードを除去
+    const now = audioCtx.currentTime;
+    scheduledNodes = scheduledNodes.filter((o) => {
+      try {
+        return o.context && o.playbackState !== 3;
+      } catch {
+        return true;
+      }
+    });
 
     if (chunkIndex < notes.length && isPlaying) {
       schedulerTimer = setTimeout(scheduler, CHECK_INTERVAL);

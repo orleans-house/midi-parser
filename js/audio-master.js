@@ -139,7 +139,7 @@ function buildMasterChain(audioCtx) {
   const reverbDecay = reverbDecaySlider ? Number(reverbDecaySlider.value) / 10 : 2.0;
   reverbConvolver.buffer = createReverbIR(audioCtx, reverbDecay, 2);
 
-  const reverbEnabled = reverbOn && reverbOn.checked;
+  const reverbEnabled = reverbOn?.checked;
   reverbDry.gain.value = 1;
   reverbWet.gain.value = reverbEnabled ? (reverbMixSlider ? Number(reverbMixSlider.value) / 100 : 0.3) : 0;
 
@@ -165,7 +165,7 @@ function buildMasterChain(audioCtx) {
   const chorusDepthSlider = document.getElementById('master-chorus-depth');
   const chorusMixSlider = document.getElementById('master-chorus-mix');
 
-  const chorusEnabled = chorusOn && chorusOn.checked;
+  const chorusEnabled = chorusOn?.checked;
   chorusDelay.delayTime.value = 0.015;
   chorusLfo.type = 'sine';
   chorusLfo.frequency.value = chorusRateSlider ? Number(chorusRateSlider.value) / 10 : 1.5;
@@ -207,7 +207,7 @@ function buildMasterChain(audioCtx) {
 function applyLimiterParams(limiter) {
   if (!limiter) return;
   const limiterOn = document.getElementById('limiter-on');
-  const isOn = limiterOn && limiterOn.checked;
+  const isOn = limiterOn?.checked;
 
   if (isOn) {
     const thresholdSlider = document.getElementById('limiter-threshold');
