@@ -4,6 +4,7 @@
 
 import { playNotesFrom, stopPlayback } from './audio-engine.js';
 import { playAudioFile } from './audio-file-engine.js';
+import { drawDJMarkers } from './dj-controls.js';
 import { getThemeColor } from './globals.js';
 import { CHANNEL_COLORS } from './visualizer.js';
 
@@ -108,8 +109,8 @@ export function drawPianoRoll() {
   }
 
   // DJ markers (hot cues, A-B loop) — 動的要素なのでキャッシュ外
-  if (typeof window.drawDJMarkers === 'function') {
-    window.drawDJMarkers(ctx, W, H, PIANO_PADDING_LEFT);
+  if (typeof drawDJMarkers === 'function') {
+    drawDJMarkers(ctx, W, H, PIANO_PADDING_LEFT);
   }
 }
 

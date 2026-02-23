@@ -2,6 +2,18 @@
 // UI
 // ============================================================
 
+import { applyFreqShiftToActive, pausePlayback, playNotes, resumePlayback, stopPlayback } from './audio-engine.js';
+import { pauseAudioFile, playAudioFile, resumeAudioFile } from './audio-file-engine.js';
+import { applyLimiterParams, createReverbIR, updateDistortionCurve } from './audio-master.js';
+import { resetDJControls } from './dj-controls.js';
+import { FREQ_MAX, FREQ_MIN, getChannelFx, getThemeColor } from './globals.js';
+import { detectKeyScale, extractChannelPrograms, extractNotes, MidiParser } from './midi-parser.js';
+import { drawPianoRoll, invalidatePianoRollCache } from './piano-roll.js';
+import { addFilesToPlaylist, clearPlaylist } from './playlist.js';
+import { buildSF2PresetMap, SF2Parser } from './sf2-parser.js';
+import { applyChannelGain, buildChannelUI, detectChannels } from './visualizer.js';
+import { applyWaveform } from './waveforms.js';
+
 const fileInput = document.getElementById('file-input');
 const btnOpen = document.getElementById('btn-open');
 const btnPlay = document.getElementById('btn-play');
@@ -44,11 +56,11 @@ function applyChannelWaveVolumes() {
   if (typeof window.channelStates === 'undefined') return;
   for (const [ch, state] of Object.entries(window.channelStates)) {
     if (!state.gainNode) continue;
-    const chFx = window.getChannelFx(Number(ch));
+    const chFx = getChannelFx(Number(ch));
     const waveType = chFx.waveType;
     const slider = mixerSliders[waveType];
     state.waveGain = slider ? slider.value / 100 : 0.5;
-    window.applyChannelGain(state);
+    applyChannelGain(state);
   }
 }
 
@@ -78,7 +90,7 @@ function setActiveWave(newWave) {
     window.channelFxState[ch].waveType = newWave;
   }
   for (const ch of window.currentChannels) {
-    window.getChannelFx(ch).waveType = newWave;
+    getChannelFx(ch).waveType = newWave;
   }
 
   // FXモジュールの波形ボタンUIも同期
@@ -93,8 +105,8 @@ function setActiveWave(newWave) {
   if (typeof window.scheduledNodes !== 'undefined') {
     for (const osc of window.scheduledNodes) {
       try {
-        if (typeof window.applyWaveform === 'function' && osc.context) {
-          window.applyWaveform(osc, newWave, osc.context);
+        if (osc.context) {
+          applyWaveform(osc, newWave, osc.context);
         } else {
           osc.type = newWave;
         }
@@ -155,7 +167,7 @@ btnLoadSF2.addEventListener('click', () => {
       if (mixerBtns[currentWave]) mixerBtns[currentWave].classList.add('active');
     }
     // 再生中なら即時反映
-    if (typeof window.applyFreqShiftToActive === 'function') window.applyFreqShiftToActive();
+    if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
   } else {
     // 未読み込み: ファイル選択
     sf2Input.click();
@@ -174,10 +186,10 @@ sf2Input.addEventListener('change', () => {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const parser = new window.SF2Parser(e.target.result);
+      const parser = new SF2Parser(e.target.result);
       const sf2Data = parser.parse();
       window._sf2Data = sf2Data;
-      window._sf2PresetMap = window.buildSF2PresetMap(sf2Data);
+      window._sf2PresetMap = buildSF2PresetMap(sf2Data);
       const sf2DisplayName = sf2Data.info.INAM || file.name.replace('.sf2', '');
       window._useSF2 = true;
       btnLoadSF2.title = `SF2: ${sf2DisplayName}`;
@@ -265,21 +277,21 @@ export function loadFile(file) {
 export function loadFiles(fileList) {
   if (fileList.length === 1) {
     // 単一ファイル: 従来動作（プレイリストに追加しつつ即読み込み）
-    window.clearPlaylist();
-    window.addFilesToPlaylist(fileList);
+    clearPlaylist();
+    addFilesToPlaylist(fileList);
   } else if (fileList.length > 1) {
     // 複数ファイル: プレイリストに追加
-    window.clearPlaylist();
-    window.addFilesToPlaylist(fileList);
+    clearPlaylist();
+    addFilesToPlaylist(fileList);
   }
 }
 
 export function processAudioFile(buffer, fileName) {
-  window.stopPlayback();
+  stopPlayback();
   window.audioFileMode = true;
   window.audioFileBuffer = null;
-  if (typeof window.resetDJControls === 'function') window.resetDJControls();
-  if (typeof window.invalidatePianoRollCache === 'function') window.invalidatePianoRollCache();
+  if (typeof resetDJControls === 'function') resetDJControls();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 
   // 生バッファを保持（シーク用）
   window._audioFileRawBuffer = buffer;
@@ -299,7 +311,7 @@ export function processAudioFile(buffer, fileName) {
   document.getElementById('info-key').textContent = '-';
 
   // チャンネルUIクリア
-  window.buildChannelUI([]);
+  buildChannelUI([]);
 
   // 再生コントロール有効化
   btnPlay.disabled = false;
@@ -314,25 +326,25 @@ export function processAudioFile(buffer, fileName) {
 }
 
 export function processMidi(buffer, fileName) {
-  window.stopPlayback();
+  stopPlayback();
   window.audioFileMode = false;
   window.audioFileBuffer = null;
   window._audioFileRawBuffer = null;
-  if (typeof window.resetDJControls === 'function') window.resetDJControls();
-  if (typeof window.invalidatePianoRollCache === 'function') window.invalidatePianoRollCache();
+  if (typeof resetDJControls === 'function') resetDJControls();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 
-  const parser = new window.MidiParser(buffer);
+  const parser = new MidiParser(buffer);
   const parsed = parser.parse();
-  const { notes, tempo, bpm } = window.extractNotes(parsed);
+  const { notes, tempo, bpm } = extractNotes(parsed);
 
   window.currentNotes = notes;
   window.currentBpm = bpm;
 
   // チャンネルごとの楽器情報を抽出
-  window.channelPrograms = window.extractChannelPrograms(parsed);
+  window.channelPrograms = extractChannelPrograms(parsed);
 
   // チャンネル検出
-  window.currentChannels = window.detectChannels(notes);
+  window.currentChannels = detectChannels(notes);
 
   // ファイル情報表示
   document.getElementById('info-filename').textContent = fileName;
@@ -345,7 +357,7 @@ export function processMidi(buffer, fileName) {
   // キー＋スケール自動検出
   const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   if (notes.length > 0) {
-    const detected = window.detectKeyScale(notes);
+    const detected = detectKeyScale(notes);
     document.getElementById('info-key').textContent = `${noteNames[detected.key]} ${detected.scale}`;
     // スケール変換のKeyとFromに自動セット
     document.getElementById('scale-key').value = detected.key;
@@ -358,7 +370,7 @@ export function processMidi(buffer, fileName) {
   // テンポ表示（不要 — ファイル情報に表示済み）
 
   // チャンネルUI構築
-  window.buildChannelUI(window.currentChannels);
+  buildChannelUI(window.currentChannels);
   // 再生コントロール有効化
   btnPlay.disabled = false;
   btnStop.disabled = true;
@@ -368,7 +380,7 @@ export function processMidi(buffer, fileName) {
 
   // 描画（表示後に実行）
   requestAnimationFrame(() => {
-    window.drawPianoRoll();
+    drawPianoRoll();
   });
 }
 
@@ -376,23 +388,23 @@ export function processMidi(buffer, fileName) {
 btnPlay.addEventListener('click', () => {
   if (window.audioFileMode) {
     if (window.isPlaying && !window.isPaused) {
-      window.pauseAudioFile();
+      pauseAudioFile();
     } else if (window.isPlaying && window.isPaused) {
-      window.resumeAudioFile();
+      resumeAudioFile();
     } else {
-      window.playAudioFile(window._audioFileRawBuffer);
+      playAudioFile(window._audioFileRawBuffer);
     }
   } else {
     if (window.isPlaying && !window.isPaused) {
-      window.pausePlayback();
+      pausePlayback();
     } else if (window.isPlaying && window.isPaused) {
-      window.resumePlayback();
+      resumePlayback();
     } else {
-      window.playNotes(window.currentNotes, window.currentBpm);
+      playNotes(window.currentNotes, window.currentBpm);
     }
   }
 });
-btnStop.addEventListener('click', () => window.stopPlayback());
+btnStop.addEventListener('click', () => stopPlayback());
 
 // リピート
 const btnRepeat = document.getElementById('btn-repeat');
@@ -421,7 +433,7 @@ document.addEventListener('click', (e) => {
   if (waveBtn) {
     const ch = Number(waveBtn.dataset.ch);
     const wave = waveBtn.dataset.wave;
-    const chFx = window.getChannelFx(ch);
+    const chFx = getChannelFx(ch);
     chFx.waveType = wave;
 
     // ボタンのactive状態を更新
@@ -436,8 +448,8 @@ document.addEventListener('click', (e) => {
       for (const osc of window.scheduledNodes) {
         try {
           if (osc._channel === ch) {
-            if (typeof window.applyWaveform === 'function' && osc.context) {
-              window.applyWaveform(osc, wave, osc.context);
+            if (osc.context) {
+              applyWaveform(osc, wave, osc.context);
             } else {
               osc.type = wave;
             }
@@ -458,7 +470,7 @@ document.addEventListener('change', (e) => {
   if (e.target.classList.contains('ch-fx-toggle')) {
     const ch = Number(e.target.dataset.ch);
     const fx = e.target.dataset.fx;
-    const chFx = window.getChannelFx(ch);
+    const chFx = getChannelFx(ch);
     const slider = e.target.closest('.fx-mod-row').querySelector('.ch-fx-slider');
     slider.disabled = !e.target.checked;
     chFx[fx].enabled = e.target.checked;
@@ -469,7 +481,7 @@ document.addEventListener('change', (e) => {
         state.fxNodes.distDry.gain.value = e.target.checked ? 0 : 1;
         state.fxNodes.distWet.gain.value = e.target.checked ? 1 : 0;
         if (e.target.checked) {
-          window.updateDistortionCurve(state.fxNodes.distortion, chFx.distortion.amount);
+          updateDistortionCurve(state.fxNodes.distortion, chFx.distortion.amount);
         }
       } else if (fx === 'delay') {
         state.fxNodes.delayWet.gain.value = e.target.checked ? 0.5 : 0;
@@ -485,7 +497,7 @@ document.addEventListener('input', (e) => {
   if (e.target.classList.contains('ch-fx-slider')) {
     const ch = Number(e.target.dataset.ch);
     const fx = e.target.dataset.fx;
-    const chFx = window.getChannelFx(ch);
+    const chFx = getChannelFx(ch);
     const valDisplay = e.target.closest('.fx-mod-row').querySelector('.ch-fx-val');
     valDisplay.textContent = e.target.value;
 
@@ -493,7 +505,7 @@ document.addEventListener('input', (e) => {
     if (fx === 'distortion') {
       chFx.distortion.amount = Number(e.target.value);
       if (state?.fxNodes && chFx.distortion.enabled) {
-        window.updateDistortionCurve(state.fxNodes.distortion, chFx.distortion.amount);
+        updateDistortionCurve(state.fxNodes.distortion, chFx.distortion.amount);
       }
     } else if (fx === 'delay') {
       chFx.delay.time = Number(e.target.value);
@@ -539,18 +551,18 @@ export function startSpectrumDraw() {
     }
     analyser.getByteFrequencyData(spectrumData);
 
-    specCtx.fillStyle = window.getThemeColor('--bg-canvas', '#140f1a');
+    specCtx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
     specCtx.fillRect(0, 0, w, h);
 
     // スペクトラムバー (対数スケール、4px幅で間引き)
     const nyquist = (window._audioCtxSampleRate || 48000) / 2;
-    const minFreq = window.FREQ_MIN;
-    const maxFreq = window.FREQ_MAX;
+    const minFreq = FREQ_MIN;
+    const maxFreq = FREQ_MAX;
     const barWidth = 4;
     const logMin = Math.log(minFreq);
     const logRange = Math.log(maxFreq) - logMin;
 
-    specCtx.fillStyle = window.getThemeColor('--accent-purple', '#b39ddb');
+    specCtx.fillStyle = getThemeColor('--accent-purple', '#b39ddb');
     specCtx.globalAlpha = 0.6;
     for (let i = 0; i < w; i += barWidth) {
       const freq = Math.exp(logMin + (i / w) * logRange);
@@ -734,19 +746,19 @@ function resetFilterBypass() {
 }
 
 function xyPosToFreqs(x, y, w, h) {
-  const hpfFreq = window.FREQ_MIN * (window.FREQ_MAX / window.FREQ_MIN) ** (x / w);
-  const lpfFreq = window.FREQ_MAX * (window.FREQ_MIN / window.FREQ_MAX) ** (y / h);
+  const hpfFreq = FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (x / w);
+  const lpfFreq = FREQ_MAX * (FREQ_MIN / FREQ_MAX) ** (y / h);
   return { hpfFreq: Math.max(20, Math.min(hpfFreq, 20000)), lpfFreq: Math.max(20, Math.min(lpfFreq, 20000)) };
 }
 
 function xyPosToFreqQ(x, y, w, h) {
-  const freq = window.FREQ_MIN * (window.FREQ_MAX / window.FREQ_MIN) ** (x / w);
+  const freq = FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (x / w);
   const q = 0.1 + (1 - y / h) * 19.9; // 上=高Q(狭い), 下=低Q(広い)
   return { freq: Math.max(20, Math.min(freq, 20000)), q: Math.max(0.1, Math.min(q, 20)) };
 }
 
 function xyPosToFreqGain(x, y, w, h) {
-  const freq = window.FREQ_MIN * (window.FREQ_MAX / window.FREQ_MIN) ** (x / w);
+  const freq = FREQ_MIN * (FREQ_MAX / FREQ_MIN) ** (x / w);
   const gain = (0.5 - y / h) * 24; // 上=+12dB, 下=-12dB, 中央=0
   return { freq: Math.max(20, Math.min(freq, 20000)), gain: Math.max(-12, Math.min(gain, 12)) };
 }
@@ -817,7 +829,7 @@ function drawXYPad(cx, cy, w, h) {
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = window.getThemeColor('--bg-canvas', '#140f1a');
+  ctx.fillStyle = getThemeColor('--bg-canvas', '#140f1a');
   ctx.fillRect(0, 0, w, h);
 
   // Grid lines
@@ -923,14 +935,14 @@ pitchShiftSlider.addEventListener('input', () => {
   const v = Number(pitchShiftSlider.value);
   window._pitchShift = v;
   pitchShiftVal.textContent = `${v >= 0 ? '+' : ''}${v} st`;
-  if (typeof window.applyFreqShiftToActive === 'function') window.applyFreqShiftToActive();
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
 
 pitchShiftReset.addEventListener('click', () => {
   pitchShiftSlider.value = 0;
   window._pitchShift = 0;
   pitchShiftVal.textContent = '0 st';
-  if (typeof window.applyFreqShiftToActive === 'function') window.applyFreqShiftToActive();
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
 
 // --- 周波数シフト ---
@@ -943,14 +955,14 @@ freqShiftSlider.addEventListener('input', () => {
   const v = Number(freqShiftSlider.value);
   window._freqShift = v;
   freqShiftVal.textContent = `${v >= 0 ? '+' : ''}${v} Hz`;
-  if (typeof window.applyFreqShiftToActive === 'function') window.applyFreqShiftToActive();
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
 
 freqShiftReset.addEventListener('click', () => {
   freqShiftSlider.value = 0;
   window._freqShift = 0;
   freqShiftVal.textContent = '0 Hz';
-  if (typeof window.applyFreqShiftToActive === 'function') window.applyFreqShiftToActive();
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
 
 // --- スケール変換 ---
@@ -968,7 +980,7 @@ export function updateScaleConvert() {
     from: scaleFrom.value,
     to: scaleTo.value,
   };
-  if (typeof window.applyFreqShiftToActive === 'function') window.applyFreqShiftToActive();
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 }
 
 scaleConvertOn.addEventListener('change', updateScaleConvert);
@@ -1007,17 +1019,17 @@ const limiterKneeVal = document.getElementById('limiter-knee-val');
 const limiterReduction = document.getElementById('limiter-reduction');
 
 limiterOn.addEventListener('change', () => {
-  window.applyLimiterParams(window._limiter);
+  applyLimiterParams(window._limiter);
 });
 
 limiterThreshold.addEventListener('input', () => {
   limiterThresholdVal.textContent = `${limiterThreshold.value} dB`;
-  window.applyLimiterParams(window._limiter);
+  applyLimiterParams(window._limiter);
 });
 
 limiterKnee.addEventListener('input', () => {
   limiterKneeVal.textContent = `${limiterKnee.value} dB`;
-  window.applyLimiterParams(window._limiter);
+  applyLimiterParams(window._limiter);
 });
 
 // リミッターのゲインリダクション表示
@@ -1070,7 +1082,7 @@ masterReverbDecay.addEventListener('input', () => {
   const decay = Number(masterReverbDecay.value) / 10;
   masterReverbDecayVal.textContent = `${decay.toFixed(1)}s`;
   if (window._masterReverbConvolver && window.audioCtx) {
-    window._masterReverbConvolver.buffer = window.createReverbIR(window.audioCtx, decay, 2);
+    window._masterReverbConvolver.buffer = createReverbIR(window.audioCtx, decay, 2);
   }
 });
 

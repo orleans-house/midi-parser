@@ -4,6 +4,7 @@
 
 import { getChannelFx, getThemeColor } from './globals.js';
 import { getInstrumentName } from './midi-parser.js';
+import { invalidatePianoRollCache } from './piano-roll.js';
 
 const CHANNEL_COLORS = [
   '#b39ddb', // パステル紫
@@ -301,7 +302,7 @@ export function toggleMute(ch) {
   const btn = document.querySelector(`#channel-card-${ch} .btn-mute`);
   btn.classList.toggle('active', state.muted);
   updateChannelGains();
-  if (typeof window.invalidatePianoRollCache === 'function') window.invalidatePianoRollCache();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 }
 
 export function toggleSolo(ch) {
@@ -310,7 +311,7 @@ export function toggleSolo(ch) {
   const btn = document.querySelector(`#channel-card-${ch} .btn-solo`);
   btn.classList.toggle('active', state.soloed);
   updateChannelGains();
-  if (typeof window.invalidatePianoRollCache === 'function') window.invalidatePianoRollCache();
+  if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 }
 
 export function updateChannelGains() {
