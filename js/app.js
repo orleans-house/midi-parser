@@ -840,6 +840,29 @@ freqShiftReset.addEventListener('click', () => {
   if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
 
+// --- スケール変換 ---
+const scaleConvertOn = document.getElementById('scale-convert-on');
+const scaleKey = document.getElementById('scale-key');
+const scaleFrom = document.getElementById('scale-from');
+const scaleTo = document.getElementById('scale-to');
+
+window._scaleConvert = { enabled: false, key: 0, from: 'major', to: 'minor' };
+
+function updateScaleConvert() {
+  window._scaleConvert = {
+    enabled: scaleConvertOn.checked,
+    key: Number(scaleKey.value),
+    from: scaleFrom.value,
+    to: scaleTo.value,
+  };
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+}
+
+scaleConvertOn.addEventListener('change', updateScaleConvert);
+scaleKey.addEventListener('change', updateScaleConvert);
+scaleFrom.addEventListener('change', updateScaleConvert);
+scaleTo.addEventListener('change', updateScaleConvert);
+
 // --- メトロノーム ---
 const metronomeOn = document.getElementById('metronome-on');
 const metronomeVol = document.getElementById('metronome-vol');

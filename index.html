@@ -259,6 +259,70 @@
         </div>
       </div>
       <div class="panel-section">
+        <h3><i data-lucide="music"></i> スケール変換</h3>
+        <div class="fx-row">
+          <label class="fx-toggle">
+            <input type="checkbox" id="scale-convert-on">
+            <span>ON</span>
+          </label>
+        </div>
+        <div class="fx-row">
+          <span class="fx-val" style="min-width:28px">Key</span>
+          <select id="scale-key" class="fx-select" style="font-size:0.7rem;">
+            <option value="0">C</option>
+            <option value="1">C#</option>
+            <option value="2">D</option>
+            <option value="3">D#</option>
+            <option value="4">E</option>
+            <option value="5">F</option>
+            <option value="6">F#</option>
+            <option value="7">G</option>
+            <option value="8">G#</option>
+            <option value="9">A</option>
+            <option value="10">A#</option>
+            <option value="11">B</option>
+          </select>
+        </div>
+        <div class="fx-row">
+          <span class="fx-val" style="min-width:28px">From</span>
+          <select id="scale-from" class="fx-select" style="font-size:0.7rem;">
+            <option value="major">Major</option>
+            <option value="minor">Minor</option>
+            <option value="dorian">Dorian</option>
+            <option value="phrygian">Phrygian</option>
+            <option value="lydian">Lydian</option>
+            <option value="mixolydian">Mixolydian</option>
+            <option value="locrian">Locrian</option>
+            <option value="harmonic-minor">Harmonic Minor</option>
+            <option value="melodic-minor">Melodic Minor</option>
+            <option value="pentatonic">Pentatonic</option>
+            <option value="minor-pentatonic">Minor Penta</option>
+            <option value="blues">Blues</option>
+            <option value="whole-tone">Whole Tone</option>
+            <option value="chromatic">Chromatic</option>
+          </select>
+        </div>
+        <div class="fx-row">
+          <span class="fx-val" style="min-width:28px">To</span>
+          <select id="scale-to" class="fx-select" style="font-size:0.7rem;">
+            <option value="major">Major</option>
+            <option value="minor" selected>Minor</option>
+            <option value="dorian">Dorian</option>
+            <option value="phrygian">Phrygian</option>
+            <option value="lydian">Lydian</option>
+            <option value="mixolydian">Mixolydian</option>
+            <option value="locrian">Locrian</option>
+            <option value="harmonic-minor">Harmonic Minor</option>
+            <option value="melodic-minor">Melodic Minor</option>
+            <option value="pentatonic">Pentatonic</option>
+            <option value="minor-pentatonic">Minor Penta</option>
+            <option value="blues">Blues</option>
+            <option value="whole-tone">Whole Tone</option>
+            <option value="chromatic">Chromatic</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-section">
         <h3><i data-lucide="disc"></i> DJ Controls</h3>
         <div id="hot-cue-section">
           <div class="dj-label">Hot Cue</div>

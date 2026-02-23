@@ -395,7 +395,58 @@ function extractChannelPrograms(parsed) {
   return programs;
 }
 
+// スケール定義: 各スケールの半音パターン（ルートからの距離）
+const SCALES = {
+  major: [0, 2, 4, 5, 7, 9, 11],
+  minor: [0, 2, 3, 5, 7, 8, 10],
+  dorian: [0, 2, 3, 5, 7, 9, 10],
+  phrygian: [0, 1, 3, 5, 7, 8, 10],
+  lydian: [0, 2, 4, 6, 7, 9, 11],
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  locrian: [0, 1, 3, 5, 6, 8, 10],
+  'harmonic-minor': [0, 2, 3, 5, 7, 8, 11],
+  'melodic-minor': [0, 2, 3, 5, 7, 9, 11],
+  pentatonic: [0, 2, 4, 7, 9],
+  'minor-pentatonic': [0, 3, 5, 7, 10],
+  blues: [0, 3, 5, 6, 7, 10],
+  'whole-tone': [0, 2, 4, 6, 8, 10],
+  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+};
+
+// スケール変換: ソーススケールの度数→ターゲットスケールの度数にマッピング
+function remapNote(midiNote) {
+  const cfg = window._scaleConvert;
+  if (!cfg || !cfg.enabled || cfg.from === cfg.to) return midiNote;
+
+  const fromScale = SCALES[cfg.from];
+  const toScale = SCALES[cfg.to];
+  if (!fromScale || !toScale) return midiNote;
+
+  const key = cfg.key || 0; // 0=C, 1=C#, ... 11=B
+  const rel = ((midiNote % 12) - key + 12) % 12; // キーからの相対半音
+  const octave = Math.floor((midiNote - key) / 12);
+
+  // ソーススケール内の最も近い度数を見つける
+  let bestDeg = 0;
+  let bestDist = 12;
+  for (let i = 0; i < fromScale.length; i++) {
+    const dist = Math.abs(rel - fromScale[i]);
+    const distWrap = Math.min(dist, 12 - dist);
+    if (distWrap < bestDist) {
+      bestDist = distWrap;
+      bestDeg = i;
+    }
+  }
+
+  // ターゲットスケールの同じ度数にマッピング
+  const targetDeg = bestDeg % toScale.length;
+  const remapped = key + octave * 12 + toScale[targetDeg];
+
+  return Math.max(0, Math.min(127, remapped));
+}
+
 function midiToFreq(midiNote) {
-  const shifted = midiNote + (window._pitchShift || 0);
+  const remapped = remapNote(midiNote);
+  const shifted = remapped + (window._pitchShift || 0);
   return Math.max(1, 440 * 2 ** ((shifted - 69) / 12) + (window._freqShift || 0));
 }
