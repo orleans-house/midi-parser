@@ -3,6 +3,7 @@
 // ============================================================
 
 import { getThemeColor } from './globals.js';
+import state from './state/audioState.js';
 import { getChannelColor } from './visualizer.js';
 
 // Output分岐構築: eqOut → spectrumAnalyser (表示用)
@@ -12,12 +13,12 @@ export function buildOutputChain(audioCtx, eqOut) {
   const spectrumAnalyser = audioCtx.createAnalyser();
   spectrumAnalyser.fftSize = 4096;
   spectrumAnalyser.smoothingTimeConstant = 0.8;
-  window._spectrumAnalyser = spectrumAnalyser;
+  state._spectrumAnalyser = spectrumAnalyser;
 
   // マスター波形用Analyser → 音声出力
   const masterAnalyser = audioCtx.createAnalyser();
   masterAnalyser.fftSize = 2048;
-  window._masterAnalyser = masterAnalyser;
+  state._masterAnalyser = masterAnalyser;
 
   eqOut.connect(spectrumAnalyser);
   eqOut.connect(masterAnalyser);
@@ -33,14 +34,14 @@ let waveFrameCount = 0;
 
 // 波形描画ループ（30fpsに間引き）
 export function drawWaveforms() {
-  if (!window.isPlaying) {
+  if (!state.isPlaying) {
     // マスタークリア
     const mc = document.getElementById('waveform-master');
     if (mc) {
       const mctx = mc.getContext('2d');
       mctx.clearRect(0, 0, mc.width, mc.height);
     }
-    for (const ch of window.currentChannels) {
+    for (const ch of state.currentChannels) {
       const canvas = document.getElementById(`waveform-${ch}`);
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -56,11 +57,11 @@ export function drawWaveforms() {
   if (waveFrameCount % 2 !== 0) return;
 
   // マスター合成波描画
-  if (window._masterAnalyser) {
+  if (state._masterAnalyser) {
     const mc = document.getElementById('waveform-master');
     if (mc) {
       const mctx = mc.getContext('2d');
-      const ma = window._masterAnalyser;
+      const ma = state._masterAnalyser;
       const bufLen = ma.frequencyBinCount;
       if (!waveformMasterBuf || waveformMasterBuf.length !== bufLen) {
         waveformMasterBuf = new Uint8Array(bufLen);
@@ -85,18 +86,18 @@ export function drawWaveforms() {
     }
   }
 
-  for (const ch of window.currentChannels) {
-    const state = window.channelStates[ch];
-    if (!state.analyser) continue;
+  for (const ch of state.currentChannels) {
+    const chState = state.channelStates[ch];
+    if (!chState.analyser) continue;
 
     // ミュート中 or ソロ外のチャンネルはスキップ
-    if (state.playGate === 0) continue;
+    if (chState.playGate === 0) continue;
 
     const canvas = document.getElementById(`waveform-${ch}`);
     if (!canvas) continue;
 
     const ctx = canvas.getContext('2d');
-    const analyser = state.analyser;
+    const analyser = chState.analyser;
     const bufferLength = analyser.frequencyBinCount;
 
     if (!waveformChBufs[ch] || waveformChBufs[ch].length !== bufferLength) {

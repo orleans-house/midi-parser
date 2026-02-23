@@ -5,6 +5,7 @@
 import { getChannelFx, getThemeColor } from './globals.js';
 import { getInstrumentName } from './midi-parser.js';
 import { invalidatePianoRollCache } from './piano-roll.js';
+import state from './state/audioState.js';
 
 const CHANNEL_COLORS = [
   '#b39ddb', // パステル紫
@@ -30,7 +31,7 @@ export { CHANNEL_COLORS };
 function getChannelLabel(ch) {
   const num = ch + 1;
   if (num === 10) return 'Ch.10 (Drums)';
-  const program = window.channelPrograms[ch];
+  const program = state.channelPrograms[ch];
   if (program !== undefined) {
     return `Ch.${num} - ${getInstrumentName(program)}`;
   }
@@ -50,7 +51,7 @@ export function detectChannels(notes) {
 export function buildChannelUI(channels) {
   const container = document.getElementById('visualizer-container');
   container.innerHTML = '';
-  window.channelStates = {};
+  state.channelStates = {};
 
   // マスター合成波カード（4列幅）
   const masterCard = document.createElement('div');
@@ -77,7 +78,7 @@ export function buildChannelUI(channels) {
 
   for (const ch of allChannels) {
     const isActive = channels.includes(ch);
-    window.channelStates[ch] = {
+    state.channelStates[ch] = {
       muted: !isActive,
       soloed: false,
       gainNode: null,
@@ -297,37 +298,37 @@ function drawCables(allChannels) {
 }
 
 export function toggleMute(ch) {
-  const state = window.channelStates[ch];
-  state.muted = !state.muted;
+  const chState = state.channelStates[ch];
+  chState.muted = !chState.muted;
   const btn = document.querySelector(`#channel-card-${ch} .btn-mute`);
-  btn.classList.toggle('active', state.muted);
+  btn.classList.toggle('active', chState.muted);
   updateChannelGains();
   if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 }
 
 export function toggleSolo(ch) {
-  const state = window.channelStates[ch];
-  state.soloed = !state.soloed;
+  const chState = state.channelStates[ch];
+  chState.soloed = !chState.soloed;
   const btn = document.querySelector(`#channel-card-${ch} .btn-solo`);
-  btn.classList.toggle('active', state.soloed);
+  btn.classList.toggle('active', chState.soloed);
   updateChannelGains();
   if (typeof invalidatePianoRollCache === 'function') invalidatePianoRollCache();
 }
 
 export function updateChannelGains() {
-  const anySolo = Object.values(window.channelStates).some((s) => s.soloed);
-  for (const [ch, state] of Object.entries(window.channelStates)) {
-    if (!state.gainNode) continue;
-    const shouldPlay = anySolo ? state.soloed && !state.muted : !state.muted;
-    state.playGate = shouldPlay ? 1 : 0;
-    applyChannelGain(state);
+  const anySolo = Object.values(state.channelStates).some((s) => s.soloed);
+  for (const [ch, chState] of Object.entries(state.channelStates)) {
+    if (!chState.gainNode) continue;
+    const shouldPlay = anySolo ? chState.soloed && !chState.muted : !chState.muted;
+    chState.playGate = shouldPlay ? 1 : 0;
+    applyChannelGain(chState);
   }
 }
 
 // waveGain × playGate を gainNode に適用
-export function applyChannelGain(state) {
-  if (!state.gainNode) return;
-  const waveGain = state.waveGain ?? 1;
-  const playGate = state.playGate ?? 1;
-  state.gainNode.gain.value = waveGain * playGate;
+export function applyChannelGain(chState) {
+  if (!chState.gainNode) return;
+  const waveGain = chState.waveGain ?? 1;
+  const playGate = chState.playGate ?? 1;
+  chState.gainNode.gain.value = waveGain * playGate;
 }
