@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import state from '../../js/state/audioState.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { getChannelFx, resolveVoice } from '../../js/globals.js';
+import state from '../../js/state/audioState.js';
 
 describe('resolveVoice', () => {
   beforeEach(() => {
