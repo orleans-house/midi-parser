@@ -419,4 +419,238 @@ test.describe('MIDI Parser App', () => {
     await expect(page.locator('#spectrum-canvas')).toBeVisible();
     await expect(page.locator('#xy-pad')).toBeVisible();
   });
+
+  // ===== ピッチシフト =====
+
+  test('pitch shift slider updates global state', async ({ page }) => {
+    const slider = page.locator('#pitch-shift');
+    await expect(slider).toBeVisible();
+    await slider.fill('5');
+    await slider.dispatchEvent('input');
+    const val = await page.evaluate(() => window._pitchShift);
+    expect(val).toBe(5);
+    const display = await page.locator('#pitch-shift-val').textContent();
+    expect(display).toBe('+5 st');
+  });
+
+  test('pitch shift reset button clears value', async ({ page }) => {
+    const slider = page.locator('#pitch-shift');
+    await slider.fill('7');
+    await slider.dispatchEvent('input');
+    await page.locator('#pitch-shift-reset').click();
+    const val = await page.evaluate(() => window._pitchShift);
+    expect(val).toBe(0);
+    const display = await page.locator('#pitch-shift-val').textContent();
+    expect(display).toBe('0 st');
+  });
+
+  // ===== 周波数シフト =====
+
+  test('frequency shift slider updates global state', async ({ page }) => {
+    const slider = page.locator('#freq-shift');
+    await expect(slider).toBeVisible();
+    await slider.fill('-30');
+    await slider.dispatchEvent('input');
+    const val = await page.evaluate(() => window._freqShift);
+    expect(val).toBe(-30);
+    const display = await page.locator('#freq-shift-val').textContent();
+    expect(display).toBe('-30 Hz');
+  });
+
+  test('frequency shift reset button clears value', async ({ page }) => {
+    const slider = page.locator('#freq-shift');
+    await slider.fill('50');
+    await slider.dispatchEvent('input');
+    await page.locator('#freq-shift-reset').click();
+    const val = await page.evaluate(() => window._freqShift);
+    expect(val).toBe(0);
+  });
+
+  // ===== スケール変換 =====
+
+  test('scale convert controls exist and are functional', async ({ page }) => {
+    await expect(page.locator('#scale-convert-on')).toBeVisible();
+    await expect(page.locator('#scale-key')).toBeVisible();
+    await expect(page.locator('#scale-from')).toBeVisible();
+    await expect(page.locator('#scale-to')).toBeVisible();
+  });
+
+  test('scale convert ON updates global state', async ({ page }) => {
+    await page.locator('#scale-convert-on').check();
+    const cfg = await page.evaluate(() => window._scaleConvert);
+    expect(cfg.enabled).toBe(true);
+  });
+
+  test('scale convert key/from/to changes update state', async ({ page }) => {
+    await page.locator('#scale-key').selectOption('2'); // D
+    await page.locator('#scale-from').selectOption('major');
+    await page.locator('#scale-to').selectOption('dorian');
+    const cfg = await page.evaluate(() => window._scaleConvert);
+    expect(cfg.key).toBe(2);
+    expect(cfg.from).toBe('major');
+    expect(cfg.to).toBe('dorian');
+  });
+
+  // ===== フィルターモード切替 =====
+
+  test('filter mode buttons switch active state', async ({ page }) => {
+    const bandBtn = page.locator('.filter-mode-btn[data-mode="bandpass"]');
+    await bandBtn.click();
+    await expect(bandBtn).toHaveClass(/active/);
+    const hpfBtn = page.locator('.filter-mode-btn[data-mode="hpf-lpf"]');
+    await expect(hpfBtn).not.toHaveClass(/active/);
+  });
+
+  test('filter mode defaults to hpf-lpf', async ({ page }) => {
+    const hpfBtn = page.locator('.filter-mode-btn[data-mode="hpf-lpf"]');
+    await expect(hpfBtn).toHaveClass(/active/);
+  });
+
+  // ===== カスタム波形 =====
+
+  test('custom waveform select exists with 10 options', async ({ page }) => {
+    const select = page.locator('#custom-waveform-select');
+    await expect(select).toBeVisible();
+    const options = await select.locator('option').count();
+    expect(options).toBe(11); // 1 placeholder + 10 waveforms
+  });
+
+  test('custom waveform selection deactivates standard wave buttons', async ({ page }) => {
+    await page.locator('#custom-waveform-select').selectOption('organ');
+    // 標準波形ボタンはすべて非アクティブ
+    for (const wave of ['triangle', 'sine', 'square', 'sawtooth']) {
+      const btn = page.locator(`.mixer-channel[data-wave="${wave}"] .mixer-btn`);
+      await expect(btn).not.toHaveClass(/active/);
+    }
+  });
+
+  test('standard wave button click resets custom waveform select', async ({ page }) => {
+    await page.locator('#custom-waveform-select').selectOption('piano');
+    await page.locator('.mixer-channel[data-wave="sine"] .mixer-btn').click();
+    const val = await page.locator('#custom-waveform-select').inputValue();
+    expect(val).toBe('');
+  });
+
+  // ===== SF2 =====
+
+  test('SF2 button and status display exist', async ({ page }) => {
+    await expect(page.locator('#btn-load-sf2')).toBeVisible();
+    const name = await page.locator('#sf2-name').textContent();
+    expect(name).toBe('未読み込み');
+  });
+
+  test('SF2 button click without loaded font opens file dialog', async ({ page }) => {
+    const [fileChooser] = await Promise.all([page.waitForEvent('filechooser'), page.locator('#btn-load-sf2').click()]);
+    expect(fileChooser).toBeTruthy();
+  });
+
+  // ===== キー自動検出 =====
+
+  test('key detection displays after MIDI load', async ({ page }) => {
+    await uploadMidi(page);
+    const keyText = await page.locator('#info-key').textContent();
+    expect(keyText).not.toBe('-');
+    expect(keyText.length).toBeGreaterThan(0);
+  });
+
+  // ===== 組み合わせテスト =====
+
+  test('pitch shift and frequency shift can be set simultaneously', async ({ page }) => {
+    const pitchSlider = page.locator('#pitch-shift');
+    const freqSlider = page.locator('#freq-shift');
+    await pitchSlider.fill('3');
+    await pitchSlider.dispatchEvent('input');
+    await freqSlider.fill('-20');
+    await freqSlider.dispatchEvent('input');
+    const pitch = await page.evaluate(() => window._pitchShift);
+    const freq = await page.evaluate(() => window._freqShift);
+    expect(pitch).toBe(3);
+    expect(freq).toBe(-20);
+  });
+
+  test('scale convert with pitch shift combo', async ({ page }) => {
+    await page.locator('#scale-convert-on').check();
+    await page.locator('#scale-to').selectOption('minor');
+    const pitchSlider = page.locator('#pitch-shift');
+    await pitchSlider.fill('-2');
+    await pitchSlider.dispatchEvent('input');
+    const cfg = await page.evaluate(() => window._scaleConvert);
+    const pitch = await page.evaluate(() => window._pitchShift);
+    expect(cfg.enabled).toBe(true);
+    expect(cfg.to).toBe('minor');
+    expect(pitch).toBe(-2);
+  });
+
+  test('switching wave type after custom waveform restores standard mode', async ({ page }) => {
+    // カスタム波形選択 → 標準波形に戻す
+    await page.locator('#custom-waveform-select').selectOption('brass');
+    await page.locator('.mixer-channel[data-wave="triangle"] .mixer-btn').click();
+    const triBtn = page.locator('.mixer-channel[data-wave="triangle"] .mixer-btn');
+    await expect(triBtn).toHaveClass(/active/);
+    // SF2は無効のまま
+    const useSF2 = await page.evaluate(() => window._useSF2);
+    expect(useSF2).toBeFalsy();
+  });
+
+  test('midiToFreq applies pitch shift and frequency shift correctly', async ({ page }) => {
+    // midiToFreq が全シフトを正しく適用するか検証
+    await page.evaluate(() => {
+      window._pitchShift = 0;
+      window._freqShift = 0;
+      window._scaleConvert = { enabled: false };
+    });
+    const baseFreq = await page.evaluate(() => midiToFreq(69)); // A4
+    expect(baseFreq).toBeCloseTo(440, 0);
+
+    // ピッチシフト+12 = 1オクターブ上
+    await page.evaluate(() => {
+      window._pitchShift = 12;
+    });
+    const shiftedFreq = await page.evaluate(() => midiToFreq(69));
+    expect(shiftedFreq).toBeCloseTo(880, 0);
+
+    // 周波数シフト+10Hz
+    await page.evaluate(() => {
+      window._pitchShift = 0;
+      window._freqShift = 10;
+    });
+    const freqShifted = await page.evaluate(() => midiToFreq(69));
+    expect(freqShifted).toBeCloseTo(450, 0);
+  });
+
+  test('midiToFreq clamps to minimum 1Hz', async ({ page }) => {
+    await page.evaluate(() => {
+      window._pitchShift = 0;
+      window._freqShift = -100;
+    });
+    const freq = await page.evaluate(() => midiToFreq(21)); // A0 = 27.5Hz
+    expect(freq).toBeGreaterThanOrEqual(1);
+  });
+
+  test('remapNote converts scale correctly', async ({ page }) => {
+    // C major → C minor: E(64) → Eb(63)
+    await page.evaluate(() => {
+      window._scaleConvert = { enabled: true, key: 0, from: 'major', to: 'minor' };
+    });
+    const remapped = await page.evaluate(() => remapNote(64)); // E4
+    expect(remapped).toBe(63); // Eb4
+  });
+
+  test('remapNote passes through when disabled', async ({ page }) => {
+    await page.evaluate(() => {
+      window._scaleConvert = { enabled: false, key: 0, from: 'major', to: 'minor' };
+    });
+    const remapped = await page.evaluate(() => remapNote(64));
+    expect(remapped).toBe(64); // 変換なし
+  });
+
+  test('detectKeyScale returns valid key and scale', async ({ page }) => {
+    await uploadMidi(page);
+    const result = await page.evaluate(() => {
+      return detectKeyScale(currentNotes);
+    });
+    expect(result.key).toBeGreaterThanOrEqual(0);
+    expect(result.key).toBeLessThanOrEqual(11);
+    expect(typeof result.scale).toBe('string');
+  });
 });
