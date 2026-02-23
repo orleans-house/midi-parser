@@ -2,6 +2,8 @@
 // Source層: メトロノーム生成
 // ============================================================
 
+import state from './state/audioState.js';
+
 export function buildMetronome(audioCtx, destination) {
   const metronomeGain = audioCtx.createGain();
   const metroVolSlider = document.getElementById('metronome-vol');
@@ -11,7 +13,7 @@ export function buildMetronome(audioCtx, destination) {
       : 0.5
     : 0;
   metronomeGain.connect(destination);
-  window._metronomeGain = metronomeGain;
+  state._metronomeGain = metronomeGain;
   return metronomeGain;
 }
 

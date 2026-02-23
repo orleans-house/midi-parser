@@ -4,9 +4,10 @@
 
 import { createReverbIR, updateDistortionCurve } from './audio-master.js';
 import { getChannelFx } from './globals.js';
+import state from './state/audioState.js';
 
 export function buildChannelChain(audioCtx, ch, masterGain) {
-  const state = window.channelStates[ch];
+  const chState = state.channelStates[ch];
   const chFx = getChannelFx(ch);
 
   const gainNode = audioCtx.createGain();
@@ -14,8 +15,8 @@ export function buildChannelChain(audioCtx, ch, masterGain) {
   const chWaveType = chFx.waveType;
   const chWaveSlider = document.querySelector(`.mixer-channel[data-wave="${chWaveType}"] .mixer-vol`);
   const initWaveGain = chWaveSlider ? chWaveSlider.value / 100 : 0.5;
-  state.waveGain = initWaveGain;
-  state.playGate = 1;
+  chState.waveGain = initWaveGain;
+  chState.playGate = 1;
   gainNode.gain.value = initWaveGain;
 
   // --- チャンネル別FXノード (dry/wet方式) ---
@@ -83,9 +84,9 @@ export function buildChannelChain(audioCtx, ch, masterGain) {
   chReverbMerge.connect(analyser);
   analyser.connect(masterGain);
 
-  state.gainNode = gainNode;
-  state.analyser = analyser;
-  state.fxNodes = {
+  chState.gainNode = gainNode;
+  chState.analyser = analyser;
+  chState.fxNodes = {
     distortion: chDistNode,
     distDry: chDistDry,
     distWet: chDistWet,

@@ -2,40 +2,24 @@
 // グローバル変数・定数
 // ============================================================
 
-window.currentNotes = [];
-window.currentBpm = 120;
-window.currentTotalDuration = 0;
-window.playbackStartReal = 0;
-window.playbackStartOffset = 0;
-window.channelStates = {};
-window.channelPrograms = {};
-window.currentChannels = [];
-window.repeatEnabled = false;
-// チャンネル別エフェクト状態
-window.channelFxState = {};
-// オーディオエンジン共有状態
-window.audioCtx = null;
-window.isPlaying = false;
-window.isPaused = false;
-window.pauseDuration = 0;
-window.pauseStartTime = 0;
-// オーディオファイルエンジン共有状態
-window.audioFileSource = null;
-window.audioFileBuffer = null;
-window.audioFileMode = false;
-// スケジュール済みノード（波形切替用）
-window.scheduledNodes = [];
+import state from './state/audioState.js';
+
+// window.* ブリッジ（後方互換: main.js や typeof ガード用）
+// state module の値を window に同期
+for (const key of Object.keys(state)) {
+  window[key] = state[key];
+}
 
 export function getChannelFx(ch) {
-  if (!window.channelFxState[ch]) {
-    window.channelFxState[ch] = {
+  if (!state.channelFxState[ch]) {
+    state.channelFxState[ch] = {
       waveType: 'triangle',
       distortion: { enabled: false, amount: 50 },
       delay: { enabled: false, time: 300 },
       reverb: { enabled: false, mix: 40 },
     };
   }
-  return window.channelFxState[ch];
+  return state.channelFxState[ch];
 }
 
 // 対数スケール変換 (スライダー0-100 ↔ 周波数20-20000Hz)

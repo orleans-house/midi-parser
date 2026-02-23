@@ -17,6 +17,7 @@ import { buildMetronome, createMetroClick } from './audio-source.js';
 import { getChannelFx } from './globals.js';
 import { midiToFreq, remapNote } from './midi-parser.js';
 import { clearSF2BufferCache, findSF2Sample, getSF2AudioBuffer } from './sf2-parser.js';
+import state from './state/audioState.js';
 import { updateChannelGains } from './visualizer.js';
 import { applyWaveform, clearPeriodicWaveCache } from './waveforms.js';
 
@@ -26,8 +27,8 @@ let stopTimerId = null;
 
 // ピッチ/周波数/スケール変更時に再生中のノードを即時更新
 export function applyFreqShiftToActive() {
-  const pitchShift = window._pitchShift || 0;
-  for (const node of window.scheduledNodes) {
+  const pitchShift = state._pitchShift || 0;
+  for (const node of state.scheduledNodes) {
     if (node._baseMidi == null) continue;
     try {
       if (node._isSF2) {
@@ -45,14 +46,14 @@ export function applyFreqShiftToActive() {
 
 export async function playNotes(notes, bpm, seekOffset = 0) {
   stopPlayback();
-  window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (window.audioCtx.state === 'suspended') {
-    await window.audioCtx.resume();
+  state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (state.audioCtx.state === 'suspended') {
+    await state.audioCtx.resume();
   }
-  window.isPlaying = true;
-  window.scheduledNodes = [];
+  state.isPlaying = true;
+  state.scheduledNodes = [];
 
-  const audioCtx = window.audioCtx;
+  const audioCtx = state.audioCtx;
 
   // === Master層 ===
   const { masterGain, eqOut } = buildMasterChain(audioCtx);
@@ -61,7 +62,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
   buildOutputChain(audioCtx, eqOut);
 
   // === Channel層 ===
-  for (const ch of window.currentChannels) {
+  for (const ch of state.currentChannels) {
     buildChannelChain(audioCtx, ch, masterGain);
   }
 
@@ -101,7 +102,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
   }
 
   function scheduler() {
-    if (!window.isPlaying || !window.audioCtx) return;
+    if (!state.isPlaying || !state.audioCtx) return;
     const horizon = audioCtx.currentTime + LOOK_AHEAD;
     scheduleMetronome();
 
@@ -116,11 +117,11 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
       // SF2モード: サンプルベース再生
       let sourceNode;
 
-      if (window._useSF2 && window._sf2Data && window._sf2PresetMap) {
-        const sf2Data = window._sf2Data;
-        const sf2PresetMap = window._sf2PresetMap;
+      if (state._useSF && state._sf && state._sf2PresetMap) {
+        const sf2Data = state._sf;
+        const sf2PresetMap = state._sf2PresetMap;
         const bank = n.channel === 9 ? 128 : 0; // Ch10=ドラム
-        const program = window.channelPrograms[n.channel] || 0;
+        const program = state.channelPrograms[n.channel] || 0;
         const sample = findSF2Sample(sf2Data, sf2PresetMap, bank, program, n.note, n.velocity);
 
         if (sample) {
@@ -131,7 +132,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
 
             // スケール変換 + ピッチシフト適用
             const remapped = remapNote(n.note);
-            const pitchShift = window._pitchShift || 0;
+            const pitchShift = state._pitchShift || 0;
             const semitones = remapped - sample.rootKey + sample.tuning + pitchShift;
             src.playbackRate.value = 2 ** (semitones / 12);
 
@@ -154,7 +155,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
             env.gain.linearRampToValueAtTime(0, t + dur);
 
             src.connect(env);
-            const chState = window.channelStates[n.channel];
+            const chState = state.channelStates[n.channel];
             if (chState?.gainNode) {
               env.connect(chState.gainNode);
             } else {
@@ -191,7 +192,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
         env.gain.linearRampToValueAtTime(0, t + dur);
 
         osc.connect(env);
-        const chState = window.channelStates[n.channel];
+        const chState = state.channelStates[n.channel];
         if (chState?.gainNode) {
           env.connect(chState.gainNode);
         } else {
@@ -204,11 +205,11 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
         sourceNode = osc;
       }
 
-      window.scheduledNodes.push(sourceNode);
+      state.scheduledNodes.push(sourceNode);
       chunkIndex++;
     }
 
-    if (chunkIndex < notes.length && window.isPlaying) {
+    if (chunkIndex < notes.length && state.isPlaying) {
       schedulerTimer = setTimeout(scheduler, CHECK_INTERVAL);
     }
   }
@@ -218,7 +219,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
   // 再生終了検知
   const totalDuration = notes.length > 0 ? Math.max(...notes.map((n) => n.startTime + n.duration)) : 0;
 
-  if (seekOffset === 0) window.currentTotalDuration = totalDuration;
+  if (seekOffset === 0) state.currentTotalDuration = totalDuration;
 
   const btnPlay = document.getElementById('btn-play');
   const btnStop = document.getElementById('btn-stop');
@@ -233,20 +234,20 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
   // シークバー表示・設定
   const posDisplay = document.getElementById('position-display');
   const startReal = performance.now();
-  window.playbackStartReal = startReal;
-  window.playbackStartOffset = seekOffset;
+  state.playbackStartReal = startReal;
+  state.playbackStartOffset = seekOffset;
 
   animationTimer = setInterval(() => {
-    const elapsed = (performance.now() - startReal - window.pauseDuration) / 1000 + seekOffset;
-    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${window.currentTotalDuration.toFixed(1)}s`;
+    const elapsed = (performance.now() - startReal - state.pauseDuration) / 1000 + seekOffset;
+    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${state.currentTotalDuration.toFixed(1)}s`;
     if (typeof window.updatePlayhead === 'function') window.updatePlayhead(elapsed);
   }, 100);
 
   stopTimerId = setTimeout(
     () => {
-      if (window.isPlaying) {
-        if (window.repeatEnabled && window.currentNotes.length > 0) {
-          playNotes(window.currentNotes, window.currentBpm);
+      if (state.isPlaying) {
+        if (state.repeatEnabled && state.currentNotes.length > 0) {
+          playNotes(state.currentNotes, state.currentBpm);
         } else {
           stopPlayback();
           if (typeof window.playNextTrack === 'function') window.playNextTrack();
@@ -258,10 +259,10 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
 }
 
 export function pausePlayback() {
-  if (!window.isPlaying || !window.audioCtx || window.isPaused) return;
-  window.isPaused = true;
-  window.pauseStartTime = performance.now();
-  window.audioCtx.suspend();
+  if (!state.isPlaying || !state.audioCtx || state.isPaused) return;
+  state.isPaused = true;
+  state.pauseStartTime = performance.now();
+  state.audioCtx.suspend();
   if (animationTimer) {
     clearInterval(animationTimer);
     animationTimer = null;
@@ -278,24 +279,24 @@ export function pausePlayback() {
 }
 
 export function resumePlayback() {
-  if (!window.isPlaying || !window.audioCtx || !window.isPaused) return;
-  window.isPaused = false;
-  window.pauseDuration += performance.now() - window.pauseStartTime;
-  window.audioCtx.resume();
+  if (!state.isPlaying || !state.audioCtx || !state.isPaused) return;
+  state.isPaused = false;
+  state.pauseDuration += performance.now() - state.pauseStartTime;
+  state.audioCtx.resume();
   const posDisplay = document.getElementById('position-display');
   animationTimer = setInterval(() => {
     const elapsed =
-      (performance.now() - window.playbackStartReal - window.pauseDuration) / 1000 + window.playbackStartOffset;
-    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${window.currentTotalDuration.toFixed(1)}s`;
+      (performance.now() - state.playbackStartReal - state.pauseDuration) / 1000 + state.playbackStartOffset;
+    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${state.currentTotalDuration.toFixed(1)}s`;
     if (typeof window.updatePlayhead === 'function') window.updatePlayhead(elapsed);
   }, 100);
   const currentElapsed =
-    (performance.now() - window.playbackStartReal - window.pauseDuration) / 1000 + window.playbackStartOffset;
-  const remaining = window.currentTotalDuration - currentElapsed;
+    (performance.now() - state.playbackStartReal - state.pauseDuration) / 1000 + state.playbackStartOffset;
+  const remaining = state.currentTotalDuration - currentElapsed;
   if (remaining > 0) {
     stopTimerId = setTimeout(
       () => {
-        if (window.isPlaying) stopPlayback();
+        if (state.isPlaying) stopPlayback();
       },
       (remaining + 1.0) * 1000,
     );
@@ -309,10 +310,10 @@ export function resumePlayback() {
 export function stopPlayback() {
   if (typeof window.stopSpectrumDraw === 'function') window.stopSpectrumDraw();
   if (typeof window.stopLimiterMeter === 'function') window.stopLimiterMeter();
-  window.isPaused = false;
-  window.pauseDuration = 0;
-  window.pauseStartTime = 0;
-  window.isPlaying = false;
+  state.isPaused = false;
+  state.pauseDuration = 0;
+  state.pauseStartTime = 0;
+  state.isPlaying = false;
   if (typeof window.clearLoopTimer === 'function') window.clearLoopTimer();
   if (stopTimerId) {
     clearTimeout(stopTimerId);
@@ -327,29 +328,29 @@ export function stopPlayback() {
     animationTimer = null;
   }
   // オーディオファイルソースの停止
-  if (window.audioFileSource) {
+  if (state.audioFileSource) {
     try {
-      window.audioFileSource.stop();
+      state.audioFileSource.stop();
     } catch {}
-    window.audioFileSource = null;
+    state.audioFileSource = null;
   }
 
-  for (const osc of window.scheduledNodes) {
+  for (const osc of state.scheduledNodes) {
     try {
       osc.stop();
     } catch {}
   }
-  window.scheduledNodes = [];
+  state.scheduledNodes = [];
   // チャンネルオーディオノードのクリーンアップ
-  for (const ch of Object.keys(window.channelStates)) {
-    window.channelStates[ch].gainNode = null;
-    window.channelStates[ch].analyser = null;
+  for (const ch of Object.keys(state.channelStates)) {
+    state.channelStates[ch].gainNode = null;
+    state.channelStates[ch].analyser = null;
   }
-  if (window.audioCtx) {
-    window.audioCtx.close().catch(() => {});
+  if (state.audioCtx) {
+    state.audioCtx.close().catch(() => {});
     clearPeriodicWaveCache();
     clearSF2BufferCache();
-    window.audioCtx = null;
+    state.audioCtx = null;
   }
   const btnPlay = document.getElementById('btn-play');
   const btnStop = document.getElementById('btn-stop');

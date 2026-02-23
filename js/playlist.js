@@ -4,6 +4,7 @@
 
 import { playNotes } from './audio-engine.js';
 import { playAudioFile } from './audio-file-engine.js';
+import state from './state/audioState.js';
 
 const SUPPORTED_EXTENSIONS = ['.mid', '.midi', '.wav', '.mp3', '.ogg', '.flac', '.aac', '.m4a', '.webm'];
 
@@ -69,10 +70,10 @@ export async function playNextTrack() {
   const next = playlist.currentIndex + 1;
   if (next < playlist.tracks.length) {
     await selectTrack(next);
-    if (window.audioFileMode) {
-      playAudioFile(window._audioFileRawBuffer);
+    if (state.audioFileMode) {
+      playAudioFile(state._audioFileRawBuffer);
     } else {
-      playNotes(window.currentNotes, window.currentBpm);
+      playNotes(state.currentNotes, state.currentBpm);
     }
   }
 }
@@ -81,10 +82,10 @@ export async function playPrevTrack() {
   const prev = playlist.currentIndex - 1;
   if (prev >= 0) {
     await selectTrack(prev);
-    if (window.audioFileMode) {
-      playAudioFile(window._audioFileRawBuffer);
+    if (state.audioFileMode) {
+      playAudioFile(state._audioFileRawBuffer);
     } else {
-      playNotes(window.currentNotes, window.currentBpm);
+      playNotes(state.currentNotes, state.currentBpm);
     }
   }
 }
@@ -112,10 +113,10 @@ function renderPlaylist() {
     }
     li.addEventListener('click', async () => {
       await selectTrack(i);
-      if (window.audioFileMode) {
-        playAudioFile(window._audioFileRawBuffer);
-      } else if (window.currentNotes.length > 0) {
-        playNotes(window.currentNotes, window.currentBpm);
+      if (state.audioFileMode) {
+        playAudioFile(state._audioFileRawBuffer);
+      } else if (state.currentNotes.length > 0) {
+        playNotes(state.currentNotes, state.currentBpm);
       }
     });
     ul.appendChild(li);
