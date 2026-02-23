@@ -23,8 +23,9 @@ function applyFreqShiftToActive() {
     if (node._baseMidi == null) continue;
     try {
       if (node._isSF2) {
-        // SF2: playbackRateでピッチシフトを反映（周波数シフトはBufferSourceでは不可）
-        const semitones = node._baseMidi - node._rootKey + node._sampleTuning + pitchShift;
+        // SF2: playbackRateでピッチシフト+スケール変換を反映
+        const remapped = typeof remapNote === 'function' ? remapNote(node._baseMidi) : node._baseMidi;
+        const semitones = remapped - node._rootKey + node._sampleTuning + pitchShift;
         node.playbackRate.value = 2 ** (semitones / 12);
       } else {
         // オシレーター: frequency.valueで反映
@@ -103,11 +104,11 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const vel = n.velocity / 127;
 
       // SF2モード: サンプルベース再生
-      const sf2Data = window._sf2Data;
-      const sf2PresetMap = window._sf2PresetMap;
       let sourceNode;
 
-      if (sf2Data && sf2PresetMap) {
+      if (window._useSF2 && window._sf2Data && window._sf2PresetMap) {
+        const sf2Data = window._sf2Data;
+        const sf2PresetMap = window._sf2PresetMap;
         const bank = n.channel === 9 ? 128 : 0; // Ch10=ドラム
         const program = channelPrograms[n.channel] || 0;
         const sample = findSF2Sample(sf2Data, sf2PresetMap, bank, program, n.note, n.velocity);
@@ -118,9 +119,10 @@ async function playNotes(notes, bpm, seekOffset = 0) {
             const src = audioCtx.createBufferSource();
             src.buffer = buf;
 
-            // ピッチ計算: ルートキーからの差分 + チューニング + ピッチシフト
+            // スケール変換 + ピッチシフト適用
+            const remapped = typeof remapNote === 'function' ? remapNote(n.note) : n.note;
             const pitchShift = window._pitchShift || 0;
-            const semitones = n.note - sample.rootKey + sample.tuning + pitchShift;
+            const semitones = remapped - sample.rootKey + sample.tuning + pitchShift;
             src.playbackRate.value = 2 ** (semitones / 12);
 
             // ループ設定
