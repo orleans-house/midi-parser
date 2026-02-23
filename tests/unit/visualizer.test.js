@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHANNEL_COLORS, detectChannels, getChannelColor } from '../../js/visualizer.js';
+import { applyChannelGain, CHANNEL_COLORS, detectChannels, getChannelColor } from '../../js/visualizer.js';
 
 describe('getChannelColor()', () => {
   it('チャンネル0で最初の色を返す', () => {
@@ -53,5 +53,48 @@ describe('detectChannels()', () => {
       { channel: 3, note: 72 },
     ];
     expect(detectChannels(notes)).toEqual([3]);
+  });
+});
+
+describe('applyChannelGain()', () => {
+  it('waveGain × playGate を gainNode に設定する', () => {
+    const chState = {
+      gainNode: { gain: { value: 0 } },
+      waveGain: 0.8,
+      playGate: 0.5,
+    };
+    applyChannelGain(chState);
+    expect(chState.gainNode.gain.value).toBeCloseTo(0.4, 5);
+  });
+
+  it('waveGain 未設定時はデフォルト1として計算する', () => {
+    const chState = {
+      gainNode: { gain: { value: 0 } },
+      playGate: 0.5,
+    };
+    applyChannelGain(chState);
+    expect(chState.gainNode.gain.value).toBeCloseTo(0.5, 5);
+  });
+
+  it('playGate 未設定時はデフォルト1として計算する', () => {
+    const chState = {
+      gainNode: { gain: { value: 0 } },
+      waveGain: 0.7,
+    };
+    applyChannelGain(chState);
+    expect(chState.gainNode.gain.value).toBeCloseTo(0.7, 5);
+  });
+
+  it('gainNode がない場合はエラーにならない', () => {
+    const chState = { waveGain: 1, playGate: 1 };
+    expect(() => applyChannelGain(chState)).not.toThrow();
+  });
+
+  it('両方未設定時は1になる', () => {
+    const chState = {
+      gainNode: { gain: { value: 0 } },
+    };
+    applyChannelGain(chState);
+    expect(chState.gainNode.gain.value).toBeCloseTo(1, 5);
   });
 });
