@@ -132,7 +132,11 @@ async function playNotes(notes, bpm, seekOffset = 0) {
     // 期限切れノードを除去
     const now = audioCtx.currentTime;
     scheduledNodes = scheduledNodes.filter((o) => {
-      try { return o.context && o.playbackState !== 3; } catch { return true; }
+      try {
+        return o.context && o.playbackState !== 3;
+      } catch {
+        return true;
+      }
     });
 
     if (chunkIndex < notes.length && isPlaying) {
