@@ -100,7 +100,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
 
       const chFx = getChannelFx(n.channel);
       const waveType = chFx.waveType;
-      osc.type = waveType;
+      applyWaveform(osc, waveType, audioCtx);
       osc.frequency.value = freq;
       osc._baseMidi = n.note; // ピッチ/周波数シフト即時反映用
 
@@ -127,16 +127,6 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       scheduledNodes.push(osc);
       chunkIndex++;
     }
-
-    // 期限切れノードを除去
-    const now = audioCtx.currentTime;
-    scheduledNodes = scheduledNodes.filter((o) => {
-      try {
-        return o.context && o.playbackState !== 3;
-      } catch {
-        return true;
-      }
-    });
 
     if (chunkIndex < notes.length && isPlaying) {
       schedulerTimer = setTimeout(scheduler, CHECK_INTERVAL);
@@ -276,6 +266,7 @@ function stopPlayback() {
   }
   if (audioCtx) {
     audioCtx.close().catch(() => {});
+    if (typeof clearPeriodicWaveCache === 'function') clearPeriodicWaveCache();
     audioCtx = null;
   }
   btnPlay.innerHTML = '<i data-lucide="play"></i>';
