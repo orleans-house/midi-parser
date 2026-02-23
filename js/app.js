@@ -7,7 +7,7 @@ import { pauseAudioFile, playAudioFile, resumeAudioFile } from './audio-file-eng
 import { applyLimiterParams, createReverbIR, updateDistortionCurve } from './audio-master.js';
 import { resetDJControls } from './dj-controls.js';
 import { FREQ_MAX, FREQ_MIN, getChannelFx, getThemeColor } from './globals.js';
-import { detectKeyScale, extractChannelPrograms, extractNotes, MidiParser } from './midi-parser.js';
+import { detectKeyScale, extractChannelPrograms, extractNotes, getInstrumentName, MidiParser } from './midi-parser.js';
 import { drawPianoRoll, invalidatePianoRollCache } from './piano-roll.js';
 import { addFilesToPlaylist, clearPlaylist } from './playlist.js';
 import { buildSF2PresetMap, SF2Parser } from './sf2-parser.js';
@@ -203,6 +203,7 @@ sf2Input.addEventListener('change', () => {
         btn.classList.remove('active');
       }
       document.getElementById('custom-waveform-select').value = '';
+      document.getElementById('btn-sf2-info').style.display = '';
       console.log(`SF2 loaded: ${sf2DisplayName}`, `Presets: ${Object.keys(state._sf2PresetMap).length}`);
     } catch (err) {
       console.error('SF2 load error:', err);
@@ -211,6 +212,54 @@ sf2Input.addEventListener('change', () => {
   };
   reader.readAsArrayBuffer(file);
   sf2Input.value = '';
+});
+
+// --- SF2 Info Modal ---
+const sf2InfoModal = document.getElementById('sf2-info-modal');
+const btnSF2Info = document.getElementById('btn-sf2-info');
+
+function showSF2Info() {
+  if (!state._sf || !state._sf2PresetMap) return;
+
+  // タイトル
+  const name = state._sf.info.INAM || 'Unknown';
+  document.getElementById('sf2-info-title').textContent = `SF2: ${name}`;
+
+  // チャンネル割り当て
+  const assignDiv = document.getElementById('sf2-channel-assignments');
+  const channels = Object.keys(state.channelPrograms);
+  if (channels.length > 0) {
+    let html = '<table class="sf2-info-table"><tr><th>Ch</th><th>Program</th><th>楽器名</th></tr>';
+    for (const ch of channels.sort((a, b) => Number(a) - Number(b))) {
+      const prog = state.channelPrograms[ch];
+      html += `<tr><td>${Number(ch) + 1}</td><td>${prog}</td><td>${getInstrumentName(prog)}</td></tr>`;
+    }
+    html += '</table>';
+    assignDiv.innerHTML = html;
+  } else {
+    assignDiv.innerHTML = '<p style="color:var(--text-secondary);font-size:0.8rem;">MIDIファイル未読み込み</p>';
+  }
+
+  // プリセット一覧
+  const presetDiv = document.getElementById('sf2-preset-list');
+  const presets = Object.values(state._sf2PresetMap);
+  presets.sort((a, b) => a.bank - b.bank || a.preset - b.preset);
+  let html = '<table class="sf2-info-table"><tr><th>Bank</th><th>Program</th><th>プリセット名</th></tr>';
+  for (const p of presets) {
+    html += `<tr><td>${p.bank}</td><td>${p.preset}</td><td>${p.name}</td></tr>`;
+  }
+  html += '</table>';
+  presetDiv.innerHTML = html;
+
+  sf2InfoModal.style.display = '';
+}
+
+btnSF2Info.addEventListener('click', showSF2Info);
+document.getElementById('btn-sf2-info-close').addEventListener('click', () => {
+  sf2InfoModal.style.display = 'none';
+});
+sf2InfoModal.addEventListener('click', (e) => {
+  if (e.target === sf2InfoModal) sf2InfoModal.style.display = 'none';
 });
 
 folderInput.addEventListener('change', () => {

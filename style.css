@@ -445,6 +445,100 @@ input[type="range"].slider-h:disabled {
   color: var(--accent-green, #66bb6a);
 }
 
+.sf2-info-btn {
+  background: none;
+  border: 1px solid var(--border, #444);
+  color: var(--text-secondary, #aaa);
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.sf2-info-btn:hover {
+  color: var(--text, #eee);
+  border-color: var(--text-secondary, #aaa);
+}
+
+/* SF2 Info Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: var(--bg-panel, #1e1e1e);
+  border: 1px solid var(--border, #444);
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #444);
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text, #eee);
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #aaa);
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.modal-close:hover {
+  color: var(--text, #eee);
+}
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+}
+.sf2-info-section {
+  margin-bottom: 16px;
+}
+.sf2-info-section:last-child {
+  margin-bottom: 0;
+}
+.sf2-info-section h4 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--accent-green, #66bb6a);
+}
+.sf2-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.sf2-info-table th,
+.sf2-info-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border, #333);
+  text-align: left;
+}
+.sf2-info-table th {
+  color: var(--text-secondary, #aaa);
+  font-weight: normal;
+}
+.sf2-info-table td {
+  color: var(--text, #eee);
+}
+
 .fx-reset-btn {
   font-size: 0.8rem;
   padding: 2px 6px;
