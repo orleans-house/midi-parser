@@ -445,6 +445,46 @@ function remapNote(midiNote) {
   return Math.max(0, Math.min(127, remapped));
 }
 
+// キー＋スケール自動検出: ノート分布とスケールパターンの相関で推定
+function detectKeyScale(notes) {
+  // ピッチクラスのヒストグラム（ノート長で重み付け）
+  const hist = new Array(12).fill(0);
+  for (const n of notes) {
+    hist[n.note % 12] += n.duration;
+  }
+
+  let bestScore = -Infinity;
+  let bestKey = 0;
+  let bestScale = 'major';
+
+  for (const [scaleName, intervals] of Object.entries(SCALES)) {
+    // chromatic はスキップ（全音含むので意味がない）
+    if (scaleName === 'chromatic') continue;
+    for (let key = 0; key < 12; key++) {
+      let score = 0;
+      let outScore = 0;
+      for (let pc = 0; pc < 12; pc++) {
+        const rel = (pc - key + 12) % 12;
+        if (intervals.includes(rel)) {
+          score += hist[pc];
+        } else {
+          outScore += hist[pc];
+        }
+      }
+      // スケール内ノートの比率を評価（ノート数の少ないスケールにペナルティ）
+      const coverage = score / (score + outScore + 0.001);
+      const normalizedScore = coverage * (intervals.length / 12);
+      if (score - outScore * 0.5 > bestScore) {
+        bestScore = score - outScore * 0.5;
+        bestKey = key;
+        bestScale = scaleName;
+      }
+    }
+  }
+
+  return { key: bestKey, scale: bestScale };
+}
+
 function midiToFreq(midiNote) {
   const remapped = remapNote(midiNote);
   const shifted = remapped + (window._pitchShift || 0);

@@ -248,6 +248,19 @@ function processMidi(buffer, fileName) {
   document.getElementById('info-tempo').textContent = `${bpm} BPM`;
   document.getElementById('info-notes').textContent = notes.length;
 
+  // キー＋スケール自動検出
+  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  if (notes.length > 0) {
+    const detected = detectKeyScale(notes);
+    document.getElementById('info-key').textContent = `${noteNames[detected.key]} ${detected.scale}`;
+    // スケール変換のKeyとFromに自動セット
+    document.getElementById('scale-key').value = detected.key;
+    document.getElementById('scale-from').value = detected.scale;
+    updateScaleConvert();
+  } else {
+    document.getElementById('info-key').textContent = '-';
+  }
+
   // テンポ表示（不要 — ファイル情報に表示済み）
 
   // チャンネルUI構築
