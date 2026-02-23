@@ -142,10 +142,14 @@ sf2Input.addEventListener('change', () => {
       const sf2Data = parser.parse();
       window._sf2Data = sf2Data;
       window._sf2PresetMap = buildSF2PresetMap(sf2Data);
-      btnLoadSF2.title = `SF2: ${sf2Data.info.INAM || file.name}`;
+      const sf2DisplayName = sf2Data.info.INAM || file.name.replace('.sf2', '');
+      btnLoadSF2.title = `SF2: ${sf2DisplayName}`;
       btnLoadSF2.classList.add('active');
+      const sf2NameEl = document.getElementById('sf2-name');
+      sf2NameEl.textContent = sf2DisplayName;
+      sf2NameEl.classList.add('loaded');
       console.log(
-        `SF2 loaded: ${sf2Data.info.INAM || file.name}`,
+        `SF2 loaded: ${sf2DisplayName}`,
         `Presets: ${Object.keys(window._sf2PresetMap).length}`,
       );
     } catch (err) {

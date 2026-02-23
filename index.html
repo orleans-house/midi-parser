@@ -18,9 +18,12 @@
       <div class="panel-section">
         <button type="button" id="btn-open"><i data-lucide="folder-open"></i> ファイルを開く</button>
         <button type="button" id="btn-open-folder"><i data-lucide="folder"></i> フォルダを開く</button>
-        <button type="button" id="btn-load-sf2" title="SoundFont読み込み"><i data-lucide="piano"></i> SF2音源</button>
         <input type="file" id="file-input" accept=".mid,.midi,.wav,.mp3,.ogg,.flac,.aac,.m4a,.webm" multiple>
         <input type="file" id="sf2-input" accept=".sf2" style="display:none;">
+        <div class="sf2-status">
+          <button type="button" id="btn-load-sf2" class="sf2-btn" title="SoundFont読み込み"><i data-lucide="piano"></i> SF2音源</button>
+          <span id="sf2-name" class="sf2-name">未読み込み</span>
+        </div>
         <input type="file" id="folder-input" webkitdirectory>
       </div>
 
