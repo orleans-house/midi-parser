@@ -1,7 +1,7 @@
 // SF2 (SoundFont 2) パーサー
 // RIFF形式のSF2ファイルを解析し、プリセット・サンプル情報を抽出する
 
-class SF2Parser {
+export class SF2Parser {
   constructor(buffer) {
     this.data = new DataView(buffer);
     this.offset = 0;
@@ -203,7 +203,7 @@ class SF2Parser {
       //       + sampleLink(2) + sampleType(2) = 46 bytes
       const name = this.readString(20);
       const start = this.readUint32();
-      const end = this.readUint32();
+      const sampleEnd = this.readUint32();
       const loopStart = this.readUint32();
       const loopEnd = this.readUint32();
       const sampleRate = this.readUint32();
@@ -215,7 +215,7 @@ class SF2Parser {
       headers.push({
         name,
         start,
-        end,
+        end: sampleEnd,
         loopStart,
         loopEnd,
         sampleRate,
@@ -231,7 +231,7 @@ class SF2Parser {
 
 // SF2データからプリセットマップを構築
 // preset[bank][program] → zones[] → { keyRange, velRange, sampleId, generators }
-function buildSF2PresetMap(sf2) {
+export function buildSF2PresetMap(sf2) {
   const { pdta } = sf2;
   const presetMap = {};
 
@@ -243,9 +243,16 @@ function buildSF2PresetMap(sf2) {
     const zones = [];
     for (let b = ph.bagIndex; b < nextPh.bagIndex; b++) {
       const bag = pdta.presetBags[b];
-      const nextBag = pdta.presetBags[b + 1] || { genIndex: pdta.presetGenerators.length };
+      const nextBag = pdta.presetBags[b + 1] || {
+        genIndex: pdta.presetGenerators.length,
+      };
 
-      const zone = { keyRange: [0, 127], velRange: [0, 127], instrumentId: -1, generators: {} };
+      const zone = {
+        keyRange: [0, 127],
+        velRange: [0, 127],
+        instrumentId: -1,
+        generators: {},
+      };
 
       for (let g = bag.genIndex; g < nextBag.genIndex; g++) {
         const gen = pdta.presetGenerators[g];
@@ -265,14 +272,19 @@ function buildSF2PresetMap(sf2) {
       zones.push(zone);
     }
 
-    presetMap[key] = { name: ph.name, bank: ph.bank, preset: ph.preset, zones };
+    presetMap[key] = {
+      name: ph.name,
+      bank: ph.bank,
+      preset: ph.preset,
+      zones,
+    };
   }
 
   return presetMap;
 }
 
 // インストゥルメントのゾーンを解析してサンプルマッピングを取得
-function getInstrumentZones(sf2, instrumentId) {
+export function getInstrumentZones(sf2, instrumentId) {
   const { pdta } = sf2;
   if (instrumentId < 0 || instrumentId >= pdta.instruments.length - 1) return [];
 
@@ -282,7 +294,9 @@ function getInstrumentZones(sf2, instrumentId) {
 
   for (let b = inst.bagIndex; b < nextInst.bagIndex; b++) {
     const bag = pdta.instrumentBags[b];
-    const nextBag = pdta.instrumentBags[b + 1] || { genIndex: pdta.instrumentGenerators.length };
+    const nextBag = pdta.instrumentBags[b + 1] || {
+      genIndex: pdta.instrumentGenerators.length,
+    };
 
     const zone = {
       keyRange: [0, 127],
@@ -325,7 +339,7 @@ function getInstrumentZones(sf2, instrumentId) {
 }
 
 // MIDIノート＋プログラムに対応するサンプルを検索
-function findSF2Sample(sf2, presetMap, bank, program, midiNote, velocity) {
+export function findSF2Sample(sf2, presetMap, bank, program, midiNote, velocity) {
   const key = `${bank}-${program}`;
   const preset = presetMap[key] || presetMap['0-0']; // フォールバック: Piano
   if (!preset) return null;
@@ -363,7 +377,7 @@ function findSF2Sample(sf2, presetMap, bank, program, midiNote, velocity) {
 // サンプルデータからAudioBufferを生成（キャッシュ付き）
 const sf2BufferCache = {};
 
-function getSF2AudioBuffer(audioCtx, sf2, shdr) {
+export function getSF2AudioBuffer(audioCtx, sf2, shdr) {
   const cacheKey = `${shdr.name}-${shdr.start}-${shdr.end}`;
   if (sf2BufferCache[cacheKey]) return sf2BufferCache[cacheKey];
 
@@ -378,7 +392,7 @@ function getSF2AudioBuffer(audioCtx, sf2, shdr) {
   return buffer;
 }
 
-function clearSF2BufferCache() {
+export function clearSF2BufferCache() {
   for (const key of Object.keys(sf2BufferCache)) {
     delete sf2BufferCache[key];
   }

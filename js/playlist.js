@@ -2,6 +2,9 @@
 // Playlist — 複数ファイル管理
 // ============================================================
 
+import { playNotes } from './audio-engine.js';
+import { playAudioFile } from './audio-file-engine.js';
+
 const SUPPORTED_EXTENSIONS = ['.mid', '.midi', '.wav', '.mp3', '.ogg', '.flac', '.aac', '.m4a', '.webm'];
 
 const playlist = {
@@ -15,7 +18,7 @@ function isSupportedFile(fileName) {
   return SUPPORTED_EXTENSIONS.includes(ext);
 }
 
-function addFilesToPlaylist(fileList) {
+export function addFilesToPlaylist(fileList) {
   const files = Array.from(fileList).filter((f) => isSupportedFile(f.name));
   if (files.length === 0) return;
 
@@ -34,13 +37,13 @@ function addFilesToPlaylist(fileList) {
   }
 }
 
-function clearPlaylist() {
+export function clearPlaylist() {
   playlist.tracks = [];
   playlist.currentIndex = -1;
   renderPlaylist();
 }
 
-function selectTrack(index) {
+export function selectTrack(index) {
   if (index < 0 || index >= playlist.tracks.length) return Promise.resolve();
   playlist.currentIndex = index;
   renderPlaylist();
@@ -50,10 +53,10 @@ function selectTrack(index) {
     const reader = new FileReader();
     reader.onload = (e) => {
       track.buffer = e.target.result;
-      if (isAudioFile(track.name)) {
-        processAudioFile(e.target.result, track.name);
+      if (window.isAudioFile(track.name)) {
+        window.processAudioFile(e.target.result, track.name);
       } else {
-        processMidi(e.target.result, track.name);
+        window.processMidi(e.target.result, track.name);
       }
       resolve();
     };
@@ -61,27 +64,27 @@ function selectTrack(index) {
   });
 }
 
-async function playNextTrack() {
+export async function playNextTrack() {
   if (!playlist.autoAdvance) return;
   const next = playlist.currentIndex + 1;
   if (next < playlist.tracks.length) {
     await selectTrack(next);
-    if (audioFileMode) {
+    if (window.audioFileMode) {
       playAudioFile(window._audioFileRawBuffer);
     } else {
-      playNotes(currentNotes, currentBpm);
+      playNotes(window.currentNotes, window.currentBpm);
     }
   }
 }
 
-async function playPrevTrack() {
+export async function playPrevTrack() {
   const prev = playlist.currentIndex - 1;
   if (prev >= 0) {
     await selectTrack(prev);
-    if (audioFileMode) {
+    if (window.audioFileMode) {
       playAudioFile(window._audioFileRawBuffer);
     } else {
-      playNotes(currentNotes, currentBpm);
+      playNotes(window.currentNotes, window.currentBpm);
     }
   }
 }
@@ -109,10 +112,10 @@ function renderPlaylist() {
     }
     li.addEventListener('click', async () => {
       await selectTrack(i);
-      if (audioFileMode) {
+      if (window.audioFileMode) {
         playAudioFile(window._audioFileRawBuffer);
-      } else if (currentNotes.length > 0) {
-        playNotes(currentNotes, currentBpm);
+      } else if (window.currentNotes.length > 0) {
+        playNotes(window.currentNotes, window.currentBpm);
       }
     });
     ul.appendChild(li);

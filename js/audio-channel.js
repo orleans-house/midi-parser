@@ -2,8 +2,11 @@
 // Channel層: チャンネル別Gain, チャンネル別FXチェーン構築
 // ============================================================
 
-function buildChannelChain(audioCtx, ch, masterGain) {
-  const state = channelStates[ch];
+import { createReverbIR, updateDistortionCurve } from './audio-master.js';
+import { getChannelFx } from './globals.js';
+
+export function buildChannelChain(audioCtx, ch, masterGain) {
+  const state = window.channelStates[ch];
   const chFx = getChannelFx(ch);
 
   const gainNode = audioCtx.createGain();

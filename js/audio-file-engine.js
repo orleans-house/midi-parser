@@ -6,29 +6,32 @@
 //   AudioBufferSourceNode → MasterGain → HPF → LPF → EQ → Output層
 // ============================================================
 
-let audioFileSource = null;
-let audioFileBuffer = null;
-let audioFileMode = false;
+import { stopPlayback } from './audio-engine.js';
+import { buildMasterChain } from './audio-master.js';
+import { buildOutputChain, drawWaveforms } from './audio-output.js';
+
 let audioFilePausedAt = 0;
 let audioFileStartedAt = 0;
 
-async function playAudioFile(buffer, seekOffset = 0) {
+export async function playAudioFile(buffer, seekOffset = 0) {
   stopPlayback();
-  audioFileMode = true;
+  window.audioFileMode = true;
 
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') {
-    await audioCtx.resume();
+  window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (window.audioCtx.state === 'suspended') {
+    await window.audioCtx.resume();
   }
-  isPlaying = true;
+  window.isPlaying = true;
+
+  const audioCtx = window.audioCtx;
 
   // デコード
-  if (!audioFileBuffer) {
-    audioFileBuffer = await audioCtx.decodeAudioData(buffer.slice(0));
+  if (!window.audioFileBuffer) {
+    window.audioFileBuffer = await audioCtx.decodeAudioData(buffer.slice(0));
   }
 
-  const totalDuration = audioFileBuffer.duration;
-  currentTotalDuration = totalDuration;
+  const totalDuration = window.audioFileBuffer.duration;
+  window.currentTotalDuration = totalDuration;
 
   // === Master層 ===
   const { masterGain, eqOut } = buildMasterChain(audioCtx);
@@ -37,22 +40,22 @@ async function playAudioFile(buffer, seekOffset = 0) {
   buildOutputChain(audioCtx, eqOut);
 
   // === Source: AudioBufferSourceNode ===
-  audioFileSource = audioCtx.createBufferSource();
-  audioFileSource.buffer = audioFileBuffer;
-  audioFileSource.connect(masterGain);
-  audioFileSource.start(0, seekOffset);
+  window.audioFileSource = audioCtx.createBufferSource();
+  window.audioFileSource.buffer = window.audioFileBuffer;
+  window.audioFileSource.connect(masterGain);
+  window.audioFileSource.start(0, seekOffset);
   audioFileStartedAt = audioCtx.currentTime - seekOffset;
   audioFilePausedAt = 0;
 
   // 再生終了時
-  audioFileSource.onended = () => {
-    if (isPlaying && !isPaused) {
-      if (repeatEnabled) {
-        audioFileSource = null;
+  window.audioFileSource.onended = () => {
+    if (window.isPlaying && !window.isPaused) {
+      if (window.repeatEnabled) {
+        window.audioFileSource = null;
         playAudioFile(buffer, 0);
       } else {
         stopPlayback();
-        if (typeof playNextTrack === 'function') playNextTrack();
+        if (typeof window.playNextTrack === 'function') window.playNextTrack();
       }
     }
   };
@@ -61,57 +64,62 @@ async function playAudioFile(buffer, seekOffset = 0) {
   drawWaveforms();
 
   // UI更新
+  const btnPlay = document.getElementById('btn-play');
+  const btnStop = document.getElementById('btn-stop');
   btnPlay.innerHTML = '<i data-lucide="pause"></i>';
   btnPlay.title = '一時停止';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
   btnPlay.disabled = false;
-  if (typeof startSpectrumDraw === 'function') startSpectrumDraw();
-  if (typeof startLimiterMeter === 'function') startLimiterMeter();
+  if (typeof window.startSpectrumDraw === 'function') window.startSpectrumDraw();
+  if (typeof window.startLimiterMeter === 'function') window.startLimiterMeter();
   btnStop.disabled = false;
 
   // 位置表示
   const posDisplay = document.getElementById('position-display');
-  playbackStartReal = performance.now();
-  playbackStartOffset = seekOffset;
-  pauseDuration = 0;
+  window.playbackStartReal = performance.now();
+  window.playbackStartOffset = seekOffset;
+  window.pauseDuration = 0;
 
-  animationTimer = setInterval(() => {
-    const elapsed = (performance.now() - playbackStartReal - pauseDuration) / 1000 + seekOffset;
+  window._audioFileAnimTimer = setInterval(() => {
+    const elapsed = (performance.now() - window.playbackStartReal - window.pauseDuration) / 1000 + seekOffset;
     posDisplay.textContent = `${elapsed.toFixed(1)}s / ${totalDuration.toFixed(1)}s`;
-    updatePlayhead(elapsed);
+    if (typeof window.updatePlayhead === 'function') window.updatePlayhead(elapsed);
   }, 100);
 }
 
-function pauseAudioFile() {
-  if (!isPlaying || !audioCtx || isPaused || !audioFileMode) return;
-  isPaused = true;
-  audioFilePausedAt = audioCtx.currentTime - audioFileStartedAt;
-  audioCtx.suspend();
-  pauseStartTime = performance.now();
+export function pauseAudioFile() {
+  if (!window.isPlaying || !window.audioCtx || window.isPaused || !window.audioFileMode) return;
+  window.isPaused = true;
+  audioFilePausedAt = window.audioCtx.currentTime - audioFileStartedAt;
+  window.audioCtx.suspend();
+  window.pauseStartTime = performance.now();
 
-  if (animationTimer) {
-    clearInterval(animationTimer);
-    animationTimer = null;
+  if (window._audioFileAnimTimer) {
+    clearInterval(window._audioFileAnimTimer);
+    window._audioFileAnimTimer = null;
   }
 
+  const btnPlay = document.getElementById('btn-play');
   btnPlay.innerHTML = '<i data-lucide="play"></i>';
   btnPlay.title = '再生';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });
 }
 
-function resumeAudioFile() {
-  if (!isPlaying || !audioCtx || !isPaused || !audioFileMode) return;
-  isPaused = false;
-  pauseDuration += performance.now() - pauseStartTime;
-  audioCtx.resume();
+export function resumeAudioFile() {
+  if (!window.isPlaying || !window.audioCtx || !window.isPaused || !window.audioFileMode) return;
+  window.isPaused = false;
+  window.pauseDuration += performance.now() - window.pauseStartTime;
+  window.audioCtx.resume();
 
   const posDisplay = document.getElementById('position-display');
-  animationTimer = setInterval(() => {
-    const elapsed = (performance.now() - playbackStartReal - pauseDuration) / 1000 + playbackStartOffset;
-    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${currentTotalDuration.toFixed(1)}s`;
-    updatePlayhead(elapsed);
+  window._audioFileAnimTimer = setInterval(() => {
+    const elapsed =
+      (performance.now() - window.playbackStartReal - window.pauseDuration) / 1000 + window.playbackStartOffset;
+    posDisplay.textContent = `${elapsed.toFixed(1)}s / ${window.currentTotalDuration.toFixed(1)}s`;
+    if (typeof window.updatePlayhead === 'function') window.updatePlayhead(elapsed);
   }, 100);
 
+  const btnPlay = document.getElementById('btn-play');
   btnPlay.innerHTML = '<i data-lucide="pause"></i>';
   btnPlay.title = '一時停止';
   lucide.createIcons({ nameAttr: 'data-lucide', node: btnPlay });

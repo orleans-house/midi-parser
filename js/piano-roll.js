@@ -2,6 +2,11 @@
 // ピアノロール描画（オフスクリーンキャッシュ方式）
 // ============================================================
 
+import { playNotesFrom, stopPlayback } from './audio-engine.js';
+import { playAudioFile } from './audio-file-engine.js';
+import { getThemeColor } from './globals.js';
+import { CHANNEL_COLORS } from './visualizer.js';
+
 const PIANO_PADDING_LEFT = 0;
 
 // オフスクリーンCanvasにノート+ラベルをキャッシュ
@@ -15,7 +20,7 @@ function buildPianoRollCache() {
   const W = canvas.clientWidth;
   const H = canvas.clientHeight;
 
-  if (!W || !H || !currentNotes.length) {
+  if (!W || !H || !window.currentNotes.length) {
     pianoRollCache = null;
     return;
   }
@@ -27,12 +32,12 @@ function buildPianoRollCache() {
   const ctx = offscreen.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const dur = currentTotalDuration || Math.max(...currentNotes.map((n) => n.startTime + n.duration));
+  const dur = window.currentTotalDuration || Math.max(...window.currentNotes.map((n) => n.startTime + n.duration));
 
   // 音域検出（パディング付き）
   let minNote = 127;
   let maxNote = 0;
-  for (const n of currentNotes) {
+  for (const n of window.currentNotes) {
     if (n.note < minNote) minNote = n.note;
     if (n.note > maxNote) maxNote = n.note;
   }
@@ -41,10 +46,10 @@ function buildPianoRollCache() {
   const noteRange = maxNote - minNote + 1;
 
   // ノート描画
-  for (const n of currentNotes) {
-    const isMuted = channelStates[n.channel]?.muted;
-    const anySolo = Object.values(channelStates).some((s) => s.soloed);
-    const isSoloed = channelStates[n.channel]?.soloed;
+  for (const n of window.currentNotes) {
+    const isMuted = window.channelStates[n.channel]?.muted;
+    const anySolo = Object.values(window.channelStates).some((s) => s.soloed);
+    const isSoloed = window.channelStates[n.channel]?.soloed;
     const hidden = anySolo ? !isSoloed : isMuted;
 
     const x = (n.startTime / dur) * W;
@@ -75,11 +80,11 @@ function buildPianoRollCache() {
 }
 
 // キャッシュを無効化（mute/solo変更時、ファイル再読み込み時に呼ぶ）
-function invalidatePianoRollCache() {
+export function invalidatePianoRollCache() {
   pianoRollCache = null;
 }
 
-function drawPianoRoll() {
+export function drawPianoRoll() {
   const canvas = document.getElementById('piano-roll-canvas');
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.clientWidth;
@@ -90,7 +95,7 @@ function drawPianoRoll() {
   ctx.scale(dpr, dpr);
 
   ctx.clearRect(0, 0, W, H);
-  if (!currentNotes.length) return;
+  if (!window.currentNotes.length) return;
 
   // キャッシュがなければ構築
   if (!pianoRollCache || pianoRollCacheW !== W || pianoRollCacheH !== H) {
@@ -103,14 +108,14 @@ function drawPianoRoll() {
   }
 
   // DJ markers (hot cues, A-B loop) — 動的要素なのでキャッシュ外
-  if (typeof drawDJMarkers === 'function') {
-    drawDJMarkers(ctx, W, H, PIANO_PADDING_LEFT);
+  if (typeof window.drawDJMarkers === 'function') {
+    window.drawDJMarkers(ctx, W, H, PIANO_PADDING_LEFT);
   }
 }
 
 // ピアノロールクリックでシーク
 document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
-  if (!currentNotes.length && !audioFileMode) return;
+  if (!window.currentNotes.length && !window.audioFileMode) return;
   const canvas = e.target;
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
@@ -118,12 +123,12 @@ document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
   const plotW = canvas.clientWidth - PADDING_LEFT;
   const ratio = (x - PADDING_LEFT) / plotW;
   if (ratio < 0 || ratio > 1) return;
-  const seekTime = ratio * (currentTotalDuration || 1);
+  const seekTime = ratio * (window.currentTotalDuration || 1);
   stopPlayback();
-  if (audioFileMode) {
+  if (window.audioFileMode) {
     playAudioFile(window._audioFileRawBuffer, seekTime);
   } else {
-    playNotesFrom(currentNotes, currentBpm, seekTime);
+    playNotesFrom(window.currentNotes, window.currentBpm, seekTime);
   }
 });
 
@@ -131,7 +136,7 @@ document.getElementById('piano-roll-canvas').addEventListener('click', (e) => {
 // 再生ヘッド統合更新
 // ============================================================
 
-function updatePlayhead(elapsed) {
+export function updatePlayhead(elapsed) {
   const prCanvas = document.getElementById('piano-roll-canvas');
   if (prCanvas.clientWidth <= 0) return;
 
@@ -143,7 +148,7 @@ function updatePlayhead(elapsed) {
   const H = prCanvas.clientHeight;
   const PADDING_LEFT = PIANO_PADDING_LEFT;
   const plotW = W - PADDING_LEFT;
-  const dur = currentTotalDuration || 1;
+  const dur = window.currentTotalDuration || 1;
   const x = PADDING_LEFT + (elapsed / dur) * plotW;
 
   // Playhead

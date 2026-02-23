@@ -1,7 +1,7 @@
 // カスタム波形定義: PeriodicWave用の倍音構成
 // real = cosine成分, imag = sine成分（0番目はDCオフセットで常に0）
 
-const CUSTOM_WAVEFORMS = {
+export const CUSTOM_WAVEFORMS = {
   // --- オルガン系 ---
   organ: {
     label: 'Organ',
@@ -77,7 +77,7 @@ const CUSTOM_WAVEFORMS = {
 // PeriodicWaveオブジェクトを生成してキャッシュ
 const periodicWaveCache = {};
 
-function getPeriodicWave(audioCtx, name) {
+export function getPeriodicWave(audioCtx, name) {
   if (!periodicWaveCache[name]) {
     const def = CUSTOM_WAVEFORMS[name];
     if (!def) return null;
@@ -89,19 +89,19 @@ function getPeriodicWave(audioCtx, name) {
 }
 
 // AudioContext変更時にキャッシュをクリア
-function clearPeriodicWaveCache() {
+export function clearPeriodicWaveCache() {
   for (const key of Object.keys(periodicWaveCache)) {
     delete periodicWaveCache[key];
   }
 }
 
 // 標準波形かカスタム波形かを判定
-function isCustomWaveform(name) {
+export function isCustomWaveform(name) {
   return name in CUSTOM_WAVEFORMS;
 }
 
 // オシレーターに波形を適用
-function applyWaveform(osc, waveName, audioCtx) {
+export function applyWaveform(osc, waveName, audioCtx) {
   if (isCustomWaveform(waveName)) {
     const pw = getPeriodicWave(audioCtx, waveName);
     if (pw) osc.setPeriodicWave(pw);
