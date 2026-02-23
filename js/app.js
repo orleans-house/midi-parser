@@ -301,7 +301,7 @@ document.querySelectorAll('.eq-band').forEach((band, i) => {
   slider.addEventListener('input', () => {
     const val = Number(slider.value);
     valDisplay.textContent = val > 0 ? `+${val}` : `${val}`;
-    if (window._eqFilters && window._eqFilters[i]) {
+    if (window._eqFilters?.[i]) {
       window._eqFilters[i].gain.value = val;
     }
   });
@@ -481,7 +481,7 @@ function startSpectrumDraw() {
     // 周波数シフト時: 基準線（元の位置）とシフト後の位置を表示
     const freqShift = window._freqShift || 0;
     {
-      const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
       specCtx.font = '9px monospace';
       // C1(24)〜C9(120) の範囲で描画
       for (let midi = 24; midi <= 120; midi += 12) {
