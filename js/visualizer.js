@@ -2,10 +2,11 @@
 // チャンネル管理
 // ============================================================
 
-import { getChannelFx, getThemeColor } from './globals.js';
+import { getChannelFx, getThemeColor, resolveVoice } from './globals.js';
 import { getInstrumentName } from './midi-parser.js';
 import { invalidatePianoRollCache } from './piano-roll.js';
 import state from './state/audioState.js';
+import { CUSTOM_WAVEFORMS } from './waveforms.js';
 
 const CHANNEL_COLORS = [
   '#b39ddb', // パステル紫
@@ -120,7 +121,18 @@ export function buildChannelUI(channels) {
     canvas.style.borderRadius = '4px';
     canvas.style.display = 'block';
 
-    card.append(header, canvas);
+    // 音色表示ラベル
+    const voiceLabel = document.createElement('div');
+    voiceLabel.className = 'channel-voice-label';
+    voiceLabel.id = `voice-label-${ch}`;
+    voiceLabel.textContent = '';
+    voiceLabel.title = 'クリックで音色を変更';
+    voiceLabel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showVoiceMenu(ch, voiceLabel);
+    });
+
+    card.append(header, voiceLabel, canvas);
     container.appendChild(card);
 
     // NO SIGNAL表示
@@ -331,4 +343,146 @@ export function applyChannelGain(chState) {
   const waveGain = chState.waveGain ?? 1;
   const playGate = chState.playGate ?? 1;
   chState.gainNode.gain.value = waveGain * playGate;
+}
+
+// --- 音色選択メニュー ---
+const BASIC_WAVES = ['sine', 'square', 'sawtooth', 'triangle'];
+
+function getVoiceDisplayName(ch) {
+  const voice = resolveVoice(ch);
+  if (voice.type === 'sf2') {
+    const key = `${voice.bank}-${voice.preset}`;
+    const preset = state._sf2PresetMap?.[key];
+    return preset ? `🎹 ${preset.name}` : `SF2 B${voice.bank}:P${voice.preset}`;
+  }
+  if (voice.type === 'custom' || voice.type === 'waveform') {
+    const custom = CUSTOM_WAVEFORMS[voice.waveType];
+    if (custom) return `🎵 ${custom.label}`;
+    return `〜 ${voice.waveType}`;
+  }
+  return '';
+}
+
+export function updateVoiceLabels() {
+  for (let ch = 0; ch < 16; ch++) {
+    const el = document.getElementById(`voice-label-${ch}`);
+    if (el) el.textContent = getVoiceDisplayName(ch);
+  }
+}
+
+let activeVoiceMenu = null;
+
+function closeVoiceMenu() {
+  if (activeVoiceMenu) {
+    activeVoiceMenu.remove();
+    activeVoiceMenu = null;
+  }
+}
+
+function showVoiceMenu(ch, anchor) {
+  closeVoiceMenu();
+
+  const menu = document.createElement('div');
+  menu.className = 'voice-menu';
+
+  // ヘッダー
+  const header = document.createElement('div');
+  header.className = 'voice-menu-header';
+  header.textContent = `Ch.${ch + 1} 音色選択`;
+  menu.appendChild(header);
+
+  // デフォルトに戻す
+  const resetItem = document.createElement('div');
+  resetItem.className = 'voice-menu-item voice-menu-reset';
+  resetItem.textContent = '↩ デフォルトに戻す';
+  resetItem.addEventListener('click', () => {
+    const chFx = getChannelFx(ch);
+    chFx.voiceSource = { type: 'global' };
+    updateVoiceLabels();
+    closeVoiceMenu();
+  });
+  menu.appendChild(resetItem);
+
+  // 基本波形セクション
+  const waveSection = document.createElement('div');
+  waveSection.className = 'voice-menu-section';
+  waveSection.textContent = '基本波形';
+  menu.appendChild(waveSection);
+
+  for (const w of BASIC_WAVES) {
+    const item = document.createElement('div');
+    item.className = 'voice-menu-item';
+    item.textContent = `〜 ${w}`;
+    item.addEventListener('click', () => {
+      const chFx = getChannelFx(ch);
+      chFx.voiceSource = { type: 'waveform', waveType: w };
+      updateVoiceLabels();
+      closeVoiceMenu();
+    });
+    menu.appendChild(item);
+  }
+
+  // カスタム波形セクション
+  const customKeys = Object.keys(CUSTOM_WAVEFORMS);
+  if (customKeys.length > 0) {
+    const customSection = document.createElement('div');
+    customSection.className = 'voice-menu-section';
+    customSection.textContent = 'カスタム波形';
+    menu.appendChild(customSection);
+
+    for (const key of customKeys) {
+      const cw = CUSTOM_WAVEFORMS[key];
+      const item = document.createElement('div');
+      item.className = 'voice-menu-item';
+      item.textContent = `🎵 ${cw.label}`;
+      item.addEventListener('click', () => {
+        const chFx = getChannelFx(ch);
+        chFx.voiceSource = { type: 'custom', waveType: key };
+        updateVoiceLabels();
+        closeVoiceMenu();
+      });
+      menu.appendChild(item);
+    }
+  }
+
+  // SF2プリセットセクション
+  if (state._useSF && state._sf2PresetMap) {
+    const sf2Section = document.createElement('div');
+    sf2Section.className = 'voice-menu-section';
+    sf2Section.textContent = `SF2: ${state._sf?.info?.INAM || 'SoundFont'}`;
+    menu.appendChild(sf2Section);
+
+    const presets = Object.values(state._sf2PresetMap).sort((a, b) => a.bank - b.bank || a.preset - b.preset);
+    for (const p of presets) {
+      const item = document.createElement('div');
+      item.className = 'voice-menu-item';
+      item.textContent = `🎹 B${p.bank}:P${p.preset} ${p.name}`;
+      item.addEventListener('click', () => {
+        const chFx = getChannelFx(ch);
+        chFx.voiceSource = { type: 'sf2', bank: p.bank, preset: p.preset };
+        updateVoiceLabels();
+        closeVoiceMenu();
+      });
+      menu.appendChild(item);
+    }
+  }
+
+  // 配置
+  const rect = anchor.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.left = `${rect.left}px`;
+  menu.style.top = `${rect.bottom + 4}px`;
+  document.body.appendChild(menu);
+  activeVoiceMenu = menu;
+
+  // メニュー外クリックで閉じる
+  setTimeout(() => {
+    const handler = (e) => {
+      if (!menu.contains(e.target)) {
+        closeVoiceMenu();
+        document.removeEventListener('click', handler);
+      }
+    };
+    document.addEventListener('click', handler);
+  }, 0);
 }

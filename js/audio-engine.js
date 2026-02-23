@@ -14,7 +14,7 @@ import { buildChannelChain } from './audio-channel.js';
 import { buildMasterChain } from './audio-master.js';
 import { buildOutputChain, drawWaveforms } from './audio-output.js';
 import { buildMetronome, createMetroClick } from './audio-source.js';
-import { getChannelFx } from './globals.js';
+import { getChannelFx, resolveVoice } from './globals.js';
 import { midiToFreq, remapNote } from './midi-parser.js';
 import { clearSF2BufferCache, findSF2Sample, getSF2AudioBuffer } from './sf2-parser.js';
 import state from './state/audioState.js';
@@ -114,15 +114,14 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
       const dur = Math.max(n.duration, 0.05);
       const vel = n.velocity / 127;
 
-      // SF2モード: サンプルベース再生
+      // 音色解決
       let sourceNode;
+      const voice = resolveVoice(n.channel);
 
-      if (state._useSF && state._sf && state._sf2PresetMap) {
+      if (voice.type === 'sf2') {
         const sf2Data = state._sf;
         const sf2PresetMap = state._sf2PresetMap;
-        const bank = n.channel === 9 ? 128 : 0; // Ch10=ドラム
-        const program = state.channelPrograms[n.channel] || 0;
-        const sample = findSF2Sample(sf2Data, sf2PresetMap, bank, program, n.note, n.velocity);
+        const sample = findSF2Sample(sf2Data, sf2PresetMap, voice.bank, voice.preset, n.note, n.velocity);
 
         if (sample) {
           const buf = getSF2AudioBuffer(audioCtx, sf2Data, sample.shdr);
@@ -180,8 +179,8 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
         const osc = audioCtx.createOscillator();
         const env = audioCtx.createGain();
 
-        const chFx = getChannelFx(n.channel);
-        const waveType = chFx.waveType;
+        const waveType =
+          voice.type === 'waveform' || voice.type === 'custom' ? voice.waveType : getChannelFx(n.channel).waveType;
         applyWaveform(osc, waveType, audioCtx);
         osc.frequency.value = freq;
         osc._baseMidi = n.note;

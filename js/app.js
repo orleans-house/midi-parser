@@ -12,7 +12,7 @@ import { drawPianoRoll, invalidatePianoRollCache } from './piano-roll.js';
 import { addFilesToPlaylist, clearPlaylist } from './playlist.js';
 import { buildSF2PresetMap, SF2Parser } from './sf2-parser.js';
 import state from './state/audioState.js';
-import { applyChannelGain, buildChannelUI, detectChannels } from './visualizer.js';
+import { applyChannelGain, buildChannelUI, detectChannels, updateVoiceLabels } from './visualizer.js';
 import { applyWaveform } from './waveforms.js';
 
 const fileInput = document.getElementById('file-input');
@@ -169,6 +169,7 @@ btnLoadSF2.addEventListener('click', () => {
     }
     // 再生中なら即時反映
     if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+    updateVoiceLabels();
   } else {
     // 未読み込み: ファイル選択
     sf2Input.click();
@@ -204,6 +205,7 @@ sf2Input.addEventListener('change', () => {
       }
       document.getElementById('custom-waveform-select').value = '';
       document.getElementById('btn-sf2-info').style.display = '';
+      updateVoiceLabels();
       console.log(`SF2 loaded: ${sf2DisplayName}`, `Presets: ${Object.keys(state._sf2PresetMap).length}`);
     } catch (err) {
       console.error('SF2 load error:', err);
@@ -421,6 +423,7 @@ export function processMidi(buffer, fileName) {
 
   // チャンネルUI構築
   buildChannelUI(state.currentChannels);
+  updateVoiceLabels();
   // 再生コントロール有効化
   btnPlay.disabled = false;
   btnStop.disabled = true;
