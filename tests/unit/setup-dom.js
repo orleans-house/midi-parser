@@ -93,6 +93,7 @@ const elements = [
   'sf2-input',
   'sf2-name',
   'btn-repeat',
+  'position-display',
   'info-filename',
   'info-format',
   'info-tracks',

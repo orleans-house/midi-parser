@@ -118,20 +118,20 @@
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `applyFreqShiftToActive()` | 統合 | ⬜ 未着手 | scheduledNodes操作 |
-| `playNotes(notes, bpm, seekOffset)` | 統合 | ⬜ 未着手 | 再生オーケストレーション全体 |
-| `pausePlayback()` | 統合 | ⬜ 未着手 | AudioContext.suspend |
-| `resumePlayback()` | 統合 | ⬜ 未着手 | AudioContext.resume |
-| `stopPlayback()` | 統合 | ⬜ 未着手 | 全ノード停止・クリーンアップ |
-| `playNotesFrom(notes, bpm, fromTime)` | 統合 | ⬜ 未着手 | シーク再生 |
+| `applyFreqShiftToActive()` | 統合 | ✅ 完了 | scheduledNodes操作 |
+| `playNotes(notes, bpm, seekOffset)` | 統合 | ⚠️ E2Eカバー（オーケストレーション全体のため統合テスト対象外） | 再生オーケストレーション全体 |
+| `pausePlayback()` | 統合 | ✅ 完了 | AudioContext.suspend |
+| `resumePlayback()` | 統合 | ✅ 完了 | AudioContext.resume |
+| `stopPlayback()` | 統合 | ✅ 完了 | 全ノード停止・クリーンアップ |
+| `playNotesFrom(notes, bpm, fromTime)` | 統合 | ⚠️ E2Eカバー（playNotesのラッパーのため統合テスト対象外） | シーク再生 |
 
 ### audio-file-engine.js
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `playAudioFile(buffer, seekOffset)` | 統合 | ⬜ 未着手 | AudioBufferSourceNode再生 |
-| `pauseAudioFile()` | 統合 | ⬜ 未着手 | suspend |
-| `resumeAudioFile()` | 統合 | ⬜ 未着手 | resume + シーク再開 |
+| `playAudioFile(buffer, seekOffset)` | 統合 | ⚠️ E2Eカバー（オーケストレーション全体のため統合テスト対象外） | AudioBufferSourceNode再生 |
+| `pauseAudioFile()` | 統合 | ✅ 完了 | suspend |
+| `resumeAudioFile()` | 統合 | ✅ 完了 | resume + シーク再開 |
 
 ### visualizer.js
 
@@ -142,7 +142,7 @@
 | `buildChannelUI(channels)` | E2E | ✅ E2Eカバー済み | DOM生成 |
 | `toggleMute(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
 | `toggleSolo(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
-| `updateChannelGains()` | 統合 | ⬜ 未着手 | GainNode操作（ロジックはテスト可能） |
+| `updateChannelGains()` | 統合 | ✅ 完了 | GainNode操作（ロジックはテスト可能） |
 | `applyChannelGain(chState)` | ユニット | ✅ 完了 | waveGain × playGate 計算（GainNode設定） |
 
 ### piano-roll.js
