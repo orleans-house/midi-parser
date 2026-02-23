@@ -45,32 +45,32 @@
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `getChannelFx(ch)` | ユニット | ⬜ 未着手 | 純粋な状態初期化・取得ロジック |
-| `sliderToFreq(val)` | ユニット | ⬜ 未着手 | 純粋な数学変換 |
-| `freqToSlider(freq)` | ユニット | ⬜ 未着手 | 純粋な数学変換（往復誤差検証含む） |
+| `getChannelFx(ch)` | ユニット | ✅ 完了 | 純粋な状態初期化・取得ロジック |
+| `sliderToFreq(val)` | ユニット | ✅ 完了 | 純粋な数学変換 |
+| `freqToSlider(freq)` | ユニット | ✅ 完了 | 純粋な数学変換（往復誤差検証含む） |
 | `getThemeColor(varName, fallback)` | E2E | ✅ E2Eカバー済み | `getComputedStyle` 依存（DOM必須） |
 
 ### midi-parser.js
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `MidiParser.parse()` | ユニット | ⬜ 未着手 | バイナリパース（純粋ロジック）。正常系・不正データ・エッジケース |
-| `extractNotes(parsed)` | ユニット | ⬜ 未着手 | パース結果からのノート抽出。複雑度高 |
-| `extractChannelPrograms(parsed)` | ユニット | ⬜ 未着手 | チャンネル→楽器マッピング |
-| `noteName(midi)` | ユニット | ⬜ 未着手 | 数値→文字列変換 |
-| `getInstrumentName(program)` | ユニット | ⬜ 未着手 | 範囲チェック込み |
-| `remapNote(note)` | ユニット | ⬜ 未着手 | 全スケール×全キーの変換。`state._scaleConvert` 依存 |
-| `detectKeyScale(notes)` | ユニット | ⬜ 未着手 | 統計的キー検出。代表パターン＋境界ケース |
-| `midiToFreq(midi)` | ユニット | ⬜ 未着手 | シフト組合せ（pitch/freq/scale）、下限クランプ1Hz |
+| `MidiParser.parse()` | ユニット | ✅ 完了 | バイナリパース（純粋ロジック）。正常系・不正データ・エッジケース |
+| `extractNotes(parsed)` | ユニット | ✅ 完了 | パース結果からのノート抽出。複雑度高 |
+| `extractChannelPrograms(parsed)` | ユニット | ✅ 完了 | チャンネル→楽器マッピング |
+| `noteName(midi)` | ユニット | ✅ 完了 | 数値→文字列変換 |
+| `getInstrumentName(program)` | ユニット | ✅ 完了 | 範囲チェック込み |
+| `remapNote(note)` | ユニット | ✅ 完了 | 全スケール×全キーの変換。`state._scaleConvert` 依存 |
+| `detectKeyScale(notes)` | ユニット | ✅ 完了 | 統計的キー検出。代表パターン＋境界ケース |
+| `midiToFreq(midi)` | ユニット | ✅ 完了 | シフト組合せ（pitch/freq/scale）、下限クランプ1Hz |
 
 ### waveforms.js
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `CUSTOM_WAVEFORMS` | ユニット | ⬜ 未着手 | 全波形の real/imag 配列長一致、定義整合性 |
-| `isCustomWaveform(name)` | ユニット | ⬜ 未着手 | 文字列判定 |
+| `CUSTOM_WAVEFORMS` | ユニット | ✅ 完了 | 全波形の real/imag 配列長一致、定義整合性 |
+| `isCustomWaveform(name)` | ユニット | ✅ 完了 | 文字列判定 |
 | `getPeriodicWave(audioCtx, name)` | 統合 | ⬜ 未着手 | AudioContext.createPeriodicWave 呼び出し |
-| `clearPeriodicWaveCache()` | ユニット | ⬜ 未着手 | キャッシュクリアの副作用検証 |
+| `clearPeriodicWaveCache()` | ユニット | ✅ 完了 | キャッシュクリアの副作用検証 |
 | `applyWaveform(osc, name, ctx)` | 統合 | ⬜ 未着手 | OscillatorNode操作 |
 
 ### sf2-parser.js
@@ -137,8 +137,8 @@
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `getChannelColor(ch)` | ユニット | ⬜ 未着手 | インデックス→色文字列（純粋関数） |
-| `detectChannels(notes)` | ユニット | ⬜ 未着手 | ノート配列→チャンネル番号配列（純粋関数） |
+| `getChannelColor(ch)` | ユニット | ✅ 完了 | インデックス→色文字列（純粋関数） |
+| `detectChannels(notes)` | ユニット | ✅ 完了 | ノート配列→チャンネル番号配列（純粋関数） |
 | `buildChannelUI(channels)` | E2E | ✅ E2Eカバー済み | DOM生成 |
 | `toggleMute(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
 | `toggleSolo(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
@@ -177,7 +177,7 @@
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `isAudioFile(fileName)` | ユニット | ⬜ 未着手 | 拡張子判定（純粋関数） |
+| `isAudioFile(fileName)` | ユニット | ✅ 完了 | 拡張子判定（純粋関数） |
 | `loadFile(file)` | E2E | ✅ E2Eカバー済み | FileReader + 分岐処理 |
 | `loadFiles(fileList)` | E2E | ✅ E2Eカバー済み | プレイリスト連携 |
 | `processAudioFile(buffer, name)` | E2E | ✅ E2Eカバー済み | 複合処理（state + DOM + Audio） |
