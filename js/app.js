@@ -745,6 +745,7 @@ freqShiftSlider.addEventListener('input', () => {
   const v = Number(freqShiftSlider.value);
   window._freqShift = v;
   freqShiftVal.textContent = `${v >= 0 ? '+' : ''}${v} Hz`;
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
 
 freqShiftReset.addEventListener('click', () => {
