@@ -16,14 +16,22 @@ let scheduledNodes = [];
 let animationTimer = null;
 let schedulerTimer = null;
 
-// ピッチ/周波数/スケール変更時に再生中のオシレーターを即時更新
+// ピッチ/周波数/スケール変更時に再生中のノードを即時更新
 function applyFreqShiftToActive() {
-  for (const osc of scheduledNodes) {
-    if (osc._baseMidi != null) {
-      try {
-        osc.frequency.value = midiToFreq(osc._baseMidi);
-      } catch {}
-    }
+  const pitchShift = window._pitchShift || 0;
+  for (const node of scheduledNodes) {
+    if (node._baseMidi == null) continue;
+    try {
+      if (node._isSF2) {
+        // SF2: playbackRateでピッチシフト+スケール変換を反映
+        const remapped = typeof remapNote === 'function' ? remapNote(node._baseMidi) : node._baseMidi;
+        const semitones = remapped - node._rootKey + node._sampleTuning + pitchShift;
+        node.playbackRate.value = 2 ** (semitones / 12);
+      } else {
+        // オシレーター: frequency.valueで反映
+        node.frequency.value = midiToFreq(node._baseMidi);
+      }
+    } catch {}
   }
 }
 
@@ -92,39 +100,101 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       if (t > horizon) break;
 
       const n = notes[chunkIndex];
-      const freq = midiToFreq(n.note);
       const dur = Math.max(n.duration, 0.05);
-
-      const osc = audioCtx.createOscillator();
-      const env = audioCtx.createGain();
-
-      const chFx = getChannelFx(n.channel);
-      const waveType = chFx.waveType;
-      applyWaveform(osc, waveType, audioCtx);
-      osc.frequency.value = freq;
-      osc._baseMidi = n.note; // ピッチ/周波数シフト即時反映用
-
       const vel = n.velocity / 127;
-      env.gain.setValueAtTime(0, t);
-      env.gain.linearRampToValueAtTime(vel * 0.15, t + 0.01);
-      env.gain.setValueAtTime(vel * 0.15, t + dur - Math.min(0.05, dur * 0.3));
-      env.gain.linearRampToValueAtTime(0, t + dur);
 
-      osc.connect(env);
+      // SF2モード: サンプルベース再生
+      let sourceNode;
 
-      // チャンネル別ゲインノードにルーティング
-      const chState = channelStates[n.channel];
-      if (chState?.gainNode) {
-        env.connect(chState.gainNode);
-      } else {
-        env.connect(masterGain);
+      if (window._useSF2 && window._sf2Data && window._sf2PresetMap) {
+        const sf2Data = window._sf2Data;
+        const sf2PresetMap = window._sf2PresetMap;
+        const bank = n.channel === 9 ? 128 : 0; // Ch10=ドラム
+        const program = channelPrograms[n.channel] || 0;
+        const sample = findSF2Sample(sf2Data, sf2PresetMap, bank, program, n.note, n.velocity);
+
+        if (sample) {
+          const buf = getSF2AudioBuffer(audioCtx, sf2Data, sample.shdr);
+          if (buf) {
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+
+            // スケール変換 + ピッチシフト適用
+            const remapped = typeof remapNote === 'function' ? remapNote(n.note) : n.note;
+            const pitchShift = window._pitchShift || 0;
+            const semitones = remapped - sample.rootKey + sample.tuning + pitchShift;
+            src.playbackRate.value = 2 ** (semitones / 12);
+
+            // ループ設定
+            if (sample.loopMode === 1 || sample.loopMode === 3) {
+              src.loop = true;
+              const loopStart = (sample.shdr.loopStart - sample.shdr.start) / sample.shdr.sampleRate;
+              const loopEnd = (sample.shdr.loopEnd - sample.shdr.start) / sample.shdr.sampleRate;
+              if (loopEnd > loopStart) {
+                src.loopStart = loopStart;
+                src.loopEnd = loopEnd;
+              }
+            }
+
+            const env = audioCtx.createGain();
+            const attenGain = 10 ** (-sample.attenuation / 20);
+            env.gain.setValueAtTime(0, t);
+            env.gain.linearRampToValueAtTime(vel * attenGain * 0.3, t + 0.01);
+            env.gain.setValueAtTime(vel * attenGain * 0.3, t + dur - Math.min(0.05, dur * 0.3));
+            env.gain.linearRampToValueAtTime(0, t + dur);
+
+            src.connect(env);
+            const chState = channelStates[n.channel];
+            if (chState?.gainNode) {
+              env.connect(chState.gainNode);
+            } else {
+              env.connect(masterGain);
+            }
+
+            src._channel = n.channel;
+            src._baseMidi = n.note;
+            src._isSF2 = true;
+            src._rootKey = sample.rootKey;
+            src._sampleTuning = sample.tuning;
+            src.start(t);
+            src.stop(t + dur + 0.05);
+            sourceNode = src;
+          }
+        }
       }
 
-      osc._channel = n.channel;
-      osc.start(t);
-      osc.stop(t + dur + 0.01);
+      // フォールバック: オシレーター再生（SF2なし or サンプル見つからず）
+      if (!sourceNode) {
+        const freq = midiToFreq(n.note);
+        const osc = audioCtx.createOscillator();
+        const env = audioCtx.createGain();
 
-      scheduledNodes.push(osc);
+        const chFx = getChannelFx(n.channel);
+        const waveType = chFx.waveType;
+        applyWaveform(osc, waveType, audioCtx);
+        osc.frequency.value = freq;
+        osc._baseMidi = n.note;
+
+        env.gain.setValueAtTime(0, t);
+        env.gain.linearRampToValueAtTime(vel * 0.15, t + 0.01);
+        env.gain.setValueAtTime(vel * 0.15, t + dur - Math.min(0.05, dur * 0.3));
+        env.gain.linearRampToValueAtTime(0, t + dur);
+
+        osc.connect(env);
+        const chState = channelStates[n.channel];
+        if (chState?.gainNode) {
+          env.connect(chState.gainNode);
+        } else {
+          env.connect(masterGain);
+        }
+
+        osc._channel = n.channel;
+        osc.start(t);
+        osc.stop(t + dur + 0.01);
+        sourceNode = osc;
+      }
+
+      scheduledNodes.push(sourceNode);
       chunkIndex++;
     }
 
@@ -267,6 +337,7 @@ function stopPlayback() {
   if (audioCtx) {
     audioCtx.close().catch(() => {});
     if (typeof clearPeriodicWaveCache === 'function') clearPeriodicWaveCache();
+    if (typeof clearSF2BufferCache === 'function') clearSF2BufferCache();
     audioCtx = null;
   }
   btnPlay.innerHTML = '<i data-lucide="play"></i>';

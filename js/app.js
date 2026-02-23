@@ -68,6 +68,11 @@ function setActiveWave(newWave) {
   }
   applyCurrentWaveVolume();
 
+  // SF2モードを無効化（波形選択=オシレーターモード）
+  window._useSF2 = false;
+  const btnSF2 = document.getElementById('btn-load-sf2');
+  if (btnSF2) btnSF2.classList.remove('active');
+
   // 全チャンネルの波形を一括変更（channelFxState全体 + currentChannels）
   for (const ch of Object.keys(channelFxState)) {
     channelFxState[ch].waveType = newWave;
@@ -125,6 +130,75 @@ const folderInput = document.getElementById('folder-input');
 
 btnOpen.addEventListener('click', () => fileInput.click());
 btnOpenFolder.addEventListener('click', () => folderInput.click());
+
+// SF2音源読み込み
+const btnLoadSF2 = document.getElementById('btn-load-sf2');
+const sf2Input = document.getElementById('sf2-input');
+
+btnLoadSF2.addEventListener('click', () => {
+  if (window._sf2Data) {
+    // SF2読み込み済み: ON/OFFトグル
+    window._useSF2 = !window._useSF2;
+    btnLoadSF2.classList.toggle('active', window._useSF2);
+    if (window._useSF2) {
+      // SF2有効化: 波形ボタンのアクティブを解除
+      for (const btn of Object.values(mixerBtns)) {
+        btn.classList.remove('active');
+      }
+      document.getElementById('custom-waveform-select').value = '';
+    } else {
+      // SF2無効化: 現在の波形を再アクティブ化
+      const currentWave =
+        Object.keys(channelFxState).length > 0
+          ? channelFxState[Object.keys(channelFxState)[0]]?.waveType || 'triangle'
+          : 'triangle';
+      if (mixerBtns[currentWave]) mixerBtns[currentWave].classList.add('active');
+    }
+    // 再生中なら即時反映
+    if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+  } else {
+    // 未読み込み: ファイル選択
+    sf2Input.click();
+  }
+});
+
+// 右クリックでSF2ファイル再選択
+btnLoadSF2.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  sf2Input.click();
+});
+
+sf2Input.addEventListener('change', () => {
+  const file = sf2Input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parser = new SF2Parser(e.target.result);
+      const sf2Data = parser.parse();
+      window._sf2Data = sf2Data;
+      window._sf2PresetMap = buildSF2PresetMap(sf2Data);
+      const sf2DisplayName = sf2Data.info.INAM || file.name.replace('.sf2', '');
+      window._useSF2 = true;
+      btnLoadSF2.title = `SF2: ${sf2DisplayName}`;
+      btnLoadSF2.classList.add('active');
+      const sf2NameEl = document.getElementById('sf2-name');
+      sf2NameEl.textContent = sf2DisplayName;
+      sf2NameEl.classList.add('loaded');
+      // 波形ボタンのアクティブを解除
+      for (const btn of Object.values(mixerBtns)) {
+        btn.classList.remove('active');
+      }
+      document.getElementById('custom-waveform-select').value = '';
+      console.log(`SF2 loaded: ${sf2DisplayName}`, `Presets: ${Object.keys(window._sf2PresetMap).length}`);
+    } catch (err) {
+      console.error('SF2 load error:', err);
+      alert(`SF2読み込みエラー: ${err.message}`);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  sf2Input.value = '';
+});
 
 folderInput.addEventListener('change', () => {
   if (folderInput.files.length > 0) loadFiles(folderInput.files);
