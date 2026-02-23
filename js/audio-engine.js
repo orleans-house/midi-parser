@@ -16,15 +16,12 @@ let scheduledNodes = [];
 let animationTimer = null;
 let schedulerTimer = null;
 
-// ピッチ/周波数シフト変更時に再生中のオシレーターを即時更新
+// ピッチ/周波数/スケール変更時に再生中のオシレーターを即時更新
 function applyFreqShiftToActive() {
-  const pitchShift = window._pitchShift || 0;
-  const freqShift = window._freqShift || 0;
   for (const osc of scheduledNodes) {
     if (osc._baseMidi != null) {
       try {
-        const shifted = osc._baseMidi + pitchShift;
-        osc.frequency.value = Math.max(1, 440 * 2 ** ((shifted - 69) / 12) + freqShift);
+        osc.frequency.value = midiToFreq(osc._baseMidi);
       } catch {}
     }
   }

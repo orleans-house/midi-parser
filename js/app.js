@@ -203,6 +203,7 @@ function processAudioFile(buffer, fileName) {
   document.getElementById('info-division').textContent = '-';
   document.getElementById('info-tempo').textContent = '-';
   document.getElementById('info-notes').textContent = '-';
+  document.getElementById('info-key').textContent = '-';
 
   // チャンネルUIクリア
   buildChannelUI([]);
@@ -247,6 +248,19 @@ function processMidi(buffer, fileName) {
   document.getElementById('info-division').textContent = `${parsed.header.timeDivision} ticks`;
   document.getElementById('info-tempo').textContent = `${bpm} BPM`;
   document.getElementById('info-notes').textContent = notes.length;
+
+  // キー＋スケール自動検出
+  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  if (notes.length > 0) {
+    const detected = detectKeyScale(notes);
+    document.getElementById('info-key').textContent = `${noteNames[detected.key]} ${detected.scale}`;
+    // スケール変換のKeyとFromに自動セット
+    document.getElementById('scale-key').value = detected.key;
+    document.getElementById('scale-from').value = detected.scale;
+    updateScaleConvert();
+  } else {
+    document.getElementById('info-key').textContent = '-';
+  }
 
   // テンポ表示（不要 — ファイル情報に表示済み）
 
@@ -839,6 +853,29 @@ freqShiftReset.addEventListener('click', () => {
   freqShiftVal.textContent = '0 Hz';
   if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
+
+// --- スケール変換 ---
+const scaleConvertOn = document.getElementById('scale-convert-on');
+const scaleKey = document.getElementById('scale-key');
+const scaleFrom = document.getElementById('scale-from');
+const scaleTo = document.getElementById('scale-to');
+
+window._scaleConvert = { enabled: false, key: 0, from: 'major', to: 'minor' };
+
+function updateScaleConvert() {
+  window._scaleConvert = {
+    enabled: scaleConvertOn.checked,
+    key: Number(scaleKey.value),
+    from: scaleFrom.value,
+    to: scaleTo.value,
+  };
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+}
+
+scaleConvertOn.addEventListener('change', updateScaleConvert);
+scaleKey.addEventListener('change', updateScaleConvert);
+scaleFrom.addEventListener('change', updateScaleConvert);
+scaleTo.addEventListener('change', updateScaleConvert);
 
 // --- メトロノーム ---
 const metronomeOn = document.getElementById('metronome-on');
