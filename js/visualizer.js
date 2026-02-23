@@ -32,10 +32,9 @@ export { CHANNEL_COLORS };
 function getChannelLabel(ch) {
   const num = ch + 1;
   if (num === 10) return 'Ch.10 (Drums)';
-  const program = state.channelPrograms[ch];
-  if (program !== undefined) {
-    return `Ch.${num} - ${getInstrumentName(program)}`;
-  }
+  const voice = resolveVoice(ch);
+  const voiceName = getVoiceDisplayName(ch);
+  if (voiceName) return `Ch.${num} - ${voiceName}`;
   return `Ch.${num}`;
 }
 
@@ -359,7 +358,12 @@ function getVoiceDisplayName(ch) {
 }
 
 export function updateVoiceLabels() {
-  // no-op: labels removed, detail panel updates on open
+  for (let ch = 0; ch < 16; ch++) {
+    const card = document.getElementById(`channel-card-${ch}`);
+    if (!card) continue;
+    const label = card.querySelector('.channel-label');
+    if (label) label.textContent = getChannelLabel(ch);
+  }
 }
 
 function showChannelDetail(ch) {
@@ -389,6 +393,15 @@ function showChannelDetail(ch) {
   const body = document.createElement('div');
   body.className = 'modal-body';
 
+  // MIDI意図（GM楽器名）
+  const program = state.channelPrograms[ch];
+  if (program !== undefined) {
+    const midiIntent = document.createElement('div');
+    midiIntent.className = 'channel-detail-midi-intent';
+    midiIntent.textContent = `MIDI楽器: ${getInstrumentName(program)}`;
+    body.appendChild(midiIntent);
+  }
+
   // 現在の音色
   const currentVoice = document.createElement('div');
   currentVoice.className = 'channel-detail-current';
@@ -403,6 +416,7 @@ function showChannelDetail(ch) {
     const chFx = getChannelFx(ch);
     chFx.voiceSource = { type: 'global' };
     currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+    updateVoiceLabels();
   });
   body.appendChild(resetBtn);
 
@@ -415,6 +429,7 @@ function showChannelDetail(ch) {
       onClick: () => {
         getChannelFx(ch).voiceSource = { type: 'waveform', waveType: w };
         currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+        updateVoiceLabels();
       },
     })),
   );
@@ -430,6 +445,7 @@ function showChannelDetail(ch) {
         onClick: () => {
           getChannelFx(ch).voiceSource = { type: 'custom', waveType: key };
           currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+          updateVoiceLabels();
         },
       })),
     );
@@ -446,6 +462,7 @@ function showChannelDetail(ch) {
         onClick: () => {
           getChannelFx(ch).voiceSource = { type: 'sf2', bank: p.bank, preset: p.preset };
           currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+          updateVoiceLabels();
         },
       })),
     );

@@ -543,6 +543,11 @@ input[type="range"].slider-h:disabled {
 .channel-detail-panel {
   max-width: 500px;
 }
+.channel-detail-midi-intent {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #aaa);
+  padding: 4px 0;
+}
 .channel-detail-current {
   font-size: 0.85rem;
   color: var(--text, #eee);
