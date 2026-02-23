@@ -1069,7 +1069,7 @@ masterReverbMix.addEventListener('input', () => {
 masterReverbDecay.addEventListener('input', () => {
   const decay = Number(masterReverbDecay.value) / 10;
   masterReverbDecayVal.textContent = `${decay.toFixed(1)}s`;
-  if (window._masterReverbConvolver && audioCtx) {
+  if (window._masterReverbConvolver && window.audioCtx) {
     window._masterReverbConvolver.buffer = window.createReverbIR(window.audioCtx, decay, 2);
   }
 });
