@@ -126,6 +126,37 @@ const folderInput = document.getElementById('folder-input');
 btnOpen.addEventListener('click', () => fileInput.click());
 btnOpenFolder.addEventListener('click', () => folderInput.click());
 
+// SF2音源読み込み
+const btnLoadSF2 = document.getElementById('btn-load-sf2');
+const sf2Input = document.getElementById('sf2-input');
+
+btnLoadSF2.addEventListener('click', () => sf2Input.click());
+
+sf2Input.addEventListener('change', () => {
+  const file = sf2Input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parser = new SF2Parser(e.target.result);
+      const sf2Data = parser.parse();
+      window._sf2Data = sf2Data;
+      window._sf2PresetMap = buildSF2PresetMap(sf2Data);
+      btnLoadSF2.title = `SF2: ${sf2Data.info.INAM || file.name}`;
+      btnLoadSF2.classList.add('active');
+      console.log(
+        `SF2 loaded: ${sf2Data.info.INAM || file.name}`,
+        `Presets: ${Object.keys(window._sf2PresetMap).length}`,
+      );
+    } catch (err) {
+      console.error('SF2 load error:', err);
+      alert(`SF2読み込みエラー: ${err.message}`);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  sf2Input.value = '';
+});
+
 folderInput.addEventListener('change', () => {
   if (folderInput.files.length > 0) loadFiles(folderInput.files);
 });
