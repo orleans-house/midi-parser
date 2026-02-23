@@ -74,8 +74,8 @@ function setActiveWave(newWave) {
   if (btnSF2) btnSF2.classList.remove('active');
 
   // 全チャンネルの波形を一括変更（channelFxState全体 + currentChannels）
-  for (const ch of Object.keys(channelFxState)) {
-    channelFxState[ch].waveType = newWave;
+  for (const ch of Object.keys(window.channelFxState)) {
+    window.channelFxState[ch].waveType = newWave;
   }
   for (const ch of window.currentChannels) {
     window.getChannelFx(ch).waveType = newWave;
@@ -90,8 +90,8 @@ function setActiveWave(newWave) {
   applyChannelWaveVolumes();
 
   // 再生中のオシレーターの波形を変更
-  if (typeof scheduledNodes !== 'undefined') {
-    for (const osc of scheduledNodes) {
+  if (typeof window.scheduledNodes !== 'undefined') {
+    for (const osc of window.scheduledNodes) {
       try {
         if (typeof window.applyWaveform === 'function' && osc.context) {
           window.applyWaveform(osc, newWave, osc.context);
@@ -149,8 +149,8 @@ btnLoadSF2.addEventListener('click', () => {
     } else {
       // SF2無効化: 現在の波形を再アクティブ化
       const currentWave =
-        Object.keys(channelFxState).length > 0
-          ? channelFxState[Object.keys(channelFxState)[0]]?.waveType || 'triangle'
+        Object.keys(window.channelFxState).length > 0
+          ? window.channelFxState[Object.keys(window.channelFxState)[0]]?.waveType || 'triangle'
           : 'triangle';
       if (mixerBtns[currentWave]) mixerBtns[currentWave].classList.add('active');
     }
@@ -375,17 +375,17 @@ export function processMidi(buffer, fileName) {
 // 再生コントロール
 btnPlay.addEventListener('click', () => {
   if (window.audioFileMode) {
-    if (isPlaying && !isPaused) {
+    if (window.isPlaying && !window.isPaused) {
       window.pauseAudioFile();
-    } else if (isPlaying && isPaused) {
+    } else if (window.isPlaying && window.isPaused) {
       window.resumeAudioFile();
     } else {
       playAudioFile(window._audioFileRawBuffer);
     }
   } else {
-    if (isPlaying && !isPaused) {
+    if (window.isPlaying && !window.isPaused) {
       window.pausePlayback();
-    } else if (isPlaying && isPaused) {
+    } else if (window.isPlaying && window.isPaused) {
       window.resumePlayback();
     } else {
       window.playNotes(window.currentNotes, window.currentBpm);
@@ -397,8 +397,8 @@ btnStop.addEventListener('click', () => window.stopPlayback());
 // リピート
 const btnRepeat = document.getElementById('btn-repeat');
 btnRepeat.addEventListener('click', () => {
-  repeatEnabled = !repeatEnabled;
-  btnRepeat.classList.toggle('active', repeatEnabled);
+  window.repeatEnabled = !window.repeatEnabled;
+  btnRepeat.classList.toggle('active', window.repeatEnabled);
 });
 
 // EQ スライダーイベント
@@ -432,8 +432,8 @@ document.addEventListener('click', (e) => {
     waveBtn.classList.add('active');
 
     // 再生中のオシレーターの波形を変更
-    if (typeof scheduledNodes !== 'undefined') {
-      for (const osc of scheduledNodes) {
+    if (typeof window.scheduledNodes !== 'undefined') {
+      for (const osc of window.scheduledNodes) {
         try {
           if (osc._channel === ch) {
             if (typeof window.applyWaveform === 'function' && osc.context) {
@@ -463,7 +463,7 @@ document.addEventListener('change', (e) => {
     slider.disabled = !e.target.checked;
     chFx[fx].enabled = e.target.checked;
 
-    const state = channelStates[ch];
+    const state = window.channelStates[ch];
     if (state?.fxNodes) {
       if (fx === 'distortion') {
         state.fxNodes.distDry.gain.value = e.target.checked ? 0 : 1;
@@ -489,7 +489,7 @@ document.addEventListener('input', (e) => {
     const valDisplay = e.target.closest('.fx-mod-row').querySelector('.ch-fx-val');
     valDisplay.textContent = e.target.value;
 
-    const state = channelStates[ch];
+    const state = window.channelStates[ch];
     if (fx === 'distortion') {
       chFx.distortion.amount = Number(e.target.value);
       if (state?.fxNodes && chFx.distortion.enabled) {

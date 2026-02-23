@@ -20,7 +20,6 @@ import { clearSF2BufferCache, findSF2Sample, getSF2AudioBuffer } from './sf2-par
 import { updateChannelGains } from './visualizer.js';
 import { applyWaveform, clearPeriodicWaveCache } from './waveforms.js';
 
-let scheduledNodes = [];
 let animationTimer = null;
 let schedulerTimer = null;
 let stopTimerId = null;
@@ -28,7 +27,7 @@ let stopTimerId = null;
 // ピッチ/周波数/スケール変更時に再生中のノードを即時更新
 export function applyFreqShiftToActive() {
   const pitchShift = window._pitchShift || 0;
-  for (const node of scheduledNodes) {
+  for (const node of window.scheduledNodes) {
     if (node._baseMidi == null) continue;
     try {
       if (node._isSF2) {
@@ -51,7 +50,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
     await window.audioCtx.resume();
   }
   window.isPlaying = true;
-  scheduledNodes = [];
+  window.scheduledNodes = [];
 
   const audioCtx = window.audioCtx;
 
@@ -205,7 +204,7 @@ export async function playNotes(notes, bpm, seekOffset = 0) {
         sourceNode = osc;
       }
 
-      scheduledNodes.push(sourceNode);
+      window.scheduledNodes.push(sourceNode);
       chunkIndex++;
     }
 
@@ -335,12 +334,12 @@ export function stopPlayback() {
     window.audioFileSource = null;
   }
 
-  for (const osc of scheduledNodes) {
+  for (const osc of window.scheduledNodes) {
     try {
       osc.stop();
     } catch {}
   }
-  scheduledNodes = [];
+  window.scheduledNodes = [];
   // チャンネルオーディオノードのクリーンアップ
   for (const ch of Object.keys(window.channelStates)) {
     window.channelStates[ch].gainNode = null;
@@ -374,4 +373,3 @@ export function playNotesFrom(notes, bpm, fromTime) {
 }
 
 // Export scheduledNodes for app.js wave switching
-export { scheduledNodes };

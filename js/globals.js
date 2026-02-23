@@ -13,6 +13,18 @@ window.currentChannels = [];
 window.repeatEnabled = false;
 // チャンネル別エフェクト状態
 window.channelFxState = {};
+// オーディオエンジン共有状態
+window.audioCtx = null;
+window.isPlaying = false;
+window.isPaused = false;
+window.pauseDuration = 0;
+window.pauseStartTime = 0;
+// オーディオファイルエンジン共有状態
+window.audioFileSource = null;
+window.audioFileBuffer = null;
+window.audioFileMode = false;
+// スケジュール済みノード（波形切替用）
+window.scheduledNodes = [];
 
 export function getChannelFx(ch) {
   if (!window.channelFxState[ch]) {
