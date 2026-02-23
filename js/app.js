@@ -480,7 +480,7 @@ function startSpectrumDraw() {
 
     // 周波数シフト時: 基準線（元の位置）とシフト後の位置を表示
     const freqShift = window._freqShift || 0;
-    if (freqShift !== 0) {
+    {
       const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
       specCtx.font = '9px monospace';
       // C2(36)〜C7(96) の範囲で描画
@@ -494,9 +494,9 @@ function startSpectrumDraw() {
         const octave = Math.floor(midi / 12) - 1;
         const label = `${noteNames[midi % 12]}${octave}`;
 
-        // 基準線（元の位置）— 破線・暗め
+        // 基準線（元の位置）
         if (baseFreq >= minFreq && baseFreq <= maxFreq) {
-          specCtx.globalAlpha = 0.25;
+          specCtx.globalAlpha = freqShift !== 0 ? 0.25 : 0.35;
           specCtx.strokeStyle = '#ffd54f';
           specCtx.lineWidth = 1;
           specCtx.setLineDash([2, 4]);
@@ -504,10 +504,16 @@ function startSpectrumDraw() {
           specCtx.moveTo(xBase, 0);
           specCtx.lineTo(xBase, h);
           specCtx.stroke();
+          // シフトなしの場合はラベルを基準線に表示
+          if (freqShift === 0) {
+            specCtx.globalAlpha = 0.5;
+            specCtx.fillStyle = '#ffd54f';
+            specCtx.fillText(label, xBase + 3, h - 4);
+          }
         }
 
-        // シフト後の位置 — 実線・明るめ
-        if (shiftedFreq >= minFreq && shiftedFreq <= maxFreq) {
+        // シフト後の位置 — 実線・明るめ（シフト時のみ）
+        if (freqShift !== 0 && shiftedFreq >= minFreq && shiftedFreq <= maxFreq) {
           specCtx.globalAlpha = 0.7;
           specCtx.strokeStyle = '#ff7043';
           specCtx.lineWidth = 1.5;
@@ -521,8 +527,8 @@ function startSpectrumDraw() {
           specCtx.fillText(label, xShift + 3, h - 4);
         }
 
-        // ズレ量を示す矢印帯（基準→シフト後）
-        if (baseFreq >= minFreq && shiftedFreq <= maxFreq) {
+        // ズレ量を示す矢印帯（基準→シフト後、シフト時のみ）
+        if (freqShift !== 0 && baseFreq >= minFreq && shiftedFreq <= maxFreq) {
           specCtx.globalAlpha = 0.1;
           specCtx.fillStyle = '#ff7043';
           const left = Math.min(xBase, xShift);
