@@ -10,8 +10,9 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "fix": "biome check --fix .",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "npx playwright test",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "test:e2e": "npx playwright test",
     "test:all": "vitest run && npx playwright test"
   },
@@ -29,15 +30,13 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.3",
     "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2",
+    "playwright-core": "^1.58.2",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
   },
   "directories": {
     "doc": "docs",
     "test": "tests"
-  },
-  "dependencies": {
-    "playwright": "^1.58.2",
-    "playwright-core": "^1.58.2"
   }
 }
