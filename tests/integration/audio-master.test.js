@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { applyLimiterParams, buildMasterChain, createReverbIR, updateDistortionCurve } from '../../js/audio-master.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
@@ -49,15 +49,25 @@ describe('createReverbIR()', () => {
   });
 
   it('decay が大きいほど減衰が速い', () => {
+    // 乱数を固定して決定的にする（線形合同法 PRNG）
+    let seed = 42;
+    const mockRandom = vi.spyOn(Math, 'random').mockImplementation(() => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return (seed >>> 0) / 0xffffffff;
+    });
+
     const ctx = createMockAudioContext();
     const slowDecay = createReverbIR(ctx, 1, 1);
     const fastDecay = createReverbIR(ctx, 1, 5);
-    // 末尾付近のエネルギーを比較（遅い減衰の方が大きいはず）
-    // ランダムなので統計的にチェック
+
+    mockRandom.mockRestore();
+
+    // 減衰エンベロープ: (1 - i/length)^decay
+    // decay=1 は緩やかに減衰、decay=5 は急速に減衰
+    // 乱数は同じ系列だが、エンベロープの掛け算で結果が異なる
     const slowData = slowDecay.getChannelData(0);
     const fastData = fastDecay.getChannelData(0);
-    const last = slowData.length - 1;
-    // 末尾10%のRMS比較
+    // 末尾10%のエネルギー比較
     const tenPct = Math.floor(slowData.length * 0.9);
     let slowRms = 0;
     let fastRms = 0;
