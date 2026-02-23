@@ -203,6 +203,7 @@ function processAudioFile(buffer, fileName) {
   document.getElementById('info-division').textContent = '-';
   document.getElementById('info-tempo').textContent = '-';
   document.getElementById('info-notes').textContent = '-';
+  document.getElementById('info-key').textContent = '-';
 
   // チャンネルUIクリア
   buildChannelUI([]);
