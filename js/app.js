@@ -483,8 +483,8 @@ function startSpectrumDraw() {
     {
       const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
       specCtx.font = '9px monospace';
-      // C2(36)〜C7(96) の範囲で描画
-      for (let midi = 36; midi <= 96; midi += 12) {
+      // C1(24)〜C9(120) の範囲で描画
+      for (let midi = 24; midi <= 120; midi += 12) {
         const baseFreq = 440 * 2 ** ((midi - 69) / 12);
         const shiftedFreq = Math.max(1, baseFreq + freqShift);
         if (baseFreq < minFreq && shiftedFreq < minFreq) continue;
