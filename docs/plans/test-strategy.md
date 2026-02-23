@@ -88,7 +88,7 @@
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `makeDistortionCurve(amount)` | ユニット | ⬜ 未着手 | Float32Array生成（純粋関数） |
+| `makeDistortionCurve(amount)` | ユニット | ✅ 完了 | Float32Array生成（純粋関数） |
 | `updateDistortionCurve(node, amount)` | 統合 | ⬜ 未着手 | WaveShaperNode操作 |
 | `createReverbIR(audioCtx, decay, channels)` | 統合 | ⬜ 未着手 | AudioBuffer生成 |
 | `buildMasterChain(audioCtx)` | 統合 | ⬜ 未着手 | ノード接続チェーン構築 |
@@ -143,13 +143,13 @@
 | `toggleMute(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
 | `toggleSolo(ch)` | E2E | ✅ E2Eカバー済み | DOM操作 + state変更 |
 | `updateChannelGains()` | 統合 | ⬜ 未着手 | GainNode操作（ロジックはテスト可能） |
-| `applyChannelGain(chState)` | ユニット | ⬜ 未着手 | waveGain × playGate 計算（GainNode設定） |
+| `applyChannelGain(chState)` | ユニット | ✅ 完了 | waveGain × playGate 計算（GainNode設定） |
 
 ### piano-roll.js
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `invalidatePianoRollCache()` | ユニット | ⬜ 未着手 | キャッシュフラグ操作 |
+| `invalidatePianoRollCache()` | ユニット | ✅ 完了 | キャッシュフラグ操作 |
 | `drawPianoRoll()` | E2E | ✅ E2Eカバー済み | Canvas描画 |
 | `updatePlayhead(elapsed)` | E2E | ✅ E2Eカバー済み | Canvas描画 + クリックシーク |
 
@@ -157,8 +157,8 @@
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `getCurrentPlaybackTime()` | ユニット | ⬜ 未着手 | state から再生位置計算（純粋ロジック） |
-| `clearLoopTimer()` | ユニット | ⬜ 未着手 | タイマークリア |
+| `getCurrentPlaybackTime()` | ユニット | ⚠️ 非export（内部関数のため直接テスト不可） | state から再生位置計算（純粋ロジック） |
+| `clearLoopTimer()` | ユニット | ✅ 完了 | タイマークリア |
 | `clearABLoop()` | E2E | ✅ E2Eカバー済み | DOM操作込み |
 | `drawDJMarkers(ctx, W, H, pad)` | E2E | ✅ E2Eカバー済み | Canvas描画 |
 | `resetDJControls()` | E2E | ✅ E2Eカバー済み | DOM操作 |
