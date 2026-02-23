@@ -735,6 +735,25 @@ lpfQSlider.addEventListener('input', () => {
 });
 
 // メトロノーム
+// --- 周波数シフト ---
+const freqShiftSlider = document.getElementById('freq-shift');
+const freqShiftVal = document.getElementById('freq-shift-val');
+const freqShiftReset = document.getElementById('freq-shift-reset');
+window._freqShift = 0;
+
+freqShiftSlider.addEventListener('input', () => {
+  const v = Number(freqShiftSlider.value);
+  window._freqShift = v;
+  freqShiftVal.textContent = `${v >= 0 ? '+' : ''}${v} Hz`;
+});
+
+freqShiftReset.addEventListener('click', () => {
+  freqShiftSlider.value = 0;
+  window._freqShift = 0;
+  freqShiftVal.textContent = '0 Hz';
+});
+
+// --- メトロノーム ---
 const metronomeOn = document.getElementById('metronome-on');
 const metronomeVol = document.getElementById('metronome-vol');
 const metronomeVolVal = document.getElementById('metronome-vol-val');

@@ -410,6 +410,13 @@ input[type="range"].slider-h:disabled {
   text-align: right;
 }
 
+.fx-reset-btn {
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  min-width: auto;
+  line-height: 1;
+}
+
 /* ===== ボタン共通 ===== */
 button {
   background: var(--accent-purple);
