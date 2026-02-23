@@ -480,13 +480,16 @@ function startSpectrumDraw() {
 
     // 周波数シフト時: 基準線（元の位置）とシフト後の位置を表示
     const freqShift = window._freqShift || 0;
+    const pitchShift = window._pitchShift || 0;
+    const anyShift = freqShift !== 0 || pitchShift !== 0;
     {
       const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
       specCtx.font = '9px monospace';
       // C1(24)〜C9(120) の範囲で描画
       for (let midi = 24; midi <= 120; midi += 12) {
         const baseFreq = 440 * 2 ** ((midi - 69) / 12);
-        const shiftedFreq = Math.max(1, baseFreq + freqShift);
+        const shiftedMidi = midi + pitchShift;
+        const shiftedFreq = Math.max(1, 440 * 2 ** ((shiftedMidi - 69) / 12) + freqShift);
         if (baseFreq < minFreq && shiftedFreq < minFreq) continue;
         if (baseFreq > maxFreq && shiftedFreq > maxFreq) continue;
         const xBase = w * ((Math.log(baseFreq) - logMin) / logRange);
@@ -496,7 +499,7 @@ function startSpectrumDraw() {
 
         // 基準線（元の位置）
         if (baseFreq >= minFreq && baseFreq <= maxFreq) {
-          specCtx.globalAlpha = freqShift !== 0 ? 0.25 : 0.35;
+          specCtx.globalAlpha = anyShift ? 0.25 : 0.35;
           specCtx.strokeStyle = '#ffd54f';
           specCtx.lineWidth = 1;
           specCtx.setLineDash([2, 4]);
@@ -505,7 +508,7 @@ function startSpectrumDraw() {
           specCtx.lineTo(xBase, h);
           specCtx.stroke();
           // シフトなしの場合はラベルを基準線に表示
-          if (freqShift === 0) {
+          if (!anyShift) {
             specCtx.globalAlpha = 0.5;
             specCtx.fillStyle = '#ffd54f';
             specCtx.fillText(label, xBase + 3, h - 4);
@@ -513,7 +516,7 @@ function startSpectrumDraw() {
         }
 
         // シフト後の位置 — 実線・明るめ（シフト時のみ）
-        if (freqShift !== 0 && shiftedFreq >= minFreq && shiftedFreq <= maxFreq) {
+        if (anyShift && shiftedFreq >= minFreq && shiftedFreq <= maxFreq) {
           specCtx.globalAlpha = 0.7;
           specCtx.strokeStyle = '#ff7043';
           specCtx.lineWidth = 1.5;
@@ -528,7 +531,7 @@ function startSpectrumDraw() {
         }
 
         // ズレ量を示す矢印帯（基準→シフト後、シフト時のみ）
-        if (freqShift !== 0 && baseFreq >= minFreq && shiftedFreq <= maxFreq) {
+        if (anyShift && baseFreq >= minFreq && shiftedFreq <= maxFreq) {
           specCtx.globalAlpha = 0.1;
           specCtx.fillStyle = '#ff7043';
           const left = Math.min(xBase, xShift);
@@ -797,6 +800,26 @@ lpfQSlider.addEventListener('input', () => {
 });
 
 // メトロノーム
+// --- ピッチシフト ---
+const pitchShiftSlider = document.getElementById('pitch-shift');
+const pitchShiftVal = document.getElementById('pitch-shift-val');
+const pitchShiftReset = document.getElementById('pitch-shift-reset');
+window._pitchShift = 0;
+
+pitchShiftSlider.addEventListener('input', () => {
+  const v = Number(pitchShiftSlider.value);
+  window._pitchShift = v;
+  pitchShiftVal.textContent = `${v >= 0 ? '+' : ''}${v} st`;
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+});
+
+pitchShiftReset.addEventListener('click', () => {
+  pitchShiftSlider.value = 0;
+  window._pitchShift = 0;
+  pitchShiftVal.textContent = '0 st';
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
+});
+
 // --- 周波数シフト ---
 const freqShiftSlider = document.getElementById('freq-shift');
 const freqShiftVal = document.getElementById('freq-shift-val');

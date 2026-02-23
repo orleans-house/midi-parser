@@ -396,5 +396,6 @@ function extractChannelPrograms(parsed) {
 }
 
 function midiToFreq(midiNote) {
-  return Math.max(1, 440 * 2 ** ((midiNote - 69) / 12) + (window._freqShift || 0));
+  const shifted = midiNote + (window._pitchShift || 0);
+  return Math.max(1, 440 * 2 ** ((shifted - 69) / 12) + (window._freqShift || 0));
 }

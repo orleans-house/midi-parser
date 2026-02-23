@@ -16,13 +16,15 @@ let scheduledNodes = [];
 let animationTimer = null;
 let schedulerTimer = null;
 
-// 周波数シフト変更時に再生中のオシレーターを即時更新
+// ピッチ/周波数シフト変更時に再生中のオシレーターを即時更新
 function applyFreqShiftToActive() {
-  const shift = window._freqShift || 0;
+  const pitchShift = window._pitchShift || 0;
+  const freqShift = window._freqShift || 0;
   for (const osc of scheduledNodes) {
-    if (osc._baseFreq != null) {
+    if (osc._baseMidi != null) {
       try {
-        osc.frequency.value = Math.max(1, osc._baseFreq + shift);
+        const shifted = osc._baseMidi + pitchShift;
+        osc.frequency.value = Math.max(1, 440 * 2 ** ((shifted - 69) / 12) + freqShift);
       } catch {}
     }
   }
@@ -103,7 +105,7 @@ async function playNotes(notes, bpm, seekOffset = 0) {
       const waveType = chFx.waveType;
       osc.type = waveType;
       osc.frequency.value = freq;
-      osc._baseFreq = 440 * 2 ** ((n.note - 69) / 12); // シフト前のベース周波数を保持
+      osc._baseMidi = n.note; // ピッチ/周波数シフト即時反映用
 
       const vel = n.velocity / 127;
       env.gain.setValueAtTime(0, t);
