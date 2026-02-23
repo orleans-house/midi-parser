@@ -477,6 +477,35 @@ function startSpectrumDraw() {
       specCtx.fillText(`LP ${formatFreq(lpfF)}`, xL + 4, 24);
     }
     specCtx.setLineDash([]);
+
+    // 周波数シフト時: 12平均律基準線を表示
+    const freqShift = window._freqShift || 0;
+    if (freqShift !== 0) {
+      specCtx.globalAlpha = 0.3;
+      specCtx.strokeStyle = '#ffd54f';
+      specCtx.lineWidth = 1;
+      specCtx.setLineDash([2, 4]);
+      specCtx.font = '9px monospace';
+      specCtx.fillStyle = '#ffd54f';
+      const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+      // C2(36)〜C7(96) の範囲で描画
+      for (let midi = 36; midi <= 96; midi += 12) {
+        const baseFreq = 440 * 2 ** ((midi - 69) / 12);
+        if (baseFreq < minFreq || baseFreq > maxFreq) continue;
+        const xBase = w * ((Math.log(baseFreq) - logMin) / logRange);
+        // 基準線（元の位置）
+        specCtx.beginPath();
+        specCtx.moveTo(xBase, 0);
+        specCtx.lineTo(xBase, h);
+        specCtx.stroke();
+        const octave = Math.floor(midi / 12) - 1;
+        specCtx.globalAlpha = 0.5;
+        specCtx.fillText(`${noteNames[midi % 12]}${octave}`, xBase + 2, h - 4);
+        specCtx.globalAlpha = 0.3;
+      }
+      specCtx.setLineDash([]);
+      specCtx.globalAlpha = 1;
+    }
   }, 80);
 }
 
