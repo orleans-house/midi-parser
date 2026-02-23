@@ -23,6 +23,27 @@
         <div class="sf2-status">
           <button type="button" id="btn-load-sf2" class="sf2-btn" title="SoundFont読み込み"><i data-lucide="piano"></i> SF2音源</button>
           <span id="sf2-name" class="sf2-name">未読み込み</span>
+          <button type="button" id="btn-sf2-info" class="sf2-info-btn" title="SF2プリセット情報" style="display:none;"><i data-lucide="info"></i></button>
+        </div>
+
+        <!-- SF2 Info Modal -->
+        <div id="sf2-info-modal" class="modal-overlay" style="display:none;">
+          <div class="modal-content sf2-info-modal-content">
+            <div class="modal-header">
+              <h3 id="sf2-info-title">SF2 Info</h3>
+              <button type="button" id="btn-sf2-info-close" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <section class="sf2-info-section">
+                <h4>チャンネル割り当て</h4>
+                <div id="sf2-channel-assignments"></div>
+              </section>
+              <section class="sf2-info-section">
+                <h4>収録プリセット一覧</h4>
+                <div id="sf2-preset-list"></div>
+              </section>
+            </div>
+          </div>
         </div>
         <input type="file" id="folder-input" webkitdirectory>
       </div>
