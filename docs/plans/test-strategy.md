@@ -69,9 +69,9 @@
 |------|-----------|----------|------|
 | `CUSTOM_WAVEFORMS` | ユニット | ✅ 完了 | 全波形の real/imag 配列長一致、定義整合性 |
 | `isCustomWaveform(name)` | ユニット | ✅ 完了 | 文字列判定 |
-| `getPeriodicWave(audioCtx, name)` | 統合 | ⬜ 未着手 | AudioContext.createPeriodicWave 呼び出し |
+| `getPeriodicWave(audioCtx, name)` | 統合 | ✅ 完了 | AudioContext.createPeriodicWave 呼び出し |
 | `clearPeriodicWaveCache()` | ユニット | ✅ 完了 | キャッシュクリアの副作用検証 |
-| `applyWaveform(osc, name, ctx)` | 統合 | ⬜ 未着手 | OscillatorNode操作 |
+| `applyWaveform(osc, name, ctx)` | 統合 | ✅ 完了 | OscillatorNode操作 |
 
 ### sf2-parser.js
 
@@ -81,7 +81,7 @@
 | `buildSF2PresetMap(sf2)` | ユニット | ✅ 完了 | プリセットマッピング構築 |
 | `getInstrumentZones(sf2, preset)` | ユニット | ✅ 完了 | ゾーン抽出ロジック |
 | `findSF2Sample(sf2, presetMap, bank, program, key, vel)` | ユニット | ✅ 完了 | キー/ベロシティ範囲マッチング。境界値重要 |
-| `getSF2AudioBuffer(audioCtx, sf2, shdr)` | 統合 | ⬜ 未着手 | AudioBuffer生成（AudioContext依存） |
+| `getSF2AudioBuffer(audioCtx, sf2, shdr)` | 統合 | ✅ 完了 | AudioBuffer生成（AudioContext依存） |
 | `clearSF2BufferCache()` | ユニット | ✅ 完了 | キャッシュクリア |
 
 ### audio-master.js
@@ -89,29 +89,29 @@
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
 | `makeDistortionCurve(amount)` | ユニット | ✅ 完了 | Float32Array生成（純粋関数） |
-| `updateDistortionCurve(node, amount)` | 統合 | ⬜ 未着手 | WaveShaperNode操作 |
-| `createReverbIR(audioCtx, decay, channels)` | 統合 | ⬜ 未着手 | AudioBuffer生成 |
-| `buildMasterChain(audioCtx)` | 統合 | ⬜ 未着手 | ノード接続チェーン構築 |
-| `applyLimiterParams(limiter)` | 統合 | ⬜ 未着手 | DynamicsCompressorNode パラメータ設定 |
+| `updateDistortionCurve(node, amount)` | 統合 | ✅ 完了 | WaveShaperNode操作 |
+| `createReverbIR(audioCtx, decay, channels)` | 統合 | ✅ 完了 | AudioBuffer生成 |
+| `buildMasterChain(audioCtx)` | 統合 | ✅ 完了 | ノード接続チェーン構築 |
+| `applyLimiterParams(limiter)` | 統合 | ✅ 完了 | DynamicsCompressorNode パラメータ設定 |
 
 ### audio-source.js
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `buildMetronome(audioCtx, dest)` | 統合 | ⬜ 未着手 | メトロノームGainNode構築 |
-| `createMetroClick(audioCtx, gain, time, accent, type)` | 統合 | ⬜ 未着手 | OscillatorNode生成 |
+| `buildMetronome(audioCtx, dest)` | 統合 | ✅ 完了 | メトロノームGainNode構築 |
+| `createMetroClick(audioCtx, gain, time, accent, type)` | 統合 | ✅ 完了 | OscillatorNode生成 |
 
 ### audio-channel.js
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `buildChannelChain(audioCtx, ch, masterGain)` | 統合 | ⬜ 未着手 | チャンネルFXチェーン構築（複数ノード接続） |
+| `buildChannelChain(audioCtx, ch, masterGain)` | 統合 | ✅ 完了 | チャンネルFXチェーン構築（複数ノード接続） |
 
 ### audio-output.js
 
 | 関数 | テスト種別 | ステータス | 理由 |
 |------|-----------|----------|------|
-| `buildOutputChain(audioCtx, eqOut)` | 統合 | ⬜ 未着手 | Analyserノード構築 |
+| `buildOutputChain(audioCtx, eqOut)` | 統合 | ✅ 完了 | Analyserノード構築 |
 | `drawWaveforms()` | E2E | ✅ E2Eカバー済み | Canvas描画（DOM+requestAnimationFrame） |
 
 ### audio-engine.js
