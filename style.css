@@ -539,61 +539,48 @@ input[type="range"].slider-h:disabled {
   color: var(--text, #eee);
 }
 
-/* チャンネル音色ラベル */
-.channel-voice-label {
-  font-size: 0.7rem;
-  color: var(--text-secondary, #aaa);
-  padding: 2px 6px;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 18px;
+/* チャンネル詳細パネル */
+.channel-detail-panel {
+  max-width: 500px;
 }
-.channel-voice-label:hover {
+.channel-detail-current {
+  font-size: 0.85rem;
   color: var(--text, #eee);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border, #333);
 }
-
-/* 音色選択メニュー */
-.voice-menu {
-  background: var(--bg-panel, #1e1e1e);
+.channel-detail-reset {
+  background: none;
   border: 1px solid var(--border, #444);
-  border-radius: 6px;
-  z-index: 2000;
-  min-width: 200px;
-  max-height: 400px;
-  overflow-y: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-}
-.voice-menu-header {
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: var(--text, #eee);
-  border-bottom: 1px solid var(--border, #333);
-}
-.voice-menu-section {
-  padding: 6px 12px 2px;
-  font-size: 0.7rem;
-  color: var(--accent-green, #66bb6a);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.voice-menu-item {
-  padding: 6px 12px;
-  font-size: 0.78rem;
-  color: var(--text, #eee);
-  cursor: pointer;
-}
-.voice-menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-.voice-menu-reset {
   color: var(--text-secondary, #aaa);
-  font-style: italic;
-  border-bottom: 1px solid var(--border, #333);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  margin-bottom: 12px;
+}
+.channel-detail-reset:hover {
+  color: var(--text, #eee);
+  border-color: var(--text-secondary, #aaa);
+}
+.voice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.voice-grid-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border, #444);
+  color: var(--text, #eee);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+.voice-grid-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--text-secondary, #aaa);
 }
 
 .fx-reset-btn {

@@ -121,18 +121,13 @@ export function buildChannelUI(channels) {
     canvas.style.borderRadius = '4px';
     canvas.style.display = 'block';
 
-    // 音色表示ラベル
-    const voiceLabel = document.createElement('div');
-    voiceLabel.className = 'channel-voice-label';
-    voiceLabel.id = `voice-label-${ch}`;
-    voiceLabel.textContent = '';
-    voiceLabel.title = 'クリックで音色を変更';
-    voiceLabel.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showVoiceMenu(ch, voiceLabel);
+    card.append(header, canvas);
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+      // Mute/Soloボタンのクリックは除外
+      if (e.target.closest('.btn-ch')) return;
+      showChannelDetail(ch);
     });
-
-    card.append(header, voiceLabel, canvas);
     container.appendChild(card);
 
     // NO SIGNAL表示
@@ -345,7 +340,7 @@ export function applyChannelGain(chState) {
   chState.gainNode.gain.value = waveGain * playGate;
 }
 
-// --- 音色選択メニュー ---
+// --- チャンネル詳細パネル ---
 const BASIC_WAVES = ['sine', 'square', 'sawtooth', 'triangle'];
 
 function getVoiceDisplayName(ch) {
@@ -364,125 +359,124 @@ function getVoiceDisplayName(ch) {
 }
 
 export function updateVoiceLabels() {
-  for (let ch = 0; ch < 16; ch++) {
-    const el = document.getElementById(`voice-label-${ch}`);
-    if (el) el.textContent = getVoiceDisplayName(ch);
-  }
+  // no-op: labels removed, detail panel updates on open
 }
 
-let activeVoiceMenu = null;
+function showChannelDetail(ch) {
+  // 既存のパネルがあれば閉じる
+  const existing = document.getElementById('channel-detail-overlay');
+  if (existing) existing.remove();
 
-function closeVoiceMenu() {
-  if (activeVoiceMenu) {
-    activeVoiceMenu.remove();
-    activeVoiceMenu = null;
-  }
-}
+  const overlay = document.createElement('div');
+  overlay.id = 'channel-detail-overlay';
+  overlay.className = 'modal-overlay';
 
-function showVoiceMenu(ch, anchor) {
-  closeVoiceMenu();
-
-  const menu = document.createElement('div');
-  menu.className = 'voice-menu';
+  const panel = document.createElement('div');
+  panel.className = 'modal-content channel-detail-panel';
 
   // ヘッダー
   const header = document.createElement('div');
-  header.className = 'voice-menu-header';
-  header.textContent = `Ch.${ch + 1} 音色選択`;
-  menu.appendChild(header);
+  header.className = 'modal-header';
+  const title = document.createElement('h3');
+  title.textContent = getChannelLabel(ch);
+  title.style.color = getChannelColor(ch);
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.textContent = '×';
+  closeBtn.addEventListener('click', () => overlay.remove());
+  header.append(title, closeBtn);
+
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+
+  // 現在の音色
+  const currentVoice = document.createElement('div');
+  currentVoice.className = 'channel-detail-current';
+  currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+  body.appendChild(currentVoice);
 
   // デフォルトに戻す
-  const resetItem = document.createElement('div');
-  resetItem.className = 'voice-menu-item voice-menu-reset';
-  resetItem.textContent = '↩ デフォルトに戻す';
-  resetItem.addEventListener('click', () => {
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'channel-detail-reset';
+  resetBtn.textContent = '↩ デフォルトに戻す';
+  resetBtn.addEventListener('click', () => {
     const chFx = getChannelFx(ch);
     chFx.voiceSource = { type: 'global' };
-    updateVoiceLabels();
-    closeVoiceMenu();
+    currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
   });
-  menu.appendChild(resetItem);
+  body.appendChild(resetBtn);
 
-  // 基本波形セクション
-  const waveSection = document.createElement('div');
-  waveSection.className = 'voice-menu-section';
-  waveSection.textContent = '基本波形';
-  menu.appendChild(waveSection);
+  // 基本波形
+  addVoiceSection(
+    body,
+    '基本波形',
+    BASIC_WAVES.map((w) => ({
+      label: `〜 ${w}`,
+      onClick: () => {
+        getChannelFx(ch).voiceSource = { type: 'waveform', waveType: w };
+        currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+      },
+    })),
+  );
 
-  for (const w of BASIC_WAVES) {
-    const item = document.createElement('div');
-    item.className = 'voice-menu-item';
-    item.textContent = `〜 ${w}`;
-    item.addEventListener('click', () => {
-      const chFx = getChannelFx(ch);
-      chFx.voiceSource = { type: 'waveform', waveType: w };
-      updateVoiceLabels();
-      closeVoiceMenu();
-    });
-    menu.appendChild(item);
+  // カスタム波形
+  const customEntries = Object.entries(CUSTOM_WAVEFORMS);
+  if (customEntries.length > 0) {
+    addVoiceSection(
+      body,
+      'カスタム波形',
+      customEntries.map(([key, cw]) => ({
+        label: `🎵 ${cw.label}`,
+        onClick: () => {
+          getChannelFx(ch).voiceSource = { type: 'custom', waveType: key };
+          currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+        },
+      })),
+    );
   }
 
-  // カスタム波形セクション
-  const customKeys = Object.keys(CUSTOM_WAVEFORMS);
-  if (customKeys.length > 0) {
-    const customSection = document.createElement('div');
-    customSection.className = 'voice-menu-section';
-    customSection.textContent = 'カスタム波形';
-    menu.appendChild(customSection);
-
-    for (const key of customKeys) {
-      const cw = CUSTOM_WAVEFORMS[key];
-      const item = document.createElement('div');
-      item.className = 'voice-menu-item';
-      item.textContent = `🎵 ${cw.label}`;
-      item.addEventListener('click', () => {
-        const chFx = getChannelFx(ch);
-        chFx.voiceSource = { type: 'custom', waveType: key };
-        updateVoiceLabels();
-        closeVoiceMenu();
-      });
-      menu.appendChild(item);
-    }
-  }
-
-  // SF2プリセットセクション
+  // SF2プリセット
   if (state._useSF && state._sf2PresetMap) {
-    const sf2Section = document.createElement('div');
-    sf2Section.className = 'voice-menu-section';
-    sf2Section.textContent = `SF2: ${state._sf?.info?.INAM || 'SoundFont'}`;
-    menu.appendChild(sf2Section);
-
     const presets = Object.values(state._sf2PresetMap).sort((a, b) => a.bank - b.bank || a.preset - b.preset);
-    for (const p of presets) {
-      const item = document.createElement('div');
-      item.className = 'voice-menu-item';
-      item.textContent = `🎹 B${p.bank}:P${p.preset} ${p.name}`;
-      item.addEventListener('click', () => {
-        const chFx = getChannelFx(ch);
-        chFx.voiceSource = { type: 'sf2', bank: p.bank, preset: p.preset };
-        updateVoiceLabels();
-        closeVoiceMenu();
-      });
-      menu.appendChild(item);
-    }
+    addVoiceSection(
+      body,
+      `SF2: ${state._sf?.info?.INAM || 'SoundFont'}`,
+      presets.map((p) => ({
+        label: `🎹 B${p.bank}:P${p.preset} ${p.name}`,
+        onClick: () => {
+          getChannelFx(ch).voiceSource = { type: 'sf2', bank: p.bank, preset: p.preset };
+          currentVoice.textContent = `現在の音色: ${getVoiceDisplayName(ch)}`;
+        },
+      })),
+    );
   }
 
-  // 配置
-  const rect = anchor.getBoundingClientRect();
-  menu.style.position = 'fixed';
-  menu.style.left = `${rect.left}px`;
-  menu.style.top = `${rect.bottom + 4}px`;
-  document.body.appendChild(menu);
-  activeVoiceMenu = menu;
+  panel.append(header, body);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
 
-  // メニュー外クリックで閉じる
-  setTimeout(() => {
-    const handler = (e) => {
-      if (!menu.contains(e.target)) {
-        closeVoiceMenu();
-        document.removeEventListener('click', handler);
-      }
-    };
-    document.addEventListener('click', handler);
-  }, 0);
+  // オーバーレイクリックで閉じる
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
+function addVoiceSection(container, title, items) {
+  const section = document.createElement('div');
+  section.className = 'sf2-info-section';
+  const h4 = document.createElement('h4');
+  h4.textContent = title;
+  section.appendChild(h4);
+
+  const grid = document.createElement('div');
+  grid.className = 'voice-grid';
+  for (const item of items) {
+    const btn = document.createElement('button');
+    btn.className = 'voice-grid-btn';
+    btn.textContent = item.label;
+    btn.addEventListener('click', item.onClick);
+    grid.appendChild(btn);
+  }
+  section.appendChild(grid);
+  container.appendChild(section);
 }
