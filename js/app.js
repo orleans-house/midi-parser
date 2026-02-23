@@ -814,6 +814,7 @@ freqShiftReset.addEventListener('click', () => {
   freqShiftSlider.value = 0;
   window._freqShift = 0;
   freqShiftVal.textContent = '0 Hz';
+  if (typeof applyFreqShiftToActive === 'function') applyFreqShiftToActive();
 });
 
 // --- メトロノーム ---
