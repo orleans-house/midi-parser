@@ -11,6 +11,7 @@ import {
   remapNote,
   SCALES,
 } from '../../src/js/midi-parser.js';
+import state from '../../src/js/state/audioState.js';
 
 // ============================================================
 // ヘルパー: MIDIバイナリ構築
@@ -390,39 +391,39 @@ describe('extractChannelPrograms()', () => {
 describe('remapNote()', () => {
   beforeEach(() => {
     // スケール変換を無効化
-    window._scaleConvert = null;
+    state._scaleConvert = null;
   });
 
   it('スケール変換が無効なら入力をそのまま返す', () => {
-    window._scaleConvert = null;
+    state._scaleConvert = null;
     expect(remapNote(60)).toBe(60);
   });
 
   it('enabled=false なら入力をそのまま返す', () => {
-    window._scaleConvert = { enabled: false, from: 'major', to: 'minor', key: 0 };
+    state._scaleConvert = { enabled: false, from: 'major', to: 'minor', key: 0 };
     expect(remapNote(60)).toBe(60);
   });
 
   it('同じスケール間なら入力をそのまま返す', () => {
-    window._scaleConvert = { enabled: true, from: 'major', to: 'major', key: 0 };
+    state._scaleConvert = { enabled: true, from: 'major', to: 'major', key: 0 };
     expect(remapNote(60)).toBe(60);
   });
 
   it('major → minor でC4(60)のE(64)がEb(63)になる', () => {
-    window._scaleConvert = { enabled: true, from: 'major', to: 'minor', key: 0 };
+    state._scaleConvert = { enabled: true, from: 'major', to: 'minor', key: 0 };
     // E4 = 64, major の 3rd (E) → minor の 3rd (Eb=63)
     expect(remapNote(64)).toBe(63);
   });
 
   it('キー指定が反映される', () => {
     // key=2 (D major → D minor)
-    window._scaleConvert = { enabled: true, from: 'major', to: 'minor', key: 2 };
+    state._scaleConvert = { enabled: true, from: 'major', to: 'minor', key: 2 };
     // D major の 3rd = F# (66) → D minor の 3rd = F (65)
     expect(remapNote(66)).toBe(65);
   });
 
   it('結果が0-127にクランプされる', () => {
-    window._scaleConvert = { enabled: true, from: 'major', to: 'minor', key: 0 };
+    state._scaleConvert = { enabled: true, from: 'major', to: 'minor', key: 0 };
     expect(remapNote(0)).toBeGreaterThanOrEqual(0);
     expect(remapNote(127)).toBeLessThanOrEqual(127);
   });
@@ -485,9 +486,9 @@ describe('detectKeyScale()', () => {
 
 describe('midiToFreq()', () => {
   beforeEach(() => {
-    window._scaleConvert = null;
-    window._pitchShift = 0;
-    window._freqShift = 0;
+    state._scaleConvert = null;
+    state._pitchShift = 0;
+    state._freqShift = 0;
   });
 
   it('A4 (MIDI 69) = 440Hz', () => {
@@ -499,28 +500,28 @@ describe('midiToFreq()', () => {
   });
 
   it('pitchShift +12 で1オクターブ上', () => {
-    window._pitchShift = 12;
+    state._pitchShift = 12;
     expect(midiToFreq(69)).toBeCloseTo(880, 2);
   });
 
   it('pitchShift -12 で1オクターブ下', () => {
-    window._pitchShift = -12;
+    state._pitchShift = -12;
     expect(midiToFreq(69)).toBeCloseTo(220, 2);
   });
 
   it('freqShift +100Hz', () => {
-    window._freqShift = 100;
+    state._freqShift = 100;
     expect(midiToFreq(69)).toBeCloseTo(540, 2);
   });
 
   it('結果が1Hz未満にならない（下限クランプ）', () => {
-    window._freqShift = -10000;
+    state._freqShift = -10000;
     expect(midiToFreq(0)).toBe(1);
   });
 
   it('pitchShift + freqShift の組み合わせ', () => {
-    window._pitchShift = 12;
-    window._freqShift = -100;
+    state._pitchShift = 12;
+    state._freqShift = -100;
     // A4+12 = A5 = 880Hz - 100 = 780Hz
     expect(midiToFreq(69)).toBeCloseTo(780, 2);
   });
