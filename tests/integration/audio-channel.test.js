@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { buildChannelChain } from '../../js/audio-channel.js';
-import state from '../../js/state/audioState.js';
+import { buildChannelChain } from '../../src/js/audio-channel.js';
+import state from '../../src/js/state/audioState.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 describe('buildChannelChain()', () => {

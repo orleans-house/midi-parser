@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeDistortionCurve } from '../../js/audio-master.js';
+import { makeDistortionCurve } from '../../src/js/audio-master.js';
 
 describe('makeDistortionCurve()', () => {
   it('Float32Arrayを返す', () => {

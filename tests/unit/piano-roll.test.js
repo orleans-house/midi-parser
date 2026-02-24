@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { invalidatePianoRollCache } from '../../js/piano-roll.js';
+import { invalidatePianoRollCache } from '../../src/js/piano-roll.js';
 
 describe('invalidatePianoRollCache()', () => {
   it('呼び出してもエラーにならない', () => {

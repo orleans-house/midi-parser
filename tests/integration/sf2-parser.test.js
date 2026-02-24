@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearSF2BufferCache, getSF2AudioBuffer } from '../../js/sf2-parser.js';
+import { clearSF2BufferCache, getSF2AudioBuffer } from '../../src/js/sf2-parser.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 describe('getSF2AudioBuffer()', () => {
