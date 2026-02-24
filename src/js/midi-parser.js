@@ -2,6 +2,8 @@
 // MIDI バイナリパーサー
 // ============================================================
 
+import state from './state/audioState.js';
+
 export class MidiParser {
   constructor(buffer) {
     this.data = new DataView(buffer);
@@ -420,7 +422,7 @@ export const SCALES = {
 
 // スケール変換: ソーススケールの度数→ターゲットスケールの度数にマッピング
 export function remapNote(midiNote) {
-  const cfg = window._scaleConvert;
+  const cfg = state._scaleConvert;
   if (!cfg || !cfg.enabled || cfg.from === cfg.to) return midiNote;
 
   const fromScale = SCALES[cfg.from];
@@ -492,6 +494,6 @@ export function detectKeyScale(notes) {
 
 export function midiToFreq(midiNote) {
   const remapped = remapNote(midiNote);
-  const shifted = remapped + (window._pitchShift || 0);
-  return Math.max(1, 440 * 2 ** ((shifted - 69) / 12) + (window._freqShift || 0));
+  const shifted = remapped + (state._pitchShift || 0);
+  return Math.max(1, 440 * 2 ** ((shifted - 69) / 12) + (state._freqShift || 0));
 }
