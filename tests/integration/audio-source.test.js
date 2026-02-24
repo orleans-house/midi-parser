@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMetronome, createMetroClick } from '../../js/audio-source.js';
+import { buildMetronome, createMetroClick } from '../../src/js/audio-source.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 // ============================================================

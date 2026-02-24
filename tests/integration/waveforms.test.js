@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyWaveform, clearPeriodicWaveCache, getPeriodicWave } from '../../js/waveforms.js';
+import { applyWaveform, clearPeriodicWaveCache, getPeriodicWave } from '../../src/js/waveforms.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 describe('getPeriodicWave()', () => {

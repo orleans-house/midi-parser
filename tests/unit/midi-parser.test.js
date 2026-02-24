@@ -10,7 +10,7 @@ import {
   noteName,
   remapNote,
   SCALES,
-} from '../../js/midi-parser.js';
+} from '../../src/js/midi-parser.js';
 
 // ============================================================
 // ヘルパー: MIDIバイナリ構築

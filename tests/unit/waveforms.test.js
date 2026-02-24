@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CUSTOM_WAVEFORMS, clearPeriodicWaveCache, isCustomWaveform } from '../../js/waveforms.js';
+import { CUSTOM_WAVEFORMS, clearPeriodicWaveCache, isCustomWaveform } from '../../src/js/waveforms.js';
 
 // ============================================================
 // CUSTOM_WAVEFORMS 定義の整合性

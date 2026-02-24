@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { pauseAudioFile, resumeAudioFile } from '../../js/audio-file-engine.js';
-import state from '../../js/state/audioState.js';
+import { pauseAudioFile, resumeAudioFile } from '../../src/js/audio-file-engine.js';
+import state from '../../src/js/state/audioState.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 globalThis.lucide = { createIcons: vi.fn() };

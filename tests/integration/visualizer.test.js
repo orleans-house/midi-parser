@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import state from '../../js/state/audioState.js';
-import { updateChannelGains } from '../../js/visualizer.js';
+import state from '../../src/js/state/audioState.js';
+import { updateChannelGains } from '../../src/js/visualizer.js';
 
 describe('updateChannelGains()', () => {
   beforeEach(() => {

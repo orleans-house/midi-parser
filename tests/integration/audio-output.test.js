@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildOutputChain } from '../../js/audio-output.js';
-import state from '../../js/state/audioState.js';
+import { buildOutputChain } from '../../src/js/audio-output.js';
+import state from '../../src/js/state/audioState.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 describe('buildOutputChain()', () => {

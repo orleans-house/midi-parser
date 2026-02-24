@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyFreqShiftToActive, pausePlayback, resumePlayback, stopPlayback } from '../../js/audio-engine.js';
-import state from '../../js/state/audioState.js';
+import { applyFreqShiftToActive, pausePlayback, resumePlayback, stopPlayback } from '../../src/js/audio-engine.js';
+import state from '../../src/js/state/audioState.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 // lucide グローバルモック（DOM操作で呼ばれる）

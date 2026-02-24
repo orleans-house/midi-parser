@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyChannelGain, CHANNEL_COLORS, detectChannels, getChannelColor } from '../../js/visualizer.js';
+import { applyChannelGain, CHANNEL_COLORS, detectChannels, getChannelColor } from '../../src/js/visualizer.js';
 
 describe('getChannelColor()', () => {
   it('チャンネル0で最初の色を返す', () => {

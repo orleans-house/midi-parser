@@ -5,7 +5,7 @@ import {
   findSF2Sample,
   getInstrumentZones,
   SF2Parser,
-} from '../../js/sf2-parser.js';
+} from '../../src/js/sf2-parser.js';
 
 // ============================================================
 // ヘルパー: SF2バイナリ構築

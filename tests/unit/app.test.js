@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAudioFile } from '../../js/app.js';
+import { isAudioFile } from '../../src/js/app.js';
 
 describe('isAudioFile()', () => {
   it.each([

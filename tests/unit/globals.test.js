@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FREQ_MAX, FREQ_MIN, freqToSlider, getChannelFx, sliderToFreq } from '../../js/globals.js';
+import { FREQ_MAX, FREQ_MIN, freqToSlider, getChannelFx, sliderToFreq } from '../../src/js/globals.js';
 
 // ============================================================
 // sliderToFreq() / freqToSlider()

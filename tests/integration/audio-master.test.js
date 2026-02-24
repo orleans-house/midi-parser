@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { applyLimiterParams, buildMasterChain, createReverbIR, updateDistortionCurve } from '../../js/audio-master.js';
+import {
+  applyLimiterParams,
+  buildMasterChain,
+  createReverbIR,
+  updateDistortionCurve,
+} from '../../src/js/audio-master.js';
 import { createMockAudioContext } from './web-audio-mock.js';
 
 // ============================================================

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearLoopTimer } from '../../js/dj-controls.js';
+import { clearLoopTimer } from '../../src/js/dj-controls.js';
 
 describe('clearLoopTimer()', () => {
   it('呼び出してもエラーにならない', () => {
